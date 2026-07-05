@@ -7,6 +7,9 @@ import eventsRouter from "./events";
 import habitsRouter from "./habits";
 import intentionsRouter from "./intentions";
 import dashboardRouter from "./dashboard";
+import journalRouter from "./journal";
+import goalsRouter from "./goals";
+import affirmationsRouter from "./affirmations";
 
 const router: IRouter = Router();
 
@@ -18,5 +21,8 @@ router.use(eventsRouter);
 router.use(habitsRouter);
 router.use(intentionsRouter);
 router.use(dashboardRouter);
+router.use(journalRouter);
+router.use(goalsRouter);
+router.use(affirmationsRouter);
 
 export default router;

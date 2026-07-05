@@ -257,6 +257,151 @@ export interface UpdateIntentionBody {
   isCompleted?: boolean;
 }
 
+export type JournalEntryMood = typeof JournalEntryMood[keyof typeof JournalEntryMood];
+
+
+export const JournalEntryMood = {
+  great: 'great',
+  good: 'good',
+  okay: 'okay',
+  rough: 'rough',
+  struggling: 'struggling',
+} as const;
+
+export interface JournalEntry {
+  id: number;
+  userId: number;
+  date: string;
+  content: string;
+  mood: JournalEntryMood;
+  affirmation?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateJournalEntryBodyMood = typeof CreateJournalEntryBodyMood[keyof typeof CreateJournalEntryBodyMood];
+
+
+export const CreateJournalEntryBodyMood = {
+  great: 'great',
+  good: 'good',
+  okay: 'okay',
+  rough: 'rough',
+  struggling: 'struggling',
+} as const;
+
+export interface CreateJournalEntryBody {
+  date?: string;
+  content: string;
+  mood?: CreateJournalEntryBodyMood;
+  affirmation?: string;
+}
+
+export type UpdateJournalEntryBodyMood = typeof UpdateJournalEntryBodyMood[keyof typeof UpdateJournalEntryBodyMood];
+
+
+export const UpdateJournalEntryBodyMood = {
+  great: 'great',
+  good: 'good',
+  okay: 'okay',
+  rough: 'rough',
+  struggling: 'struggling',
+} as const;
+
+export interface UpdateJournalEntryBody {
+  content?: string;
+  mood?: UpdateJournalEntryBodyMood;
+  affirmation?: string;
+}
+
+export type GoalCategory = typeof GoalCategory[keyof typeof GoalCategory];
+
+
+export const GoalCategory = {
+  personal: 'personal',
+  financial: 'financial',
+  health: 'health',
+  relationships: 'relationships',
+  career: 'career',
+  spiritual: 'spiritual',
+} as const;
+
+export interface Goal {
+  id: number;
+  userId: number;
+  title: string;
+  description?: string | null;
+  category: GoalCategory;
+  progress: number;
+  targetDate?: string | null;
+  isCompleted: boolean;
+  color?: string | null;
+  createdAt: string;
+}
+
+export type CreateGoalBodyCategory = typeof CreateGoalBodyCategory[keyof typeof CreateGoalBodyCategory];
+
+
+export const CreateGoalBodyCategory = {
+  personal: 'personal',
+  financial: 'financial',
+  health: 'health',
+  relationships: 'relationships',
+  career: 'career',
+  spiritual: 'spiritual',
+} as const;
+
+export interface CreateGoalBody {
+  title: string;
+  description?: string;
+  category?: CreateGoalBodyCategory;
+  progress?: number;
+  targetDate?: string;
+  color?: string;
+}
+
+export type UpdateGoalBodyCategory = typeof UpdateGoalBodyCategory[keyof typeof UpdateGoalBodyCategory];
+
+
+export const UpdateGoalBodyCategory = {
+  personal: 'personal',
+  financial: 'financial',
+  health: 'health',
+  relationships: 'relationships',
+  career: 'career',
+  spiritual: 'spiritual',
+} as const;
+
+export interface UpdateGoalBody {
+  title?: string;
+  description?: string;
+  category?: UpdateGoalBodyCategory;
+  progress?: number;
+  targetDate?: string;
+  isCompleted?: boolean;
+  color?: string;
+}
+
+export interface Affirmation {
+  id: number;
+  userId: number;
+  text: string;
+  date: string;
+  isFavorited: boolean;
+  createdAt: string;
+}
+
+export interface CreateAffirmationBody {
+  text: string;
+  date?: string;
+  isFavorited?: boolean;
+}
+
+export interface UpdateAffirmationBody {
+  text?: string;
+  isFavorited?: boolean;
+}
+
 export interface Dashboard {
   userName: string;
   streakDays: number;
@@ -317,4 +462,20 @@ export type GetIntentionsParams = {
  */
 date?: string;
 };
+
+export type GetGoalsParams = {
+category?: GetGoalsCategory;
+};
+
+export type GetGoalsCategory = typeof GetGoalsCategory[keyof typeof GetGoalsCategory];
+
+
+export const GetGoalsCategory = {
+  personal: 'personal',
+  financial: 'financial',
+  health: 'health',
+  relationships: 'relationships',
+  career: 'career',
+  spiritual: 'spiritual',
+} as const;
 

@@ -465,6 +465,255 @@ export const UpdateIntentionResponse = zod.object({
 
 
 /**
+ * @summary List all journal entries
+ */
+export const GetJournalEntriesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "content": zod.string(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
+  "affirmation": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetJournalEntriesResponse = zod.array(GetJournalEntriesResponseItem)
+
+
+/**
+ * @summary Create a journal entry
+ */
+export const CreateJournalEntryBody = zod.object({
+  "date": zod.coerce.date().optional(),
+  "content": zod.string(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']).optional(),
+  "affirmation": zod.string().optional()
+})
+
+export const CreateJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "content": zod.string(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
+  "affirmation": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get today's journal entry
+ */
+export const GetTodayJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "content": zod.string(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
+  "affirmation": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a journal entry
+ */
+export const UpdateJournalEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateJournalEntryBody = zod.object({
+  "content": zod.string().optional(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']).optional(),
+  "affirmation": zod.string().optional()
+})
+
+export const UpdateJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "content": zod.string(),
+  "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
+  "affirmation": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a journal entry
+ */
+export const DeleteJournalEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteJournalEntryResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary List all goals
+ */
+export const GetGoalsQueryParams = zod.object({
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']).optional()
+})
+
+export const GetGoalsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']),
+  "progress": zod.number(),
+  "targetDate": zod.coerce.date().nullish(),
+  "isCompleted": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetGoalsResponse = zod.array(GetGoalsResponseItem)
+
+
+/**
+ * @summary Create a goal
+ */
+export const CreateGoalBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']).optional(),
+  "progress": zod.number().optional(),
+  "targetDate": zod.coerce.date().optional(),
+  "color": zod.string().optional()
+})
+
+export const CreateGoalResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']),
+  "progress": zod.number(),
+  "targetDate": zod.coerce.date().nullish(),
+  "isCompleted": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a goal
+ */
+export const UpdateGoalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateGoalBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']).optional(),
+  "progress": zod.number().optional(),
+  "targetDate": zod.coerce.date().optional(),
+  "isCompleted": zod.boolean().optional(),
+  "color": zod.string().optional()
+})
+
+export const UpdateGoalResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['personal', 'financial', 'health', 'relationships', 'career', 'spiritual']),
+  "progress": zod.number(),
+  "targetDate": zod.coerce.date().nullish(),
+  "isCompleted": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a goal
+ */
+export const DeleteGoalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteGoalResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary List affirmations
+ */
+export const GetAffirmationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "text": zod.string(),
+  "date": zod.coerce.date(),
+  "isFavorited": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const GetAffirmationsResponse = zod.array(GetAffirmationsResponseItem)
+
+
+/**
+ * @summary Create an affirmation
+ */
+export const CreateAffirmationBody = zod.object({
+  "text": zod.string(),
+  "date": zod.coerce.date().optional(),
+  "isFavorited": zod.boolean().optional()
+})
+
+export const CreateAffirmationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "text": zod.string(),
+  "date": zod.coerce.date(),
+  "isFavorited": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get or generate today's affirmation
+ */
+export const GetTodayAffirmationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "text": zod.string(),
+  "date": zod.coerce.date(),
+  "isFavorited": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Favorite or edit an affirmation
+ */
+export const UpdateAffirmationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAffirmationBody = zod.object({
+  "text": zod.string().optional(),
+  "isFavorited": zod.boolean().optional()
+})
+
+export const UpdateAffirmationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "text": zod.string(),
+  "date": zod.coerce.date(),
+  "isFavorited": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardResponse = zod.object({

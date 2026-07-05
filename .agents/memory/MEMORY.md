@@ -1,0 +1,2 @@
+- [333 Lives architecture](333-lives-arch.md) — full-stack life management app; API on port 8080, web on port 22333; orval fix required indexFiles:false
+- [CSS import order](css-import-order.md) — Google Fonts @import must be first line in index.css, before tailwindcss imports, or PostCSS throws

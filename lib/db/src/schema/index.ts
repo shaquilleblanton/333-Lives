@@ -4,3 +4,6 @@ export * from "./vault";
 export * from "./events";
 export * from "./habits";
 export * from "./intentions";
+export * from "./journal";
+export * from "./goals";
+export * from "./affirmations";

@@ -477,6 +477,249 @@ paths:
               schema:
                 $ref: "#/components/schemas/Intention"
 
+  /journal:
+    get:
+      operationId: getJournalEntries
+      tags: [journal]
+      summary: List all journal entries
+      responses:
+        "200":
+          description: List of entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JournalEntry"
+    post:
+      operationId: createJournalEntry
+      tags: [journal]
+      summary: Create a journal entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJournalEntryBody"
+      responses:
+        "201":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+
+  /journal/today:
+    get:
+      operationId: getTodayJournalEntry
+      tags: [journal]
+      summary: Get today's journal entry
+      responses:
+        "200":
+          description: Today's entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /journal/{id}:
+    put:
+      operationId: updateJournalEntry
+      tags: [journal]
+      summary: Update a journal entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJournalEntryBody"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+    delete:
+      operationId: deleteJournalEntry
+      tags: [journal]
+      summary: Delete a journal entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /goals:
+    get:
+      operationId: getGoals
+      tags: [goals]
+      summary: List all goals
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [personal, financial, health, relationships, career, spiritual]
+      responses:
+        "200":
+          description: List of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoalBody"
+      responses:
+        "201":
+          description: Created goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    put:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a goal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoalBody"
+      responses:
+        "200":
+          description: Updated goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a goal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /affirmations:
+    get:
+      operationId: getAffirmations
+      tags: [affirmations]
+      summary: List affirmations
+      responses:
+        "200":
+          description: List of affirmations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Affirmation"
+    post:
+      operationId: createAffirmation
+      tags: [affirmations]
+      summary: Create an affirmation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAffirmationBody"
+      responses:
+        "201":
+          description: Created affirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Affirmation"
+
+  /affirmations/today:
+    get:
+      operationId: getTodayAffirmation
+      tags: [affirmations]
+      summary: Get or generate today's affirmation
+      responses:
+        "200":
+          description: Today's affirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Affirmation"
+
+  /affirmations/{id}:
+    put:
+      operationId: updateAffirmation
+      tags: [affirmations]
+      summary: Favorite or edit an affirmation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAffirmationBody"
+      responses:
+        "200":
+          description: Updated affirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Affirmation"
+
   /dashboard:
     get:
       operationId: getDashboard
@@ -843,6 +1086,167 @@ components:
         text:
           type: string
         isCompleted:
+          type: boolean
+
+    JournalEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        date:
+          type: string
+          format: date
+        content:
+          type: string
+        mood:
+          type: string
+          enum: [great, good, okay, rough, struggling]
+        affirmation:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, date, content, mood, createdAt, updatedAt]
+
+    CreateJournalEntryBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        content:
+          type: string
+        mood:
+          type: string
+          enum: [great, good, okay, rough, struggling]
+        affirmation:
+          type: string
+      required: [content]
+
+    UpdateJournalEntryBody:
+      type: object
+      properties:
+        content:
+          type: string
+        mood:
+          type: string
+          enum: [great, good, okay, rough, struggling]
+        affirmation:
+          type: string
+
+    Goal:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+          enum: [personal, financial, health, relationships, career, spiritual]
+        progress:
+          type: integer
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+        isCompleted:
+          type: boolean
+        color:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, category, progress, isCompleted, createdAt]
+
+    CreateGoalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [personal, financial, health, relationships, career, spiritual]
+        progress:
+          type: integer
+        targetDate:
+          type: string
+          format: date
+        color:
+          type: string
+      required: [title]
+
+    UpdateGoalBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [personal, financial, health, relationships, career, spiritual]
+        progress:
+          type: integer
+        targetDate:
+          type: string
+          format: date
+        isCompleted:
+          type: boolean
+        color:
+          type: string
+
+    Affirmation:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        text:
+          type: string
+        date:
+          type: string
+          format: date
+        isFavorited:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, text, date, isFavorited, createdAt]
+
+    CreateAffirmationBody:
+      type: object
+      properties:
+        text:
+          type: string
+        date:
+          type: string
+          format: date
+        isFavorited:
+          type: boolean
+      required: [text]
+
+    UpdateAffirmationBody:
+      type: object
+      properties:
+        text:
+          type: string
+        isFavorited:
           type: boolean
 
     Dashboard:
