@@ -402,6 +402,103 @@ export interface UpdateAffirmationBody {
   isFavorited?: boolean;
 }
 
+export interface GratitudeEntry {
+  id: number;
+  userId: number;
+  date: string;
+  item1: string;
+  item2?: string | null;
+  item3?: string | null;
+  reflection?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGratitudeEntryBody {
+  item1: string;
+  item2?: string;
+  item3?: string;
+  reflection?: string;
+  date?: string;
+}
+
+export interface UpdateGratitudeEntryBody {
+  item1?: string;
+  item2?: string;
+  item3?: string;
+  reflection?: string;
+}
+
+export type PersonRelationship = typeof PersonRelationship[keyof typeof PersonRelationship];
+
+
+export const PersonRelationship = {
+  family: 'family',
+  friend: 'friend',
+  partner: 'partner',
+  mentor: 'mentor',
+  colleague: 'colleague',
+  other: 'other',
+} as const;
+
+export interface Person {
+  id: number;
+  userId: number;
+  name: string;
+  relationship: PersonRelationship;
+  bio?: string | null;
+  photoUrl?: string | null;
+  birthday?: string | null;
+  lostDate?: string | null;
+  note?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreatePersonBodyRelationship = typeof CreatePersonBodyRelationship[keyof typeof CreatePersonBodyRelationship];
+
+
+export const CreatePersonBodyRelationship = {
+  family: 'family',
+  friend: 'friend',
+  partner: 'partner',
+  mentor: 'mentor',
+  colleague: 'colleague',
+  other: 'other',
+} as const;
+
+export interface CreatePersonBody {
+  name: string;
+  relationship?: CreatePersonBodyRelationship;
+  bio?: string;
+  photoUrl?: string;
+  birthday?: string;
+  lostDate?: string;
+  note?: string;
+}
+
+export type UpdatePersonBodyRelationship = typeof UpdatePersonBodyRelationship[keyof typeof UpdatePersonBodyRelationship];
+
+
+export const UpdatePersonBodyRelationship = {
+  family: 'family',
+  friend: 'friend',
+  partner: 'partner',
+  mentor: 'mentor',
+  colleague: 'colleague',
+  other: 'other',
+} as const;
+
+export interface UpdatePersonBody {
+  name?: string;
+  relationship?: UpdatePersonBodyRelationship;
+  bio?: string;
+  photoUrl?: string;
+  birthday?: string;
+  lostDate?: string;
+  note?: string;
+}
+
 export interface Dashboard {
   userName: string;
   streakDays: number;

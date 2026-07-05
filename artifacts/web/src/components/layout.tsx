@@ -6,7 +6,9 @@ import {
   Sprout, 
   CalendarDays, 
   User,
-  LogOut
+  LogOut,
+  Heart,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +17,8 @@ const NAV_ITEMS = [
   { href: "/future", label: "Future", icon: Clock },
   { href: "/vault", label: "Vault", icon: Lock },
   { href: "/growth", label: "Growth", icon: Sprout },
+  { href: "/gratitude", label: "Gratitude", icon: Heart },
+  { href: "/people", label: "People", icon: Users },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: User },
 ];

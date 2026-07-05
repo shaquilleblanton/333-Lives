@@ -714,6 +714,215 @@ export const UpdateAffirmationResponse = zod.object({
 
 
 /**
+ * @summary List all gratitude entries
+ */
+export const GetGratitudeEntriesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "item1": zod.string(),
+  "item2": zod.string().nullish(),
+  "item3": zod.string().nullish(),
+  "reflection": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetGratitudeEntriesResponse = zod.array(GetGratitudeEntriesResponseItem)
+
+
+/**
+ * @summary Create a gratitude entry
+ */
+export const CreateGratitudeEntryBody = zod.object({
+  "item1": zod.string(),
+  "item2": zod.string().optional(),
+  "item3": zod.string().optional(),
+  "reflection": zod.string().optional(),
+  "date": zod.coerce.date().optional()
+})
+
+export const CreateGratitudeEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "item1": zod.string(),
+  "item2": zod.string().nullish(),
+  "item3": zod.string().nullish(),
+  "reflection": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get today's gratitude entry
+ */
+export const GetTodayGratitudeEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "item1": zod.string(),
+  "item2": zod.string().nullish(),
+  "item3": zod.string().nullish(),
+  "reflection": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a gratitude entry
+ */
+export const UpdateGratitudeEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateGratitudeEntryBody = zod.object({
+  "item1": zod.string().optional(),
+  "item2": zod.string().optional(),
+  "item3": zod.string().optional(),
+  "reflection": zod.string().optional()
+})
+
+export const UpdateGratitudeEntryResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "date": zod.coerce.date(),
+  "item1": zod.string(),
+  "item2": zod.string().nullish(),
+  "item3": zod.string().nullish(),
+  "reflection": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a gratitude entry
+ */
+export const DeleteGratitudeEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteGratitudeEntryResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary List all people
+ */
+export const GetPeopleResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']),
+  "bio": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "birthday": zod.coerce.date().nullish(),
+  "lostDate": zod.coerce.date().nullish(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetPeopleResponse = zod.array(GetPeopleResponseItem)
+
+
+/**
+ * @summary Add a person
+ */
+export const CreatePersonBody = zod.object({
+  "name": zod.string(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']).optional(),
+  "bio": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "birthday": zod.coerce.date().optional(),
+  "lostDate": zod.coerce.date().optional(),
+  "note": zod.string().optional()
+})
+
+export const CreatePersonResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']),
+  "bio": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "birthday": zod.coerce.date().nullish(),
+  "lostDate": zod.coerce.date().nullish(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a person by ID
+ */
+export const GetPersonParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPersonResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']),
+  "bio": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "birthday": zod.coerce.date().nullish(),
+  "lostDate": zod.coerce.date().nullish(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a person
+ */
+export const UpdatePersonParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePersonBody = zod.object({
+  "name": zod.string().optional(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']).optional(),
+  "bio": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "birthday": zod.coerce.date().optional(),
+  "lostDate": zod.coerce.date().optional(),
+  "note": zod.string().optional()
+})
+
+export const UpdatePersonResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relationship": zod.enum(['family', 'friend', 'partner', 'mentor', 'colleague', 'other']),
+  "bio": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "birthday": zod.coerce.date().nullish(),
+  "lostDate": zod.coerce.date().nullish(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a person
+ */
+export const DeletePersonParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePersonResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardResponse = zod.object({

@@ -11,6 +11,8 @@ import Vault from "@/pages/vault";
 import Growth from "@/pages/growth";
 import Calendar from "@/pages/calendar";
 import Profile from "@/pages/profile";
+import Gratitude from "@/pages/gratitude";
+import People from "@/pages/people";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ function Router() {
         <Route path="/growth" component={Growth} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/profile" component={Profile} />
+        <Route path="/gratitude" component={Gratitude} />
+        <Route path="/people" component={People} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

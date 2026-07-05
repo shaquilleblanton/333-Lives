@@ -7,3 +7,5 @@ export * from "./intentions";
 export * from "./journal";
 export * from "./goals";
 export * from "./affirmations";
+export * from "./gratitude";
+export * from "./people";

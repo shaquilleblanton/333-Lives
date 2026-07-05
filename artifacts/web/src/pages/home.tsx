@@ -1,14 +1,16 @@
-import { useGetDashboard, useUpdateIntention } from "@workspace/api-client-react";
+import { useGetDashboard, useUpdateIntention, useGetTodayGratitudeEntry } from "@workspace/api-client-react";
 import { format } from "date-fns";
-import { CheckCircle2, Circle, Clock, MessageSquare, Shield } from "lucide-react";
+import { CheckCircle2, Circle, Clock, MessageSquare, Shield, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 export default function Home() {
   const { data: dashboard, isLoading } = useGetDashboard();
   const updateIntention = useUpdateIntention();
+  const { data: todayEntry, isLoading: loadingGratitude } = useGetTodayGratitudeEntry();
 
-  if (isLoading) {
+  if (isLoading || loadingGratitude) {
     return (
       <div className="p-6 md:p-12 max-w-5xl mx-auto w-full space-y-12">
         <div className="space-y-4">
@@ -48,6 +50,33 @@ export default function Home() {
             "Your private space. Secure. Encrypted. Yours."
           </blockquote>
         </div>
+      </section>
+
+      {/* Today's Gratitude Widget */}
+      <section>
+        {todayEntry ? (
+          <div className="bg-card/40 border border-primary/20 p-6 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10" />
+            <div className="flex items-center gap-2 text-primary mb-4">
+              <Heart className="w-4 h-4 fill-primary/20" />
+              <h2 className="font-serif text-lg">Today's Gratitude</h2>
+            </div>
+            <ul className="space-y-2">
+              <li className="flex gap-3"><span className="text-primary/50 font-serif">1.</span><span className="text-foreground/90">{todayEntry.item1}</span></li>
+              {todayEntry.item2 && <li className="flex gap-3"><span className="text-primary/50 font-serif">2.</span><span className="text-foreground/90">{todayEntry.item2}</span></li>}
+              {todayEntry.item3 && <li className="flex gap-3"><span className="text-primary/50 font-serif">3.</span><span className="text-foreground/90">{todayEntry.item3}</span></li>}
+            </ul>
+            <Link href="/gratitude" className="absolute inset-0 z-10 block opacity-0"><span className="sr-only">View Gratitude</span></Link>
+          </div>
+        ) : (
+          <div className="bg-card/20 border border-dashed border-border/50 p-6 rounded-2xl text-center">
+            <Heart className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm mb-3">You haven't logged gratitude today.</p>
+            <Link href="/gratitude" className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1">
+              Log Today's Gratitude
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Three Pillars Grid */}

@@ -23,6 +23,10 @@ tags:
     description: Daily intentions (the 333 method)
   - name: dashboard
     description: Dashboard summary stats
+  - name: gratitude
+    description: Daily gratitude practice
+  - name: people
+    description: People in your life — family, friends, loved ones
 
 paths:
   /healthz:
@@ -720,6 +724,196 @@ paths:
               schema:
                 $ref: "#/components/schemas/Affirmation"
 
+  /gratitude:
+    get:
+      operationId: getGratitudeEntries
+      tags: [gratitude]
+      summary: List all gratitude entries
+      responses:
+        "200":
+          description: List of gratitude entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GratitudeEntry"
+    post:
+      operationId: createGratitudeEntry
+      tags: [gratitude]
+      summary: Create a gratitude entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGratitudeEntryBody"
+      responses:
+        "201":
+          description: Created gratitude entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GratitudeEntry"
+
+  /gratitude/today:
+    get:
+      operationId: getTodayGratitudeEntry
+      tags: [gratitude]
+      summary: Get today's gratitude entry
+      responses:
+        "200":
+          description: Today's gratitude entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GratitudeEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /gratitude/{id}:
+    put:
+      operationId: updateGratitudeEntry
+      tags: [gratitude]
+      summary: Update a gratitude entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGratitudeEntryBody"
+      responses:
+        "200":
+          description: Updated gratitude entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GratitudeEntry"
+    delete:
+      operationId: deleteGratitudeEntry
+      tags: [gratitude]
+      summary: Delete a gratitude entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /people:
+    get:
+      operationId: getPeople
+      tags: [people]
+      summary: List all people
+      responses:
+        "200":
+          description: List of people
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+    post:
+      operationId: createPerson
+      tags: [people]
+      summary: Add a person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonBody"
+      responses:
+        "201":
+          description: Created person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+
+  /people/{id}:
+    get:
+      operationId: getPerson
+      tags: [people]
+      summary: Get a person by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updatePerson
+      tags: [people]
+      summary: Update a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonBody"
+      responses:
+        "200":
+          description: Updated person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+    delete:
+      operationId: deletePerson
+      tags: [people]
+      summary: Delete a person
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
   /dashboard:
     get:
       operationId: getDashboard
@@ -1248,6 +1442,143 @@ components:
           type: string
         isFavorited:
           type: boolean
+
+    GratitudeEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        date:
+          type: string
+          format: date
+        item1:
+          type: string
+        item2:
+          type: string
+          nullable: true
+        item3:
+          type: string
+          nullable: true
+        reflection:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, date, item1, createdAt, updatedAt]
+
+    CreateGratitudeEntryBody:
+      type: object
+      properties:
+        item1:
+          type: string
+        item2:
+          type: string
+        item3:
+          type: string
+        reflection:
+          type: string
+        date:
+          type: string
+          format: date
+      required: [item1]
+
+    UpdateGratitudeEntryBody:
+      type: object
+      properties:
+        item1:
+          type: string
+        item2:
+          type: string
+        item3:
+          type: string
+        reflection:
+          type: string
+
+    Person:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        relationship:
+          type: string
+          enum: [family, friend, partner, mentor, colleague, other]
+        bio:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          format: date
+          nullable: true
+        lostDate:
+          type: string
+          format: date
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, name, relationship, createdAt, updatedAt]
+
+    CreatePersonBody:
+      type: object
+      properties:
+        name:
+          type: string
+        relationship:
+          type: string
+          enum: [family, friend, partner, mentor, colleague, other]
+        bio:
+          type: string
+        photoUrl:
+          type: string
+        birthday:
+          type: string
+          format: date
+        lostDate:
+          type: string
+          format: date
+        note:
+          type: string
+      required: [name]
+
+    UpdatePersonBody:
+      type: object
+      properties:
+        name:
+          type: string
+        relationship:
+          type: string
+          enum: [family, friend, partner, mentor, colleague, other]
+        bio:
+          type: string
+        photoUrl:
+          type: string
+        birthday:
+          type: string
+          format: date
+        lostDate:
+          type: string
+          format: date
+        note:
+          type: string
 
     Dashboard:
       type: object

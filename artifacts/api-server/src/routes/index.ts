@@ -10,6 +10,8 @@ import dashboardRouter from "./dashboard";
 import journalRouter from "./journal";
 import goalsRouter from "./goals";
 import affirmationsRouter from "./affirmations";
+import gratitudeRouter from "./gratitude";
+import peopleRouter from "./people";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(dashboardRouter);
 router.use(journalRouter);
 router.use(goalsRouter);
 router.use(affirmationsRouter);
+router.use(gratitudeRouter);
+router.use(peopleRouter);
 
 export default router;

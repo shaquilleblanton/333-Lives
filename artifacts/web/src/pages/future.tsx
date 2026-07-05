@@ -1,11 +1,23 @@
-import { useGetMessages } from "@workspace/api-client-react";
+import { useState, useEffect } from "react";
+import { useSearch, useLocation } from "wouter";
+import { useGetMessages, useCreateMessage, getGetMessagesQueryKey } from "@workspace/api-client-react";
 import { format } from "date-fns";
-import { Lock, Unlock, FileText, Mic, Video, Plus } from "lucide-react";
+import { Lock, Unlock, FileText, Mic, Video, Plus, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Future() {
   const { data: messages, isLoading } = useGetMessages();
+  const searchString = useSearch();
+  const queryParams = new URLSearchParams(searchString);
+  const initialRecipient = queryParams.get("recipient") || "";
+  
+  const [isFormOpen, setIsFormOpen] = useState(!!initialRecipient);
 
   return (
     <div className="p-6 md:p-12 max-w-4xl mx-auto w-full space-y-10 animate-in fade-in duration-700 slide-in-from-bottom-4">
@@ -16,11 +28,20 @@ export default function Future() {
             Words suspended in time. Sent to yourself or loved ones, waiting for the right moment.
           </p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+        <Button 
+          onClick={() => setIsFormOpen(true)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Seal New Message
         </Button>
       </header>
+
+      <MessageFormDialog 
+        open={isFormOpen} 
+        onOpenChange={setIsFormOpen} 
+        initialRecipient={initialRecipient} 
+      />
 
       {isLoading ? (
         <div className="space-y-6">
@@ -86,5 +107,123 @@ export default function Future() {
         </div>
       )}
     </div>
+  );
+}
+
+function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boolean, onOpenChange: (o: boolean) => void, initialRecipient: string }) {
+  const queryClient = useQueryClient();
+  const createMessage = useCreateMessage();
+  const [, setLocation] = useLocation();
+
+  const [formData, setFormData] = useState({
+    title: "",
+    recipient: initialRecipient,
+    unlockDate: "",
+    type: "text" as "text" | "audio" | "video",
+    content: ""
+  });
+
+  // Keep recipient in sync if opened via URL param change
+  useEffect(() => {
+    if (initialRecipient && open) {
+      setFormData(prev => ({ ...prev, recipient: initialRecipient }));
+    }
+  }, [initialRecipient, open]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.unlockDate) return;
+
+    createMessage.mutate(
+      { data: { ...formData, unlockDate: new Date(formData.unlockDate).toISOString() } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetMessagesQueryKey() });
+          onOpenChange(false);
+          // Clear query params
+          setLocation("/future", { replace: true });
+        }
+      }
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(val) => {
+      onOpenChange(val);
+      if (!val) setLocation("/future", { replace: true });
+    }}>
+      <DialogContent className="sm:max-w-[500px] bg-background border-border">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Seal a Message</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Title / Subject</label>
+            <Input 
+              value={formData.title} 
+              onChange={e => setFormData({ ...formData, title: e.target.value })} 
+              className="bg-card border-border"
+              placeholder="A note for my 30th birthday"
+              required
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-subheading text-muted-foreground">Recipient</label>
+              <Input 
+                value={formData.recipient} 
+                onChange={e => setFormData({ ...formData, recipient: e.target.value })} 
+                className="bg-card border-border"
+                placeholder="Self"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-subheading text-muted-foreground">Unlock Date</label>
+              <Input 
+                type="date"
+                value={formData.unlockDate} 
+                onChange={e => setFormData({ ...formData, unlockDate: e.target.value })} 
+                className="bg-card border-border block"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Format</label>
+            <Select value={formData.type} onValueChange={(v: "text"|"audio"|"video") => setFormData({ ...formData, type: v })}>
+              <SelectTrigger className="bg-card border-border capitalize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="text">Text Letter</SelectItem>
+                <SelectItem value="audio">Voice Note</SelectItem>
+                <SelectItem value="video">Video Message</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Message</label>
+            <Textarea 
+              value={formData.content} 
+              onChange={e => setFormData({ ...formData, content: e.target.value })} 
+              className="bg-card border-border min-h-[120px] resize-none"
+              placeholder="Write what you want them to know..."
+            />
+          </div>
+
+          <div className="flex justify-end pt-4 gap-3">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" disabled={!formData.title || !formData.unlockDate || createMessage.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {createMessage.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Seal & Lock
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
