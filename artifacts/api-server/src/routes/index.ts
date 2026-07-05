@@ -12,6 +12,7 @@ import goalsRouter from "./goals";
 import affirmationsRouter from "./affirmations";
 import gratitudeRouter from "./gratitude";
 import peopleRouter from "./people";
+import communityRouter from "./community";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(goalsRouter);
 router.use(affirmationsRouter);
 router.use(gratitudeRouter);
 router.use(peopleRouter);
+router.use(communityRouter);
 
 export default router;

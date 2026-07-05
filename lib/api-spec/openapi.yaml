@@ -27,6 +27,8 @@ tags:
     description: Daily gratitude practice
   - name: people
     description: People in your life — family, friends, loved ones
+  - name: community
+    description: Community & family connection calendar
 
 paths:
   /healthz:
@@ -914,6 +916,144 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /community:
+    get:
+      operationId: getCommunityEvents
+      tags: [community]
+      summary: List community calendar events
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [graduation, cookout, reunion, sporting_event, birthday, wedding, open_day, request, other]
+      responses:
+        "200":
+          description: List of community events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommunityEvent"
+    post:
+      operationId: createCommunityEvent
+      tags: [community]
+      summary: Create a community event or open day
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommunityEventBody"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+
+  /community/{id}:
+    get:
+      operationId: getCommunityEvent
+      tags: [community]
+      summary: Get a community event by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Community event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateCommunityEvent
+      tags: [community]
+      summary: Update a community event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommunityEventBody"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+    delete:
+      operationId: deleteCommunityEvent
+      tags: [community]
+      summary: Delete a community event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /community/{id}/respond:
+    post:
+      operationId: respondToCommunityEvent
+      tags: [community]
+      summary: Confirm or decline a community event request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondToCommunityEventBody"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+
   /dashboard:
     get:
       operationId: getDashboard
@@ -1579,6 +1719,126 @@ components:
           format: date
         note:
           type: string
+
+    CommunityEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+          enum: [graduation, cookout, reunion, sporting_event, birthday, wedding, open_day, request, other]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+          nullable: true
+        startTime:
+          type: string
+          nullable: true
+        endTime:
+          type: string
+          nullable: true
+        isOpenDay:
+          type: boolean
+        status:
+          type: string
+          enum: [open, confirmed, pending, declined]
+        requestedBy:
+          type: string
+          nullable: true
+        isPublic:
+          type: boolean
+        color:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, category, startDate, isOpenDay, status, isPublic, createdAt, updatedAt]
+
+    CreateCommunityEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [graduation, cookout, reunion, sporting_event, birthday, wedding, open_day, request, other]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isOpenDay:
+          type: boolean
+        status:
+          type: string
+          enum: [open, confirmed, pending, declined]
+        requestedBy:
+          type: string
+        isPublic:
+          type: boolean
+        color:
+          type: string
+      required: [title, startDate]
+
+    UpdateCommunityEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [graduation, cookout, reunion, sporting_event, birthday, wedding, open_day, request, other]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isOpenDay:
+          type: boolean
+        status:
+          type: string
+          enum: [open, confirmed, pending, declined]
+        requestedBy:
+          type: string
+        color:
+          type: string
+
+    RespondToCommunityEventBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [confirmed, declined, pending]
+      required: [status]
 
     Dashboard:
       type: object

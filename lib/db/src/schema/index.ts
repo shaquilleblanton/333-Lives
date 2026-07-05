@@ -9,3 +9,4 @@ export * from "./goals";
 export * from "./affirmations";
 export * from "./gratitude";
 export * from "./people";
+export * from "./community";

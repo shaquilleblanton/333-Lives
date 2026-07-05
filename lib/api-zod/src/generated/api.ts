@@ -923,6 +923,185 @@ export const DeletePersonResponse = zod.object({
 
 
 /**
+ * @summary List community calendar events
+ */
+export const GetCommunityEventsQueryParams = zod.object({
+  "startDate": zod.date().optional(),
+  "endDate": zod.date().optional(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']).optional()
+})
+
+export const GetCommunityEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
+  "isOpenDay": zod.boolean(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
+  "requestedBy": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetCommunityEventsResponse = zod.array(GetCommunityEventsResponseItem)
+
+
+/**
+ * @summary Create a community event or open day
+ */
+export const CreateCommunityEventBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']).optional(),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().optional(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional(),
+  "isOpenDay": zod.boolean().optional(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']).optional(),
+  "requestedBy": zod.string().optional(),
+  "isPublic": zod.boolean().optional(),
+  "color": zod.string().optional()
+})
+
+export const CreateCommunityEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
+  "isOpenDay": zod.boolean(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
+  "requestedBy": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a community event by ID
+ */
+export const GetCommunityEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCommunityEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
+  "isOpenDay": zod.boolean(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
+  "requestedBy": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a community event
+ */
+export const UpdateCommunityEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCommunityEventBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']).optional(),
+  "startDate": zod.coerce.date().optional(),
+  "endDate": zod.coerce.date().optional(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional(),
+  "isOpenDay": zod.boolean().optional(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']).optional(),
+  "requestedBy": zod.string().optional(),
+  "color": zod.string().optional()
+})
+
+export const UpdateCommunityEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
+  "isOpenDay": zod.boolean(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
+  "requestedBy": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a community event
+ */
+export const DeleteCommunityEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteCommunityEventResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Confirm or decline a community event request
+ */
+export const RespondToCommunityEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RespondToCommunityEventBody = zod.object({
+  "status": zod.enum(['confirmed', 'declined', 'pending'])
+})
+
+export const RespondToCommunityEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.enum(['graduation', 'cookout', 'reunion', 'sporting_event', 'birthday', 'wedding', 'open_day', 'request', 'other']),
+  "startDate": zod.coerce.date(),
+  "endDate": zod.coerce.date().nullish(),
+  "startTime": zod.string().nullish(),
+  "endTime": zod.string().nullish(),
+  "isOpenDay": zod.boolean(),
+  "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
+  "requestedBy": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "color": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardResponse = zod.object({

@@ -499,6 +499,142 @@ export interface UpdatePersonBody {
   note?: string;
 }
 
+export type CommunityEventCategory = typeof CommunityEventCategory[keyof typeof CommunityEventCategory];
+
+
+export const CommunityEventCategory = {
+  graduation: 'graduation',
+  cookout: 'cookout',
+  reunion: 'reunion',
+  sporting_event: 'sporting_event',
+  birthday: 'birthday',
+  wedding: 'wedding',
+  open_day: 'open_day',
+  request: 'request',
+  other: 'other',
+} as const;
+
+export type CommunityEventStatus = typeof CommunityEventStatus[keyof typeof CommunityEventStatus];
+
+
+export const CommunityEventStatus = {
+  open: 'open',
+  confirmed: 'confirmed',
+  pending: 'pending',
+  declined: 'declined',
+} as const;
+
+export interface CommunityEvent {
+  id: number;
+  userId: number;
+  title: string;
+  description?: string | null;
+  category: CommunityEventCategory;
+  startDate: string;
+  endDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  isOpenDay: boolean;
+  status: CommunityEventStatus;
+  requestedBy?: string | null;
+  isPublic: boolean;
+  color?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateCommunityEventBodyCategory = typeof CreateCommunityEventBodyCategory[keyof typeof CreateCommunityEventBodyCategory];
+
+
+export const CreateCommunityEventBodyCategory = {
+  graduation: 'graduation',
+  cookout: 'cookout',
+  reunion: 'reunion',
+  sporting_event: 'sporting_event',
+  birthday: 'birthday',
+  wedding: 'wedding',
+  open_day: 'open_day',
+  request: 'request',
+  other: 'other',
+} as const;
+
+export type CreateCommunityEventBodyStatus = typeof CreateCommunityEventBodyStatus[keyof typeof CreateCommunityEventBodyStatus];
+
+
+export const CreateCommunityEventBodyStatus = {
+  open: 'open',
+  confirmed: 'confirmed',
+  pending: 'pending',
+  declined: 'declined',
+} as const;
+
+export interface CreateCommunityEventBody {
+  title: string;
+  description?: string;
+  category?: CreateCommunityEventBodyCategory;
+  startDate: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  isOpenDay?: boolean;
+  status?: CreateCommunityEventBodyStatus;
+  requestedBy?: string;
+  isPublic?: boolean;
+  color?: string;
+}
+
+export type UpdateCommunityEventBodyCategory = typeof UpdateCommunityEventBodyCategory[keyof typeof UpdateCommunityEventBodyCategory];
+
+
+export const UpdateCommunityEventBodyCategory = {
+  graduation: 'graduation',
+  cookout: 'cookout',
+  reunion: 'reunion',
+  sporting_event: 'sporting_event',
+  birthday: 'birthday',
+  wedding: 'wedding',
+  open_day: 'open_day',
+  request: 'request',
+  other: 'other',
+} as const;
+
+export type UpdateCommunityEventBodyStatus = typeof UpdateCommunityEventBodyStatus[keyof typeof UpdateCommunityEventBodyStatus];
+
+
+export const UpdateCommunityEventBodyStatus = {
+  open: 'open',
+  confirmed: 'confirmed',
+  pending: 'pending',
+  declined: 'declined',
+} as const;
+
+export interface UpdateCommunityEventBody {
+  title?: string;
+  description?: string;
+  category?: UpdateCommunityEventBodyCategory;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  isOpenDay?: boolean;
+  status?: UpdateCommunityEventBodyStatus;
+  requestedBy?: string;
+  color?: string;
+}
+
+export type RespondToCommunityEventBodyStatus = typeof RespondToCommunityEventBodyStatus[keyof typeof RespondToCommunityEventBodyStatus];
+
+
+export const RespondToCommunityEventBodyStatus = {
+  confirmed: 'confirmed',
+  declined: 'declined',
+  pending: 'pending',
+} as const;
+
+export interface RespondToCommunityEventBody {
+  status: RespondToCommunityEventBodyStatus;
+}
+
 export interface Dashboard {
   userName: string;
   streakDays: number;
@@ -574,5 +710,26 @@ export const GetGoalsCategory = {
   relationships: 'relationships',
   career: 'career',
   spiritual: 'spiritual',
+} as const;
+
+export type GetCommunityEventsParams = {
+startDate?: string;
+endDate?: string;
+category?: GetCommunityEventsCategory;
+};
+
+export type GetCommunityEventsCategory = typeof GetCommunityEventsCategory[keyof typeof GetCommunityEventsCategory];
+
+
+export const GetCommunityEventsCategory = {
+  graduation: 'graduation',
+  cookout: 'cookout',
+  reunion: 'reunion',
+  sporting_event: 'sporting_event',
+  birthday: 'birthday',
+  wedding: 'wedding',
+  open_day: 'open_day',
+  request: 'request',
+  other: 'other',
 } as const;
 
