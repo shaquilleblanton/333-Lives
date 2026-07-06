@@ -1157,3 +1157,187 @@ export const GetDashboardResponse = zod.object({
 })
 
 
+/**
+ * @summary Get all legacy letters
+ */
+export const GetLegacyLettersQueryParams = zod.object({
+  "status": zod.enum(['draft', 'sealed', 'delivered']).optional()
+})
+
+export const GetLegacyLettersResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetLegacyLettersResponse = zod.array(GetLegacyLettersResponseItem)
+
+
+/**
+ * @summary Create a legacy letter
+ */
+export const CreateLegacyLetterBody = zod.object({
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']).optional(),
+  "isSealed": zod.boolean().optional(),
+  "isPublic": zod.boolean().optional()
+})
+
+export const CreateLegacyLetterResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a single legacy letter
+ */
+export const GetLegacyLetterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetLegacyLetterResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a legacy letter
+ */
+export const UpdateLegacyLetterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateLegacyLetterBody = zod.object({
+  "title": zod.string().optional(),
+  "content": zod.string().optional(),
+  "recipientName": zod.string().optional(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']).optional(),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']).optional(),
+  "isSealed": zod.boolean().optional()
+})
+
+export const UpdateLegacyLetterResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a legacy letter
+ */
+export const DeleteLegacyLetterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteLegacyLetterResponse = zod.object({
+  "success": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Seal a letter (lock it for delivery)
+ */
+export const SealLegacyLetterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SealLegacyLetterResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Unseal a letter (return to draft)
+ */
+export const UnsealLegacyLetterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnsealLegacyLetterResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "recipientName": zod.string(),
+  "recipientRelation": zod.string().optional(),
+  "triggerType": zod.enum(['date', 'milestone', 'manual', 'if_gone']),
+  "triggerDate": zod.coerce.date().optional(),
+  "milestone": zod.string().optional(),
+  "status": zod.enum(['draft', 'sealed', 'delivered']),
+  "isSealed": zod.boolean(),
+  "deliveredAt": zod.coerce.date().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

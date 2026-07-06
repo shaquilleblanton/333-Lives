@@ -9,7 +9,8 @@ import {
   LogOut,
   Heart,
   Users,
-  Calendar
+  Calendar,
+  Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/growth", label: "Growth", icon: Sprout },
   { href: "/gratitude", label: "Gratitude", icon: Heart },
   { href: "/people", label: "People", icon: Users },
+  { href: "/legacy-letters", label: "Legacy Letters", icon: Mail },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: User },

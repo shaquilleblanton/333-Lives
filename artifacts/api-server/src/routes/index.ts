@@ -13,6 +13,7 @@ import affirmationsRouter from "./affirmations";
 import gratitudeRouter from "./gratitude";
 import peopleRouter from "./people";
 import communityRouter from "./community";
+import legacyLettersRouter from "./legacy-letters";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(affirmationsRouter);
 router.use(gratitudeRouter);
 router.use(peopleRouter);
 router.use(communityRouter);
+router.use(legacyLettersRouter);
 
 export default router;

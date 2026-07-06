@@ -9,6 +9,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: legacy-letters
+    description: Legacy letters — milestone-triggered messages for loved ones
   - name: users
     description: User profile operations
   - name: messages
@@ -1067,6 +1069,144 @@ paths:
               schema:
                 $ref: "#/components/schemas/Dashboard"
 
+  /legacy-letters:
+    get:
+      operationId: getLegacyLetters
+      tags: [legacy-letters]
+      summary: Get all legacy letters
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, sealed, delivered]
+      responses:
+        "200":
+          description: List of legacy letters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LegacyLetter"
+    post:
+      operationId: createLegacyLetter
+      tags: [legacy-letters]
+      summary: Create a legacy letter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLegacyLetterBody"
+      responses:
+        "201":
+          description: Letter created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyLetter"
+
+  /legacy-letters/{id}:
+    get:
+      operationId: getLegacyLetter
+      tags: [legacy-letters]
+      summary: Get a single legacy letter
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Letter found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyLetter"
+    put:
+      operationId: updateLegacyLetter
+      tags: [legacy-letters]
+      summary: Update a legacy letter
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLegacyLetterBody"
+      responses:
+        "200":
+          description: Letter updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyLetter"
+    delete:
+      operationId: deleteLegacyLetter
+      tags: [legacy-letters]
+      summary: Delete a legacy letter
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /legacy-letters/{id}/seal:
+    post:
+      operationId: sealLegacyLetter
+      tags: [legacy-letters]
+      summary: Seal a letter (lock it for delivery)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Letter sealed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyLetter"
+
+  /legacy-letters/{id}/unseal:
+    post:
+      operationId: unsealLegacyLetter
+      tags: [legacy-letters]
+      summary: Unseal a letter (return to draft)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Letter unsealed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegacyLetter"
+
 components:
   schemas:
     HealthStatus:
@@ -1872,3 +2012,95 @@ components:
         habitCompletionToday:
           type: integer
       required: [userName, streakDays, messagesSent, goalsActive, todayIntentions, upcomingMessages, todayHabits, todayEvents, vaultCount, habitCompletionToday]
+
+    LegacyLetter:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        recipientName:
+          type: string
+        recipientRelation:
+          type: string
+        triggerType:
+          type: string
+          enum: [date, milestone, manual, if_gone]
+        triggerDate:
+          type: string
+          format: date
+        milestone:
+          type: string
+        status:
+          type: string
+          enum: [draft, sealed, delivered]
+        isSealed:
+          type: boolean
+        deliveredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, content, recipientName, triggerType, status, isSealed, createdAt, updatedAt]
+
+    CreateLegacyLetterBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        recipientName:
+          type: string
+        recipientRelation:
+          type: string
+        triggerType:
+          type: string
+          enum: [date, milestone, manual, if_gone]
+        triggerDate:
+          type: string
+          format: date
+        milestone:
+          type: string
+        status:
+          type: string
+          enum: [draft, sealed, delivered]
+        isSealed:
+          type: boolean
+        isPublic:
+          type: boolean
+      required: [title, content, recipientName, triggerType]
+
+    UpdateLegacyLetterBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        recipientName:
+          type: string
+        recipientRelation:
+          type: string
+        triggerType:
+          type: string
+          enum: [date, milestone, manual, if_gone]
+        triggerDate:
+          type: string
+          format: date
+        milestone:
+          type: string
+        status:
+          type: string
+          enum: [draft, sealed, delivered]
+        isSealed:
+          type: boolean

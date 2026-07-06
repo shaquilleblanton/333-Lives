@@ -31,15 +31,18 @@ import type {
   CreateHabitBody,
   CreateIntentionBody,
   CreateJournalEntryBody,
+  CreateLegacyLetterBody,
   CreateMessageBody,
   CreatePersonBody,
   CreateVaultItemBody,
   Dashboard,
+  DeleteLegacyLetter200,
   ErrorResponse,
   GetCommunityEventsParams,
   GetEventsParams,
   GetGoalsParams,
   GetIntentionsParams,
+  GetLegacyLettersParams,
   GetMessagesParams,
   GetVaultItemsParams,
   Goal,
@@ -50,6 +53,7 @@ import type {
   HealthStatus,
   Intention,
   JournalEntry,
+  LegacyLetter,
   Message,
   Person,
   RespondToCommunityEventBody,
@@ -62,6 +66,7 @@ import type {
   UpdateHabitBody,
   UpdateIntentionBody,
   UpdateJournalEntryBody,
+  UpdateLegacyLetterBody,
   UpdatePersonBody,
   UpdateUserBody,
   User,
@@ -4004,4 +4009,516 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
 
 
 
+
+export const getGetLegacyLettersUrl = (params?: GetLegacyLettersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/legacy-letters?${stringifiedParams}` : `/api/legacy-letters`
+}
+
+/**
+ * @summary Get all legacy letters
+ */
+export const getLegacyLetters = async (params?: GetLegacyLettersParams, options?: RequestInit): Promise<LegacyLetter[]> => {
+
+  return customFetch<LegacyLetter[]>(getGetLegacyLettersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLegacyLettersQueryKey = (params?: GetLegacyLettersParams,) => {
+    return [
+    `/api/legacy-letters`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLegacyLettersQueryOptions = <TData = Awaited<ReturnType<typeof getLegacyLetters>>, TError = ErrorType<unknown>>(params?: GetLegacyLettersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLegacyLettersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLegacyLetters>>> = ({ signal }) => getLegacyLetters(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetters>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLegacyLettersQueryResult = NonNullable<Awaited<ReturnType<typeof getLegacyLetters>>>
+export type GetLegacyLettersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all legacy letters
+ */
+
+export function useGetLegacyLetters<TData = Awaited<ReturnType<typeof getLegacyLetters>>, TError = ErrorType<unknown>>(
+ params?: GetLegacyLettersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLegacyLettersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateLegacyLetterUrl = () => {
+
+
+
+
+  return `/api/legacy-letters`
+}
+
+/**
+ * @summary Create a legacy letter
+ */
+export const createLegacyLetter = async (createLegacyLetterBody: CreateLegacyLetterBody, options?: RequestInit): Promise<LegacyLetter> => {
+
+  return customFetch<LegacyLetter>(getCreateLegacyLetterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createLegacyLetterBody)
+  }
+);}
+
+
+
+
+export const getCreateLegacyLetterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLegacyLetter>>, TError,{data: BodyType<CreateLegacyLetterBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createLegacyLetter>>, TError,{data: BodyType<CreateLegacyLetterBody>}, TContext> => {
+
+const mutationKey = ['createLegacyLetter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createLegacyLetter>>, {data: BodyType<CreateLegacyLetterBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createLegacyLetter(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateLegacyLetterMutationResult = NonNullable<Awaited<ReturnType<typeof createLegacyLetter>>>
+    export type CreateLegacyLetterMutationBody = BodyType<CreateLegacyLetterBody>
+    export type CreateLegacyLetterMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a legacy letter
+ */
+export const useCreateLegacyLetter = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLegacyLetter>>, TError,{data: BodyType<CreateLegacyLetterBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createLegacyLetter>>,
+        TError,
+        {data: BodyType<CreateLegacyLetterBody>},
+        TContext
+      > => {
+      return useMutation(getCreateLegacyLetterMutationOptions(options));
+    }
+
+export const getGetLegacyLetterUrl = (id: number,) => {
+
+
+
+
+  return `/api/legacy-letters/${id}`
+}
+
+/**
+ * @summary Get a single legacy letter
+ */
+export const getLegacyLetter = async (id: number, options?: RequestInit): Promise<LegacyLetter> => {
+
+  return customFetch<LegacyLetter>(getGetLegacyLetterUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLegacyLetterQueryKey = (id: number,) => {
+    return [
+    `/api/legacy-letters/${id}`
+    ] as const;
+    }
+
+
+export const getGetLegacyLetterQueryOptions = <TData = Awaited<ReturnType<typeof getLegacyLetter>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLegacyLetterQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLegacyLetter>>> = ({ signal }) => getLegacyLetter(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetter>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLegacyLetterQueryResult = NonNullable<Awaited<ReturnType<typeof getLegacyLetter>>>
+export type GetLegacyLetterQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a single legacy letter
+ */
+
+export function useGetLegacyLetter<TData = Awaited<ReturnType<typeof getLegacyLetter>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLegacyLetter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLegacyLetterQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateLegacyLetterUrl = (id: number,) => {
+
+
+
+
+  return `/api/legacy-letters/${id}`
+}
+
+/**
+ * @summary Update a legacy letter
+ */
+export const updateLegacyLetter = async (id: number,
+    updateLegacyLetterBody: UpdateLegacyLetterBody, options?: RequestInit): Promise<LegacyLetter> => {
+
+  return customFetch<LegacyLetter>(getUpdateLegacyLetterUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateLegacyLetterBody)
+  }
+);}
+
+
+
+
+export const getUpdateLegacyLetterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLegacyLetter>>, TError,{id: number;data: BodyType<UpdateLegacyLetterBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateLegacyLetter>>, TError,{id: number;data: BodyType<UpdateLegacyLetterBody>}, TContext> => {
+
+const mutationKey = ['updateLegacyLetter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateLegacyLetter>>, {id: number;data: BodyType<UpdateLegacyLetterBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateLegacyLetter(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateLegacyLetterMutationResult = NonNullable<Awaited<ReturnType<typeof updateLegacyLetter>>>
+    export type UpdateLegacyLetterMutationBody = BodyType<UpdateLegacyLetterBody>
+    export type UpdateLegacyLetterMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a legacy letter
+ */
+export const useUpdateLegacyLetter = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLegacyLetter>>, TError,{id: number;data: BodyType<UpdateLegacyLetterBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateLegacyLetter>>,
+        TError,
+        {id: number;data: BodyType<UpdateLegacyLetterBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateLegacyLetterMutationOptions(options));
+    }
+
+export const getDeleteLegacyLetterUrl = (id: number,) => {
+
+
+
+
+  return `/api/legacy-letters/${id}`
+}
+
+/**
+ * @summary Delete a legacy letter
+ */
+export const deleteLegacyLetter = async (id: number, options?: RequestInit): Promise<DeleteLegacyLetter200> => {
+
+  return customFetch<DeleteLegacyLetter200>(getDeleteLegacyLetterUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteLegacyLetterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLegacyLetter>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteLegacyLetter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLegacyLetter>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteLegacyLetter(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLegacyLetterMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLegacyLetter>>>
+
+    export type DeleteLegacyLetterMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a legacy letter
+ */
+export const useDeleteLegacyLetter = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLegacyLetter>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteLegacyLetterMutationOptions(options));
+    }
+
+export const getSealLegacyLetterUrl = (id: number,) => {
+
+
+
+
+  return `/api/legacy-letters/${id}/seal`
+}
+
+/**
+ * @summary Seal a letter (lock it for delivery)
+ */
+export const sealLegacyLetter = async (id: number, options?: RequestInit): Promise<LegacyLetter> => {
+
+  return customFetch<LegacyLetter>(getSealLegacyLetterUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSealLegacyLetterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sealLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sealLegacyLetter>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['sealLegacyLetter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sealLegacyLetter>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sealLegacyLetter(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SealLegacyLetterMutationResult = NonNullable<Awaited<ReturnType<typeof sealLegacyLetter>>>
+
+    export type SealLegacyLetterMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Seal a letter (lock it for delivery)
+ */
+export const useSealLegacyLetter = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sealLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sealLegacyLetter>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getSealLegacyLetterMutationOptions(options));
+    }
+
+export const getUnsealLegacyLetterUrl = (id: number,) => {
+
+
+
+
+  return `/api/legacy-letters/${id}/unseal`
+}
+
+/**
+ * @summary Unseal a letter (return to draft)
+ */
+export const unsealLegacyLetter = async (id: number, options?: RequestInit): Promise<LegacyLetter> => {
+
+  return customFetch<LegacyLetter>(getUnsealLegacyLetterUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnsealLegacyLetterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsealLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unsealLegacyLetter>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['unsealLegacyLetter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsealLegacyLetter>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unsealLegacyLetter(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnsealLegacyLetterMutationResult = NonNullable<Awaited<ReturnType<typeof unsealLegacyLetter>>>
+
+    export type UnsealLegacyLetterMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Unseal a letter (return to draft)
+ */
+export const useUnsealLegacyLetter = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsealLegacyLetter>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unsealLegacyLetter>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUnsealLegacyLetterMutationOptions(options));
+    }
 

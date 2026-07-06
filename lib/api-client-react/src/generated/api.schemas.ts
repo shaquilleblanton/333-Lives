@@ -648,6 +648,105 @@ export interface Dashboard {
   habitCompletionToday: number;
 }
 
+export type LegacyLetterTriggerType = typeof LegacyLetterTriggerType[keyof typeof LegacyLetterTriggerType];
+
+
+export const LegacyLetterTriggerType = {
+  date: 'date',
+  milestone: 'milestone',
+  manual: 'manual',
+  if_gone: 'if_gone',
+} as const;
+
+export type LegacyLetterStatus = typeof LegacyLetterStatus[keyof typeof LegacyLetterStatus];
+
+
+export const LegacyLetterStatus = {
+  draft: 'draft',
+  sealed: 'sealed',
+  delivered: 'delivered',
+} as const;
+
+export interface LegacyLetter {
+  id: number;
+  userId: number;
+  title: string;
+  content: string;
+  recipientName: string;
+  recipientRelation?: string;
+  triggerType: LegacyLetterTriggerType;
+  triggerDate?: string;
+  milestone?: string;
+  status: LegacyLetterStatus;
+  isSealed: boolean;
+  deliveredAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateLegacyLetterBodyTriggerType = typeof CreateLegacyLetterBodyTriggerType[keyof typeof CreateLegacyLetterBodyTriggerType];
+
+
+export const CreateLegacyLetterBodyTriggerType = {
+  date: 'date',
+  milestone: 'milestone',
+  manual: 'manual',
+  if_gone: 'if_gone',
+} as const;
+
+export type CreateLegacyLetterBodyStatus = typeof CreateLegacyLetterBodyStatus[keyof typeof CreateLegacyLetterBodyStatus];
+
+
+export const CreateLegacyLetterBodyStatus = {
+  draft: 'draft',
+  sealed: 'sealed',
+  delivered: 'delivered',
+} as const;
+
+export interface CreateLegacyLetterBody {
+  title: string;
+  content: string;
+  recipientName: string;
+  recipientRelation?: string;
+  triggerType: CreateLegacyLetterBodyTriggerType;
+  triggerDate?: string;
+  milestone?: string;
+  status?: CreateLegacyLetterBodyStatus;
+  isSealed?: boolean;
+  isPublic?: boolean;
+}
+
+export type UpdateLegacyLetterBodyTriggerType = typeof UpdateLegacyLetterBodyTriggerType[keyof typeof UpdateLegacyLetterBodyTriggerType];
+
+
+export const UpdateLegacyLetterBodyTriggerType = {
+  date: 'date',
+  milestone: 'milestone',
+  manual: 'manual',
+  if_gone: 'if_gone',
+} as const;
+
+export type UpdateLegacyLetterBodyStatus = typeof UpdateLegacyLetterBodyStatus[keyof typeof UpdateLegacyLetterBodyStatus];
+
+
+export const UpdateLegacyLetterBodyStatus = {
+  draft: 'draft',
+  sealed: 'sealed',
+  delivered: 'delivered',
+} as const;
+
+export interface UpdateLegacyLetterBody {
+  title?: string;
+  content?: string;
+  recipientName?: string;
+  recipientRelation?: string;
+  triggerType?: UpdateLegacyLetterBodyTriggerType;
+  triggerDate?: string;
+  milestone?: string;
+  status?: UpdateLegacyLetterBodyStatus;
+  isSealed?: boolean;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };
@@ -732,4 +831,21 @@ export const GetCommunityEventsCategory = {
   request: 'request',
   other: 'other',
 } as const;
+
+export type GetLegacyLettersParams = {
+status?: GetLegacyLettersStatus;
+};
+
+export type GetLegacyLettersStatus = typeof GetLegacyLettersStatus[keyof typeof GetLegacyLettersStatus];
+
+
+export const GetLegacyLettersStatus = {
+  draft: 'draft',
+  sealed: 'sealed',
+  delivered: 'delivered',
+} as const;
+
+export type DeleteLegacyLetter200 = {
+  success?: boolean;
+};
 
