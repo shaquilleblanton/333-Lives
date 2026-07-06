@@ -34,13 +34,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 
-function greetingForNow() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good Morning";
-  if (h < 18) return "Good Afternoon";
-  return "Good Evening";
-}
-
 export default function Home() {
   const { data: dashboard, isLoading } = useGetDashboard();
   const { data: todayEntry } = useGetTodayGratitudeEntry();
@@ -69,7 +62,7 @@ export default function Home() {
       {/* Header */}
       <header className="space-y-2">
         <h1 className="text-4xl md:text-5xl tracking-tight text-foreground">
-          {greetingForNow()}{dashboard.userName ? <>, <span className="text-primary">{dashboard.userName}</span></> : null}.
+          Good Day{dashboard.userName ? <>, <span className="text-primary">{dashboard.userName}</span></> : null}.
         </h1>
         <p className="text-muted-foreground font-subheading text-lg">
           {format(new Date(), "EEEE, MMMM do")}
