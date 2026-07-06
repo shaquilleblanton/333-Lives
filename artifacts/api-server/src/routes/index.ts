@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import storageRouter from "./storage";
 import usersRouter from "./users";
 import messagesRouter from "./messages";
 import vaultRouter from "./vault";
@@ -19,6 +20,7 @@ import relationshipMomentsRouter from "./relationship-moments";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(storageRouter);
 router.use(usersRouter);
 router.use(messagesRouter);
 router.use(vaultRouter);

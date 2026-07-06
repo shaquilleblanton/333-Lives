@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetLegacyLetters,
@@ -10,10 +10,12 @@ import {
   getGetLegacyLettersQueryKey,
 } from "@workspace/api-client-react";
 import type { LegacyLetter } from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Mail, Lock, Unlock, Plus, X, Calendar, User, Heart,
-  Milestone, Clock, Trash2, Edit3, Send, BookOpen, ChevronRight
+  Milestone, Clock, Trash2, Edit3, Send, BookOpen, ChevronRight,
+  Mic, Square, RotateCcw, Sparkles, AudioLines, Loader2, Quote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +35,53 @@ const STATUS_STYLE: Record<string, string> = {
   delivered: "text-secondary bg-secondary/10 border-secondary/30",
 };
 
+const PROMPT_CATEGORIES: { label: string; prompts: string[] }[] = [
+  {
+    label: "For your children",
+    prompts: [
+      "What do you hope they never forget about you?",
+      "Describe the day they came into your life, and what you felt.",
+      "The kind of person you dream they'll grow into.",
+      "A lesson your own father taught you that you want to pass on.",
+    ],
+  },
+  {
+    label: "Love & loss",
+    prompts: [
+      "Tell them about someone you loved and lost.",
+      "What grief has taught you about how to live.",
+      "Something you wish you'd said to someone before they were gone.",
+    ],
+  },
+  {
+    label: "Wisdom & lessons",
+    prompts: [
+      "The hardest thing you've lived through, and what it gave you.",
+      "What you know now that you wish you'd known at their age.",
+      "How to tell the difference between what matters and what doesn't.",
+    ],
+  },
+  {
+    label: "If I'm gone",
+    prompts: [
+      "What you'd want them to do the morning after they lose you.",
+      "The story of your name, and what it means to carry it forward.",
+      "Permission — to be happy, to move forward, to live fully.",
+    ],
+  },
+];
+
+const MEDIA_BASE = "/api/storage";
+function mediaSrc(path: string) {
+  return `${MEDIA_BASE}${path}`;
+}
+function formatDuration(totalSec: number) {
+  const s = Math.max(0, Math.round(totalSec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, "0")}`;
+}
+
 type FormState = {
   title: string;
   content: string;
@@ -41,11 +90,16 @@ type FormState = {
   triggerType: "date" | "milestone" | "manual" | "if_gone";
   triggerDate: string;
   milestone: string;
+  mediaType: "text" | "voice";
+  mediaUrl: string;
+  mediaDurationSec: number;
+  promptText: string;
 };
 
 const EMPTY_FORM: FormState = {
   title: "", content: "", recipientName: "", recipientRelation: "",
   triggerType: "date", triggerDate: "", milestone: "",
+  mediaType: "text", mediaUrl: "", mediaDurationSec: 0, promptText: "",
 };
 
 export default function LegacyLetters() {
@@ -78,6 +132,10 @@ export default function LegacyLetters() {
         triggerType: letter.triggerType as FormState["triggerType"],
         triggerDate: letter.triggerDate || "",
         milestone: letter.milestone || "",
+        mediaType: letter.mediaType === "voice" ? "voice" : "text",
+        mediaUrl: letter.mediaUrl || "",
+        mediaDurationSec: letter.mediaDurationSec || 0,
+        promptText: letter.promptText || "",
       });
       setEditingId(letter.id);
     } else {
@@ -101,7 +159,23 @@ export default function LegacyLetters() {
 
   async function handleSave(e: React.FormEvent, seal = false) {
     e.preventDefault();
-    const payload = { ...form, status: seal ? "sealed" as const : "draft" as const, isSealed: seal };
+    const isVoice = form.mediaType === "voice";
+    if (isVoice ? !form.mediaUrl : !form.content.trim()) return;
+    const payload = {
+      title: form.title,
+      content: isVoice ? "" : form.content,
+      recipientName: form.recipientName,
+      recipientRelation: form.recipientRelation,
+      triggerType: form.triggerType,
+      triggerDate: form.triggerDate,
+      milestone: form.milestone,
+      mediaType: form.mediaType,
+      mediaUrl: isVoice ? form.mediaUrl : null,
+      mediaDurationSec: isVoice ? form.mediaDurationSec : null,
+      promptText: form.promptText || null,
+      status: seal ? "sealed" as const : "draft" as const,
+      isSealed: seal,
+    };
     if (editingId) {
       await updateLetter.mutateAsync({ id: editingId, data: payload as any });
       if (seal) await sealLetter.mutateAsync({ id: editingId });
@@ -267,7 +341,7 @@ function LetterCard({ letter, onRead, onEdit, onSeal, onUnseal }: {
           "p-3 rounded-xl border shrink-0 transition-colors",
           letter.isSealed ? "bg-accent/10 border-accent/30 text-accent" : "bg-muted/30 border-border text-muted-foreground group-hover:border-primary/30 group-hover:text-primary"
         )}>
-          {letter.isSealed ? <Lock className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+          {letter.isSealed ? <Lock className="w-5 h-5" /> : letter.mediaType === "voice" ? <Mic className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -289,9 +363,16 @@ function LetterCard({ letter, onRead, onEdit, onSeal, onUnseal }: {
             </span>
           </div>
 
-          <p className="text-muted-foreground/70 text-sm mt-2 line-clamp-2 leading-relaxed">
-            {letter.content}
-          </p>
+          {letter.mediaType === "voice" ? (
+            <p className="flex items-center gap-1.5 text-muted-foreground/70 text-sm mt-2 font-subheading">
+              <AudioLines className="w-3.5 h-3.5 text-primary" />
+              Voice message{letter.mediaDurationSec ? ` · ${formatDuration(letter.mediaDurationSec)}` : ""}
+            </p>
+          ) : (
+            <p className="text-muted-foreground/70 text-sm mt-2 line-clamp-2 leading-relaxed">
+              {letter.content}
+            </p>
+          )}
         </div>
 
         <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0 mt-1" />
@@ -330,6 +411,12 @@ function WriteView({ form, setForm, editingId, onSave, onBack, isPending }: {
   isPending: boolean;
 }) {
   const trigger = TRIGGER_META[form.triggerType];
+  const isVoice = form.mediaType === "voice";
+  const canFinish = isVoice ? !!form.mediaUrl : !!form.content.trim();
+
+  function setMode(mode: "text" | "voice") {
+    setForm(f => ({ ...f, mediaType: mode }));
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-3xl mx-auto w-full space-y-8 animate-in fade-in duration-500">
@@ -426,9 +513,34 @@ function WriteView({ form, setForm, editingId, onSave, onBack, isPending }: {
           )}
         </section>
 
-        {/* Letter */}
-        <section className="space-y-3">
-          <h2 className="text-sm font-subheading text-muted-foreground uppercase tracking-wider">The letter</h2>
+        {/* Message */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-sm font-subheading text-muted-foreground uppercase tracking-wider">The message</h2>
+            <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+              <button
+                type="button"
+                onClick={() => setMode("text")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-subheading transition-all",
+                  !isVoice ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Write
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("voice")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-subheading transition-all",
+                  isVoice ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Mic className="w-3.5 h-3.5" /> Record voice
+              </button>
+            </div>
+          </div>
+
           <input
             required
             placeholder="Subject line"
@@ -436,21 +548,37 @@ function WriteView({ form, setForm, editingId, onSave, onBack, isPending }: {
             onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
             className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-subheading"
           />
-          <textarea
-            required
-            placeholder={"Start writing...\n\nThis is your space. Be honest. Be you. They will feel it."}
-            rows={14}
-            value={form.content}
-            onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-            className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-subheading resize-none leading-relaxed"
+
+          <PromptPicker
+            value={form.promptText}
+            onPick={p => setForm(f => ({ ...f, promptText: p }))}
+            onClear={() => setForm(f => ({ ...f, promptText: "" }))}
           />
+
+          {isVoice ? (
+            <VoiceRecorder
+              mediaUrl={form.mediaUrl}
+              mediaDurationSec={form.mediaDurationSec}
+              onRecorded={(path, dur) => setForm(f => ({ ...f, mediaUrl: path, mediaDurationSec: dur }))}
+              onCleared={() => setForm(f => ({ ...f, mediaUrl: "", mediaDurationSec: 0 }))}
+            />
+          ) : (
+            <textarea
+              required
+              placeholder={"Start writing...\n\nThis is your space. Be honest. Be you. They will feel it."}
+              rows={14}
+              value={form.content}
+              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+              className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-subheading resize-none leading-relaxed"
+            />
+          )}
         </section>
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <Button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !canFinish}
             variant="outline"
             className="flex-1 border-border text-muted-foreground hover:text-foreground font-subheading"
           >
@@ -458,7 +586,7 @@ function WriteView({ form, setForm, editingId, onSave, onBack, isPending }: {
           </Button>
           <Button
             type="button"
-            disabled={isPending}
+            disabled={isPending || !canFinish}
             onClick={(e) => onSave(e as any, true)}
             className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-subheading gap-2"
           >
@@ -539,15 +667,33 @@ function ReadView({ letter, onBack, onEdit, onSeal, onUnseal, onDelete, confirmD
       {/* Letter content */}
       <div className="bg-card border border-border rounded-2xl p-8 space-y-4">
         <h2 className="font-serif text-2xl text-foreground border-b border-border/50 pb-4">{letter.title}</h2>
-        <div className="prose prose-sm prose-invert max-w-none">
-          {letter.content.split("\n").map((paragraph, i) => (
-            paragraph.trim() ? (
-              <p key={i} className="text-foreground/85 leading-relaxed font-subheading text-sm mb-4">{paragraph}</p>
-            ) : (
-              <br key={i} />
-            )
-          ))}
-        </div>
+
+        {letter.promptText && (
+          <div className="flex items-start gap-2.5 rounded-xl bg-muted/30 border border-border/60 px-4 py-3">
+            <Quote className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground font-subheading italic leading-relaxed">{letter.promptText}</p>
+          </div>
+        )}
+
+        {letter.mediaType === "voice" && letter.mediaUrl ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-subheading">
+              <AudioLines className="w-4 h-4 text-primary" />
+              Voice message{letter.mediaDurationSec ? ` · ${formatDuration(letter.mediaDurationSec)}` : ""}
+            </div>
+            <audio controls src={mediaSrc(letter.mediaUrl)} className="w-full" />
+          </div>
+        ) : (
+          <div className="prose prose-sm prose-invert max-w-none">
+            {letter.content.split("\n").map((paragraph, i) => (
+              paragraph.trim() ? (
+                <p key={i} className="text-foreground/85 leading-relaxed font-subheading text-sm mb-4">{paragraph}</p>
+              ) : (
+                <br key={i} />
+              )
+            ))}
+          </div>
+        )}
         <div className="pt-4 border-t border-border/50 flex justify-between items-center">
           <p className="text-xs text-muted-foreground font-subheading">
             Written {format(new Date(letter.createdAt), "MMMM d, yyyy")}
@@ -573,6 +719,262 @@ function ReadView({ letter, onBack, onEdit, onSeal, onUnseal, onDelete, confirmD
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function PromptPicker({ value, onPick, onClear }: {
+  value: string;
+  onPick: (prompt: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeCat, setActiveCat] = useState(0);
+
+  if (value) {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+        <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+        <p className="flex-1 text-sm text-foreground/90 font-subheading italic leading-relaxed">{value}</p>
+        <button type="button" onClick={onClear} className="text-muted-foreground hover:text-foreground shrink-0">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/40 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
+      >
+        <span className="flex items-center gap-2 text-sm font-subheading text-muted-foreground">
+          <Sparkles className="w-4 h-4 text-primary" /> Need a place to start?
+        </span>
+        <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", open && "rotate-90")} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">
+              <div className="flex gap-1.5 flex-wrap">
+                {PROMPT_CATEGORIES.map((c, i) => (
+                  <button
+                    key={c.label}
+                    type="button"
+                    onClick={() => setActiveCat(i)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-subheading border transition-all",
+                      activeCat === i
+                        ? "bg-primary/15 border-primary/40 text-primary"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                {PROMPT_CATEGORIES[activeCat].prompts.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { onPick(p); setOpen(false); }}
+                    className="w-full text-left text-sm font-subheading text-foreground/80 hover:text-primary rounded-lg px-3 py-2 hover:bg-primary/5 transition-colors leading-relaxed"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function VoiceRecorder({ mediaUrl, mediaDurationSec, onRecorded, onCleared }: {
+  mediaUrl: string;
+  mediaDurationSec: number;
+  onRecorded: (path: string, durationSec: number) => void;
+  onCleared: () => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "recording" | "uploading" | "ready">(mediaUrl ? "ready" : "idle");
+  const [elapsed, setElapsed] = useState(0);
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const startRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { uploadFile } = useUpload();
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      if (localUrl) URL.revokeObjectURL(localUrl);
+    };
+  }, [localUrl]);
+
+  function pickMime(): string {
+    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/aac", "audio/ogg"];
+    for (const c of candidates) {
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(c)) return c;
+    }
+    return "";
+  }
+
+  function extFor(mime: string): string {
+    if (mime.includes("webm")) return "webm";
+    if (mime.includes("mp4") || mime.includes("aac")) return "m4a";
+    if (mime.includes("ogg")) return "ogg";
+    return "webm";
+  }
+
+  async function startRecording() {
+    setErrorMsg(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = pickMime();
+      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = ev => { if (ev.data.size > 0) chunksRef.current.push(ev.data); };
+      recorder.onstop = () => handleStop(recorder.mimeType || mime);
+      recorderRef.current = recorder;
+      recorder.start();
+      startRef.current = Date.now();
+      setElapsed(0);
+      setStatus("recording");
+      timerRef.current = setInterval(() => {
+        setElapsed(Math.round((Date.now() - startRef.current) / 1000));
+      }, 250);
+    } catch {
+      setErrorMsg("Microphone access was blocked. Please allow it in your browser to record.");
+      setStatus("idle");
+    }
+  }
+
+  function stopRecording() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    recorderRef.current?.stop();
+    streamRef.current?.getTracks().forEach(t => t.stop());
+  }
+
+  async function handleStop(mime: string) {
+    const duration = Math.max(1, Math.round((Date.now() - startRef.current) / 1000));
+    const type = mime || "audio/webm";
+    const blob = new Blob(chunksRef.current, { type });
+    const url = URL.createObjectURL(blob);
+    setLocalUrl(url);
+    setStatus("uploading");
+    const file = new File([blob], `voice-${Date.now()}.${extFor(type)}`, { type });
+    const res = await uploadFile(file);
+    if (res?.objectPath) {
+      onRecorded(res.objectPath, duration);
+      setStatus("ready");
+    } else {
+      setErrorMsg("We couldn't save your recording. Please try again.");
+      setStatus("idle");
+    }
+  }
+
+  function discard() {
+    if (localUrl) { URL.revokeObjectURL(localUrl); setLocalUrl(null); }
+    setElapsed(0);
+    setStatus("idle");
+    onCleared();
+  }
+
+  const playbackSrc = localUrl ?? (mediaUrl ? mediaSrc(mediaUrl) : null);
+
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-6">
+      {errorMsg && (
+        <div className="mb-4 text-xs text-rose-400 font-subheading bg-rose-400/10 border border-rose-400/30 rounded-lg px-3 py-2">
+          {errorMsg}
+        </div>
+      )}
+
+      {status === "idle" && (
+        <div className="flex flex-col items-center text-center gap-4 py-6">
+          <button
+            type="button"
+            onClick={startRecording}
+            className="w-20 h-20 rounded-full bg-primary/15 border border-primary/40 text-primary flex items-center justify-center hover:bg-primary/25 transition-all hover:scale-105"
+          >
+            <Mic className="w-8 h-8" />
+          </button>
+          <div className="space-y-1">
+            <p className="font-serif text-lg text-foreground">Record your voice</p>
+            <p className="text-xs text-muted-foreground font-subheading max-w-xs">
+              Speak as if they're sitting across from you. Your voice will be theirs to keep.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {status === "recording" && (
+        <div className="flex flex-col items-center text-center gap-5 py-6">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+            </span>
+            <span className="font-serif text-3xl text-foreground tabular-nums">{formatDuration(elapsed)}</span>
+          </div>
+          <div className="flex items-end gap-1 h-8">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <motion.span
+                key={i}
+                className="w-1 rounded-full bg-primary"
+                animate={{ height: [6, 24, 6] }}
+                transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.12 }}
+              />
+            ))}
+          </div>
+          <Button type="button" onClick={stopRecording} className="gap-2 bg-rose-500 hover:bg-rose-600 text-white font-subheading">
+            <Square className="w-4 h-4" /> Stop Recording
+          </Button>
+        </div>
+      )}
+
+      {status === "uploading" && (
+        <div className="flex flex-col items-center text-center gap-3 py-10">
+          <Loader2 className="w-7 h-7 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground font-subheading">Saving your voice…</p>
+        </div>
+      )}
+
+      {status === "ready" && playbackSrc && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
+              <AudioLines className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-subheading text-sm text-foreground">Voice message recorded</p>
+              <p className="text-xs text-muted-foreground font-subheading">{formatDuration(mediaDurationSec || elapsed)}</p>
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={discard} className="gap-1.5 text-muted-foreground hover:text-foreground font-subheading">
+              <RotateCcw className="w-3.5 h-3.5" /> Re-record
+            </Button>
+          </div>
+          <audio controls src={playbackSrc} className="w-full" />
+        </div>
+      )}
     </div>
   );
 }

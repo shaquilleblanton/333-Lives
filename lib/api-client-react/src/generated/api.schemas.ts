@@ -668,6 +668,15 @@ export const LegacyLetterStatus = {
   delivered: 'delivered',
 } as const;
 
+export type LegacyLetterMediaType = typeof LegacyLetterMediaType[keyof typeof LegacyLetterMediaType];
+
+
+export const LegacyLetterMediaType = {
+  text: 'text',
+  voice: 'voice',
+  video: 'video',
+} as const;
+
 export interface LegacyLetter {
   id: number;
   userId: number;
@@ -680,6 +689,10 @@ export interface LegacyLetter {
   milestone?: string;
   status: LegacyLetterStatus;
   isSealed: boolean;
+  mediaType: LegacyLetterMediaType;
+  mediaUrl?: string;
+  mediaDurationSec?: number;
+  promptText?: string;
   deliveredAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -704,9 +717,18 @@ export const CreateLegacyLetterBodyStatus = {
   delivered: 'delivered',
 } as const;
 
+export type CreateLegacyLetterBodyMediaType = typeof CreateLegacyLetterBodyMediaType[keyof typeof CreateLegacyLetterBodyMediaType];
+
+
+export const CreateLegacyLetterBodyMediaType = {
+  text: 'text',
+  voice: 'voice',
+  video: 'video',
+} as const;
+
 export interface CreateLegacyLetterBody {
   title: string;
-  content: string;
+  content?: string;
   recipientName: string;
   recipientRelation?: string;
   triggerType: CreateLegacyLetterBodyTriggerType;
@@ -715,6 +737,10 @@ export interface CreateLegacyLetterBody {
   status?: CreateLegacyLetterBodyStatus;
   isSealed?: boolean;
   isPublic?: boolean;
+  mediaType?: CreateLegacyLetterBodyMediaType;
+  mediaUrl?: string;
+  mediaDurationSec?: number;
+  promptText?: string;
 }
 
 export type RelationshipMomentType = typeof RelationshipMomentType[keyof typeof RelationshipMomentType];
@@ -783,6 +809,15 @@ export const UpdateLegacyLetterBodyStatus = {
   delivered: 'delivered',
 } as const;
 
+export type UpdateLegacyLetterBodyMediaType = typeof UpdateLegacyLetterBodyMediaType[keyof typeof UpdateLegacyLetterBodyMediaType];
+
+
+export const UpdateLegacyLetterBodyMediaType = {
+  text: 'text',
+  voice: 'voice',
+  video: 'video',
+} as const;
+
 export interface UpdateLegacyLetterBody {
   title?: string;
   content?: string;
@@ -793,6 +828,38 @@ export interface UpdateLegacyLetterBody {
   milestone?: string;
   status?: UpdateLegacyLetterBodyStatus;
   isSealed?: boolean;
+  mediaType?: UpdateLegacyLetterBodyMediaType;
+  mediaUrl?: string;
+  mediaDurationSec?: number;
+  promptText?: string;
+}
+
+export interface UploadUrlRequest {
+  /**
+     * Original file name.
+     * @minLength 1
+     */
+  name: string;
+  /**
+     * File size in bytes (max 100MB).
+     * @minimum 1
+     * @maximum 104857600
+     */
+  size: number;
+  /**
+     * MIME type of the file (audio/* or video/*).
+     * @minLength 1
+     * @pattern ^(audio|video)/
+     */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  /** Presigned GCS URL for PUT upload. */
+  uploadURL: string;
+  /** Normalized object path (e.g. /objects/uploads/uuid). */
+  objectPath: string;
+  metadata?: UploadUrlRequest;
 }
 
 export type GetMessagesParams = {

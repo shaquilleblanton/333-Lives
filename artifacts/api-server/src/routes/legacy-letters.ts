@@ -31,8 +31,11 @@ router.put("/legacy-letters/:id", async (req, res) => {
   const id = Number(req.params.id);
   const parsed = updateLegacyLetterSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
+  const existing = await db.select().from(legacyLettersTable).where(and(eq(legacyLettersTable.id, id), eq(legacyLettersTable.userId, DEFAULT_USER_ID))).limit(1);
+  if (existing.length === 0) return res.status(404).json({ error: "Letter not found" });
+  const validated = insertLegacyLetterSchema.safeParse({ ...existing[0], ...parsed.data });
+  if (!validated.success) return res.status(400).json({ error: validated.error.message });
   const updated = await db.update(legacyLettersTable).set({ ...parsed.data, updatedAt: new Date() }).where(and(eq(legacyLettersTable.id, id), eq(legacyLettersTable.userId, DEFAULT_USER_ID))).returning();
-  if (updated.length === 0) return res.status(404).json({ error: "Letter not found" });
   return res.json(updated[0]);
 });
 
