@@ -51,7 +51,14 @@ export interface Message {
   audioUrl?: string | null;
   type: MessageType;
   unlockDate: string;
+  /** True only when the content is included (date reached and no passcode). */
   isUnlocked: boolean;
+  /** True once the unlock date has passed. */
+  dateReached: boolean;
+  /** True if a passcode was set when the message was created. */
+  hasPasscode: boolean;
+  /** True when the date has passed but a passcode is still required to reveal content. */
+  requiresPasscode: boolean;
   recipientName?: string | null;
   createdAt: string;
 }
@@ -72,6 +79,32 @@ export interface CreateMessageBody {
   type: CreateMessageBodyType;
   unlockDate: string;
   recipientName?: string;
+  /** Optional secret passcode required to reveal the message after its unlock date. */
+  passcode?: string;
+}
+
+export interface UnlockMessageBody {
+  /** The secret passcode, required only if the message was sealed with one. */
+  passcode?: string;
+}
+
+export type UnlockedMessageType = typeof UnlockedMessageType[keyof typeof UnlockedMessageType];
+
+
+export const UnlockedMessageType = {
+  text: 'text',
+  audio: 'audio',
+  video: 'video',
+} as const;
+
+export interface UnlockedMessage {
+  id: number;
+  title: string;
+  type: UnlockedMessageType;
+  content?: string | null;
+  audioUrl?: string | null;
+  recipientName?: string | null;
+  unlockDate: string;
 }
 
 export type VaultItemCategory = typeof VaultItemCategory[keyof typeof VaultItemCategory];

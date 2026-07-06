@@ -269,6 +269,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /messages/{id}/unlock:
+    post:
+      operationId: unlockMessage
+      tags: [messages]
+      summary: Reveal a sealed message's content
+      description: >-
+        Returns the message content only if the unlock date has passed and, when
+        set, the correct passcode is supplied. Content is never returned by the
+        list or get endpoints for passcode-protected messages.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnlockMessageBody"
+      responses:
+        "200":
+          description: Unlocked message content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnlockedMessage"
+        "401":
+          description: Missing or incorrect passcode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Still sealed until unlock date
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /vault:
     get:
       operationId: getVaultItems
@@ -1847,13 +1894,23 @@ components:
           format: date-time
         isUnlocked:
           type: boolean
+          description: True only when the content is included (date reached and no passcode).
+        dateReached:
+          type: boolean
+          description: True once the unlock date has passed.
+        hasPasscode:
+          type: boolean
+          description: True if a passcode was set when the message was created.
+        requiresPasscode:
+          type: boolean
+          description: True when the date has passed but a passcode is still required to reveal content.
         recipientName:
           type: string
           nullable: true
         createdAt:
           type: string
           format: date-time
-      required: [id, title, type, unlockDate, isUnlocked, createdAt]
+      required: [id, title, type, unlockDate, isUnlocked, dateReached, hasPasscode, requiresPasscode, createdAt]
 
     CreateMessageBody:
       type: object
@@ -1872,7 +1929,41 @@ components:
           format: date-time
         recipientName:
           type: string
+        passcode:
+          type: string
+          description: Optional secret passcode required to reveal the message after its unlock date.
       required: [title, type, unlockDate]
+
+    UnlockMessageBody:
+      type: object
+      properties:
+        passcode:
+          type: string
+          description: The secret passcode, required only if the message was sealed with one.
+
+    UnlockedMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [text, audio, video]
+        content:
+          type: string
+          nullable: true
+        audioUrl:
+          type: string
+          nullable: true
+        recipientName:
+          type: string
+          nullable: true
+        unlockDate:
+          type: string
+          format: date-time
+      required: [id, title, type, unlockDate]
 
     VaultItem:
       type: object

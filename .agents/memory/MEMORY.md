@@ -3,3 +3,4 @@
 - [App-wide "today"](timezone-today.md) — day-scoped data uses user's local day via x-timezone header + getTodayDate(req), not UTC
 - [Web project references](web-project-references.md) — web typecheck reads api-client-react built .d.ts; run `pnpm run typecheck:libs` after lib changes
 - [Orval hook conventions](orval-hook-conventions.md) — generated hooks flatten path params (`mutate({id,data})`), not `{path:{...}}`; web typecheck is the gate
+- [Future messages gating](future-messages-gating.md) — sealed content never leaves server (present() sanitizer + unlock endpoint); drizzle-zod timestamps need `new Date()` coercion on create

@@ -12,11 +12,17 @@ export const messagesTable = pgTable("messages", {
   type: text("type", { enum: ["text", "audio", "video"] }).notNull().default("text"),
   unlockDate: timestamp("unlock_date").notNull(),
   isUnlocked: boolean("is_unlocked").notNull().default(false),
+  passcodeHash: text("passcode_hash"),
   recipientName: text("recipient_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertMessageSchema = createInsertSchema(messagesTable).omit({ id: true, createdAt: true });
+export const insertMessageSchema = createInsertSchema(messagesTable).omit({
+  id: true,
+  createdAt: true,
+  isUnlocked: true,
+  passcodeHash: true,
+});
 export const updateMessageSchema = insertMessageSchema.partial();
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messagesTable.$inferSelect;

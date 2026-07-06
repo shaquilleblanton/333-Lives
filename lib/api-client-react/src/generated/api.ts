@@ -68,6 +68,8 @@ import type {
   RespondToCommunityEventBody,
   SuccessResponse,
   Task,
+  UnlockMessageBody,
+  UnlockedMessage,
   UpdateAffirmationBody,
   UpdateCommunityEventBody,
   UpdateEventBody,
@@ -867,6 +869,78 @@ export const useDeleteMessage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteMessageMutationOptions(options));
+    }
+
+export const getUnlockMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}/unlock`
+}
+
+/**
+ * Returns the message content only if the unlock date has passed and, when set, the correct passcode is supplied. Content is never returned by the list or get endpoints for passcode-protected messages.
+ * @summary Reveal a sealed message's content
+ */
+export const unlockMessage = async (id: number,
+    unlockMessageBody: UnlockMessageBody, options?: RequestInit): Promise<UnlockedMessage> => {
+
+  return customFetch<UnlockedMessage>(getUnlockMessageUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(unlockMessageBody)
+  }
+);}
+
+
+
+
+export const getUnlockMessageMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockMessage>>, TError,{id: number;data: BodyType<UnlockMessageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockMessage>>, TError,{id: number;data: BodyType<UnlockMessageBody>}, TContext> => {
+
+const mutationKey = ['unlockMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockMessage>>, {id: number;data: BodyType<UnlockMessageBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  unlockMessage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockMessageMutationResult = NonNullable<Awaited<ReturnType<typeof unlockMessage>>>
+    export type UnlockMessageMutationBody = BodyType<UnlockMessageBody>
+    export type UnlockMessageMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Reveal a sealed message's content
+ */
+export const useUnlockMessage = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockMessage>>, TError,{id: number;data: BodyType<UnlockMessageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unlockMessage>>,
+        TError,
+        {id: number;data: BodyType<UnlockMessageBody>},
+        TContext
+      > => {
+      return useMutation(getUnlockMessageMutationOptions(options));
     }
 
 export const getGetVaultItemsUrl = (params?: GetVaultItemsParams,) => {

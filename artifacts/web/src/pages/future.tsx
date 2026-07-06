@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearch, useLocation } from "wouter";
-import { useGetMessages, useCreateMessage, getGetMessagesQueryKey } from "@workspace/api-client-react";
+import { useGetMessages, useCreateMessage, useUnlockMessage, getGetMessagesQueryKey } from "@workspace/api-client-react";
+import type { UnlockedMessage, Message } from "@workspace/api-client-react";
 import { format } from "date-fns";
-import { Lock, Unlock, FileText, Mic, Video, Plus, Loader2 } from "lucide-react";
+import { Lock, Unlock, KeyRound, FileText, Mic, Video, Plus, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Future() {
   const { data: messages, isLoading } = useGetMessages();
   const searchString = useSearch();
   const queryParams = new URLSearchParams(searchString);
   const initialRecipient = queryParams.get("recipient") || "";
-  
+
   const [isFormOpen, setIsFormOpen] = useState(!!initialRecipient);
 
   return (
@@ -28,7 +30,7 @@ export default function Future() {
             Words suspended in time. Sent to yourself or loved ones, waiting for the right moment.
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsFormOpen(true)}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6"
         >
@@ -37,10 +39,10 @@ export default function Future() {
         </Button>
       </header>
 
-      <MessageFormDialog 
-        open={isFormOpen} 
-        onOpenChange={setIsFormOpen} 
-        initialRecipient={initialRecipient} 
+      <MessageFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        initialRecipient={initialRecipient}
       />
 
       {isLoading ? (
@@ -57,55 +59,103 @@ export default function Future() {
         </div>
       ) : (
         <div className="relative border-l border-border/50 ml-4 md:ml-8 pl-8 space-y-12">
-          {messages?.map((msg, index) => {
-            const isUnlocked = msg.isUnlocked;
-            const unlockDate = new Date(msg.unlockDate);
-            
-            return (
-              <div key={msg.id} className="relative group">
-                <div className="absolute -left-[41px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background bg-border group-hover:bg-primary transition-colors" />
-                
-                <div className="bg-card/40 border border-border/50 hover:border-primary/30 transition-colors p-6 rounded-2xl backdrop-blur-sm">
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        {isUnlocked ? (
-                          <Unlock className="w-4 h-4 text-primary" />
-                        ) : (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        )}
-                        <h3 className={`text-lg font-serif ${isUnlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {msg.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs font-subheading tracking-wider uppercase text-muted-foreground">
-                        Unlocks: {format(unlockDate, 'MMM do, yyyy')}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full">
-                      {msg.type === 'text' && <FileText className="w-3.5 h-3.5 text-muted-foreground" />}
-                      {msg.type === 'audio' && <Mic className="w-3.5 h-3.5 text-muted-foreground" />}
-                      {msg.type === 'video' && <Video className="w-3.5 h-3.5 text-muted-foreground" />}
-                      <span className="text-xs text-muted-foreground capitalize">{msg.type}</span>
-                    </div>
-                  </div>
-                  
-                  {isUnlocked ? (
-                    <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">
-                      {msg.content || "Audio/Video content"}
-                    </p>
-                  ) : (
-                    <div className="h-12 bg-muted/10 rounded-md border border-dashed border-border/30 flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground/50 font-subheading tracking-widest uppercase">Sealed</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {messages?.map((msg) => (
+            <MessageCard key={msg.id} msg={msg} />
+          ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function MessageCard({ msg }: { msg: Message }) {
+  const { toast } = useToast();
+  const unlockMessage = useUnlockMessage();
+  const [passcode, setPasscode] = useState("");
+  const [revealed, setRevealed] = useState<UnlockedMessage | null>(null);
+
+  const unlockDate = new Date(msg.unlockDate);
+  const dateReached = msg.dateReached;
+  const requiresPasscode = msg.requiresPasscode && !revealed;
+  const isOpen = msg.isUnlocked || !!revealed;
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const result = await unlockMessage.mutateAsync({ id: msg.id, data: { passcode } });
+      setRevealed(result);
+      setPasscode("");
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Couldn't unlock",
+        description: "That passcode doesn't match. Please try again.",
+      });
+    }
+  };
+
+  const displayContent = revealed?.content ?? msg.content;
+
+  return (
+    <div className="relative group">
+      <div className="absolute -left-[41px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background bg-border group-hover:bg-primary transition-colors" />
+
+      <div className="bg-card/40 border border-border/50 hover:border-primary/30 transition-colors p-6 rounded-2xl backdrop-blur-sm">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              {isOpen ? (
+                <Unlock className="w-4 h-4 text-primary" />
+              ) : requiresPasscode ? (
+                <KeyRound className="w-4 h-4 text-primary/70" />
+              ) : (
+                <Lock className="w-4 h-4 text-muted-foreground" />
+              )}
+              <h3 className={`text-lg font-serif ${isOpen ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {msg.title}
+              </h3>
+            </div>
+            <p className="text-xs font-subheading tracking-wider uppercase text-muted-foreground">
+              Unlocks: {format(unlockDate, 'MMM do, yyyy')}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full">
+            {msg.type === 'text' && <FileText className="w-3.5 h-3.5 text-muted-foreground" />}
+            {msg.type === 'audio' && <Mic className="w-3.5 h-3.5 text-muted-foreground" />}
+            {msg.type === 'video' && <Video className="w-3.5 h-3.5 text-muted-foreground" />}
+            <span className="text-xs text-muted-foreground capitalize">{msg.type}</span>
+          </div>
+        </div>
+
+        {isOpen ? (
+          <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">
+            {displayContent || "Audio/Video content"}
+          </p>
+        ) : requiresPasscode ? (
+          <form onSubmit={handleUnlock} className="flex flex-col sm:flex-row gap-2">
+            <Input
+              type="password"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              placeholder="Enter passcode to reveal"
+              className="bg-card border-border"
+              autoComplete="off"
+            />
+            <Button
+              type="submit"
+              disabled={!passcode || unlockMessage.isPending}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+            >
+              {unlockMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reveal"}
+            </Button>
+          </form>
+        ) : (
+          <div className="h-12 bg-muted/10 rounded-md border border-dashed border-border/30 flex items-center justify-center">
+            <span className="text-xs text-muted-foreground/50 font-subheading tracking-widest uppercase">Sealed</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -114,19 +164,21 @@ function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boo
   const queryClient = useQueryClient();
   const createMessage = useCreateMessage();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
-    recipient: initialRecipient,
+    recipientName: initialRecipient,
     unlockDate: "",
     type: "text" as "text" | "audio" | "video",
-    content: ""
+    content: "",
+    passcode: "",
   });
 
   // Keep recipient in sync if opened via URL param change
   useEffect(() => {
     if (initialRecipient && open) {
-      setFormData(prev => ({ ...prev, recipient: initialRecipient }));
+      setFormData(prev => ({ ...prev, recipientName: initialRecipient }));
     }
   }, [initialRecipient, open]);
 
@@ -135,14 +187,30 @@ function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boo
     if (!formData.title || !formData.unlockDate) return;
 
     createMessage.mutate(
-      { data: { ...formData, unlockDate: new Date(formData.unlockDate).toISOString() } },
+      {
+        data: {
+          title: formData.title,
+          recipientName: formData.recipientName || undefined,
+          type: formData.type,
+          content: formData.content || undefined,
+          unlockDate: new Date(formData.unlockDate).toISOString(),
+          passcode: formData.passcode.trim() || undefined,
+        },
+      },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMessagesQueryKey() });
+          setFormData({ title: "", recipientName: "", unlockDate: "", type: "text", content: "", passcode: "" });
           onOpenChange(false);
-          // Clear query params
           setLocation("/future", { replace: true });
-        }
+        },
+        onError: () => {
+          toast({
+            variant: "destructive",
+            title: "Couldn't seal message",
+            description: "Something went wrong saving your message. Please try again.",
+          });
+        },
       }
     );
   };
@@ -156,35 +224,35 @@ function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boo
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">Seal a Message</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Title / Subject</label>
-            <Input 
-              value={formData.title} 
-              onChange={e => setFormData({ ...formData, title: e.target.value })} 
+            <Input
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="bg-card border-border"
               placeholder="A note for my 30th birthday"
               required
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-subheading text-muted-foreground">Recipient</label>
-              <Input 
-                value={formData.recipient} 
-                onChange={e => setFormData({ ...formData, recipient: e.target.value })} 
+              <Input
+                value={formData.recipientName}
+                onChange={e => setFormData({ ...formData, recipientName: e.target.value })}
                 className="bg-card border-border"
                 placeholder="Self"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-subheading text-muted-foreground">Unlock Date</label>
-              <Input 
+              <Input
                 type="date"
-                value={formData.unlockDate} 
-                onChange={e => setFormData({ ...formData, unlockDate: e.target.value })} 
+                value={formData.unlockDate}
+                onChange={e => setFormData({ ...formData, unlockDate: e.target.value })}
                 className="bg-card border-border block"
                 required
               />
@@ -207,12 +275,30 @@ function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boo
 
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Message</label>
-            <Textarea 
-              value={formData.content} 
-              onChange={e => setFormData({ ...formData, content: e.target.value })} 
+            <Textarea
+              value={formData.content}
+              onChange={e => setFormData({ ...formData, content: e.target.value })}
               className="bg-card border-border min-h-[120px] resize-none"
               placeholder="Write what you want them to know..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground flex items-center gap-2">
+              <KeyRound className="w-3.5 h-3.5" />
+              Secret Passcode <span className="text-muted-foreground/60 normal-case">(optional)</span>
+            </label>
+            <Input
+              type="password"
+              value={formData.passcode}
+              onChange={e => setFormData({ ...formData, passcode: e.target.value })}
+              className="bg-card border-border"
+              placeholder="An extra layer to reveal this message"
+              autoComplete="new-password"
+            />
+            <p className="text-xs text-muted-foreground/60">
+              If set, the message stays sealed until the date <em>and</em> this passcode are both entered. Keep it somewhere safe — it can't be recovered.
+            </p>
           </div>
 
           <div className="flex justify-end pt-4 gap-3">

@@ -128,7 +128,10 @@ export const GetMessagesResponseItem = zod.object({
   "audioUrl": zod.string().nullish(),
   "type": zod.enum(['text', 'audio', 'video']),
   "unlockDate": zod.coerce.date(),
-  "isUnlocked": zod.boolean(),
+  "isUnlocked": zod.boolean().describe('True only when the content is included (date reached and no passcode).'),
+  "dateReached": zod.boolean().describe('True once the unlock date has passed.'),
+  "hasPasscode": zod.boolean().describe('True if a passcode was set when the message was created.'),
+  "requiresPasscode": zod.boolean().describe('True when the date has passed but a passcode is still required to reveal content.'),
   "recipientName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -144,7 +147,8 @@ export const CreateMessageBody = zod.object({
   "audioUrl": zod.string().optional(),
   "type": zod.enum(['text', 'audio', 'video']),
   "unlockDate": zod.coerce.date(),
-  "recipientName": zod.string().optional()
+  "recipientName": zod.string().optional(),
+  "passcode": zod.string().optional().describe('Optional secret passcode required to reveal the message after its unlock date.')
 })
 
 export const CreateMessageResponse = zod.object({
@@ -154,7 +158,10 @@ export const CreateMessageResponse = zod.object({
   "audioUrl": zod.string().nullish(),
   "type": zod.enum(['text', 'audio', 'video']),
   "unlockDate": zod.coerce.date(),
-  "isUnlocked": zod.boolean(),
+  "isUnlocked": zod.boolean().describe('True only when the content is included (date reached and no passcode).'),
+  "dateReached": zod.boolean().describe('True once the unlock date has passed.'),
+  "hasPasscode": zod.boolean().describe('True if a passcode was set when the message was created.'),
+  "requiresPasscode": zod.boolean().describe('True when the date has passed but a passcode is still required to reveal content.'),
   "recipientName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -174,7 +181,10 @@ export const GetMessageResponse = zod.object({
   "audioUrl": zod.string().nullish(),
   "type": zod.enum(['text', 'audio', 'video']),
   "unlockDate": zod.coerce.date(),
-  "isUnlocked": zod.boolean(),
+  "isUnlocked": zod.boolean().describe('True only when the content is included (date reached and no passcode).'),
+  "dateReached": zod.boolean().describe('True once the unlock date has passed.'),
+  "hasPasscode": zod.boolean().describe('True if a passcode was set when the message was created.'),
+  "requiresPasscode": zod.boolean().describe('True when the date has passed but a passcode is still required to reveal content.'),
   "recipientName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -189,6 +199,29 @@ export const DeleteMessageParams = zod.object({
 
 export const DeleteMessageResponse = zod.object({
   "success": zod.boolean()
+})
+
+
+/**
+ * Returns the message content only if the unlock date has passed and, when set, the correct passcode is supplied. Content is never returned by the list or get endpoints for passcode-protected messages.
+ * @summary Reveal a sealed message's content
+ */
+export const UnlockMessageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnlockMessageBody = zod.object({
+  "passcode": zod.string().optional().describe('The secret passcode, required only if the message was sealed with one.')
+})
+
+export const UnlockMessageResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "type": zod.enum(['text', 'audio', 'video']),
+  "content": zod.string().nullish(),
+  "audioUrl": zod.string().nullish(),
+  "recipientName": zod.string().nullish(),
+  "unlockDate": zod.coerce.date()
 })
 
 
@@ -1194,7 +1227,10 @@ export const GetDashboardResponse = zod.object({
   "audioUrl": zod.string().nullish(),
   "type": zod.enum(['text', 'audio', 'video']),
   "unlockDate": zod.coerce.date(),
-  "isUnlocked": zod.boolean(),
+  "isUnlocked": zod.boolean().describe('True only when the content is included (date reached and no passcode).'),
+  "dateReached": zod.boolean().describe('True once the unlock date has passed.'),
+  "hasPasscode": zod.boolean().describe('True if a passcode was set when the message was created.'),
+  "requiresPasscode": zod.boolean().describe('True when the date has passed but a passcode is still required to reveal content.'),
   "recipientName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })),
