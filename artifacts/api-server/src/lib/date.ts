@@ -74,7 +74,13 @@ function getTimezoneOffsetMs(utcTime: number, timeZone: string): number {
     Number(map.minute),
     Number(map.second),
   );
-  return asUTC - utcTime;
+  // Intl.DateTimeFormat has no sub-second granularity, so `asUTC` is truncated
+  // to whole seconds while `utcTime` may carry milliseconds. Rounding to the
+  // nearest minute recovers the true offset (all IANA offsets are whole
+  // minutes) and prevents the input's sub-second part from leaking into the
+  // result — otherwise a 23:59:59.999 boundary would spill ~1s into the next
+  // day.
+  return Math.round((asUTC - utcTime) / 60000) * 60000;
 }
 
 /**

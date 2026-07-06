@@ -34,3 +34,19 @@ the correct UTC instants (two-pass offset lookup, DST-safe).
 
 **Rule of thumb:** date-string columns (`.date` = `YYYY-MM-DD`) → compare with
 `getTodayDate(req)`; timestamp columns → filter with `getLocalDayRange(req)`.
+
+## Offset math must round to whole minutes (sub-second trap)
+
+`getTimezoneOffsetMs` derives the offset via `Intl.DateTimeFormat`, which has **no
+sub-second granularity**. Subtracting a millisecond-bearing instant from that
+truncated wall time leaks the input's sub-second part into the offset. For the
+`23:59:59.999` end-of-day boundary this used to push `endOfDay` ~1 second into
+the *next* day (e.g. `...T00:00:00.997Z` instead of `...T23:59:59.999Z`) for
+every timezone. Fix/keep: round the offset to the nearest minute
+(`Math.round(diff / 60000) * 60000`) — all IANA offsets are whole minutes, so
+this recovers the true offset and preserves the input ms.
+
+**Regression guard:** unit tests live in `artifacts/api-server/src/lib/date.test.ts`
+(run `pnpm --filter @workspace/api-server test`). They assert `getLocalDayRange`
+brackets local midnight → next midnight (incl. UTC+14, half-hour, and both DST
+transition days). Any offset-math change must keep them green.
