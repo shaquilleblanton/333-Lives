@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -257,20 +256,6 @@ function MessageFormDialog({ open, onOpenChange, initialRecipient }: { open: boo
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-subheading text-muted-foreground">Format</label>
-            <Select value={formData.type} onValueChange={(v: "text"|"audio"|"video") => setFormData({ ...formData, type: v })}>
-              <SelectTrigger className="bg-card border-border capitalize">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text Letter</SelectItem>
-                <SelectItem value="audio">Voice Note</SelectItem>
-                <SelectItem value="video">Video Message</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

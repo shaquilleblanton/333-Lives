@@ -7,7 +7,6 @@ import {
   Sprout, 
   CalendarDays, 
   User,
-  LogOut,
   Heart,
   Users,
   Calendar,
@@ -78,13 +77,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        
-        <div className="pt-6 border-t border-border mt-auto">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-muted-foreground hover:text-foreground w-full text-sm font-subheading">
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}

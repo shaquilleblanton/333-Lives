@@ -1,10 +1,18 @@
-import { useGetVaultItems, useCreateVaultItem, getGetVaultItemsQueryKey } from "@workspace/api-client-react";
-import { Lock, FileText, Image as ImageIcon, Book, Mic, Info, Plus } from "lucide-react";
+import { useState } from "react";
+import { useGetVaultItems, useCreateVaultItem, useDeleteVaultItem, getGetVaultItemsQueryKey } from "@workspace/api-client-react";
+import { Lock, FileText, Image as ImageIcon, Book, Mic, Info, Plus, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+
+type VaultCategory = "document" | "photo" | "journal" | "voice_note" | "important_info";
 
 const CATEGORY_ICONS = {
   document: FileText,
@@ -14,7 +22,7 @@ const CATEGORY_ICONS = {
   important_info: Info,
 };
 
-const CATEGORY_LABELS = {
+const CATEGORY_LABELS: Record<VaultCategory, string> = {
   document: "Documents",
   photo: "Photos",
   journal: "Journals",
@@ -24,40 +32,34 @@ const CATEGORY_LABELS = {
 
 export default function Vault() {
   const { data: vaultItems, isLoading } = useGetVaultItems();
-  const createVaultItem = useCreateVaultItem();
+  const deleteVaultItem = useDeleteVaultItem();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<VaultCategory | null>(null);
+
   function showError(description: string) {
-    toast({
-      variant: "destructive",
-      title: "Something went wrong",
-      description,
-    });
+    toast({ variant: "destructive", title: "Something went wrong", description });
   }
 
-  const handleAddDemoItem = () => {
-    createVaultItem.mutate({
-      data: {
-        name: "New Secured Note",
-        category: "document",
-        content: "Encrypted content goes here...",
-      }
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() });
-      },
-      onError: () =>
-        showError("We couldn't store that item. Please check your connection and try again."),
+  const handleDelete = (id: number) => {
+    deleteVaultItem.mutate({ id }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() }),
+      onError: () => showError("We couldn't remove that item. Please try again."),
     });
   };
 
-  const categories = vaultItems ? Object.keys(CATEGORY_LABELS).map(cat => ({
+  const categories = (Object.keys(CATEGORY_LABELS) as VaultCategory[]).map((cat) => ({
     id: cat,
-    label: CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS],
-    icon: CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS],
-    count: vaultItems.filter(i => i.category === cat).length
-  })) : [];
+    label: CATEGORY_LABELS[cat],
+    icon: CATEGORY_ICONS[cat],
+    count: vaultItems?.filter((i) => i.category === cat).length ?? 0,
+  }));
+
+  const visibleItems = activeCategory
+    ? vaultItems?.filter((i) => i.category === activeCategory)
+    : vaultItems;
 
   return (
     <div className="p-6 md:p-12 max-w-6xl mx-auto w-full space-y-12 animate-in fade-in duration-700 slide-in-from-bottom-4">
@@ -68,67 +70,101 @@ export default function Vault() {
             Secure Vault
           </h1>
           <p className="text-muted-foreground font-subheading text-base max-w-md">
-            Your encrypted sanctuary. What goes in here, stays for your eyes only.
+            Your private sanctuary. What goes in here, stays for your eyes only.
           </p>
         </div>
-        <Button onClick={handleAddDemoItem} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+        <Button onClick={() => setIsFormOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
           <Plus className="w-4 h-4 mr-2" />
           Store Item
         </Button>
       </header>
 
+      <VaultFormDialog open={isFormOpen} onOpenChange={setIsFormOpen} />
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5].map(i => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-32 rounded-xl bg-muted/30" />
           ))}
         </div>
       ) : (
         <div className="space-y-12">
-          {/* Categories Grid */}
+          {/* Categories Grid — click to filter */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categories.map((cat) => (
-              <button key={cat.id} className="p-4 rounded-xl border border-border/50 bg-card/30 hover:bg-card/60 hover:border-primary/50 transition-all text-left group">
-                <cat.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
-                <h3 className="font-subheading font-medium text-foreground">{cat.label}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{cat.count} items</p>
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(isActive ? null : cat.id)}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all text-left group",
+                    isActive
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 bg-card/30 hover:bg-card/60 hover:border-primary/50"
+                  )}
+                >
+                  <cat.icon className={cn("w-6 h-6 transition-colors mb-3", isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary")} />
+                  <h3 className="font-subheading font-medium text-foreground">{cat.label}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{cat.count} items</p>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Recent Items */}
+          {/* Items */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-serif text-foreground">Recent Additions</h2>
-            
-            {vaultItems?.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-serif text-foreground">
+                {activeCategory ? CATEGORY_LABELS[activeCategory] : "Recent Additions"}
+              </h2>
+              {activeCategory && (
+                <button onClick={() => setActiveCategory(null)} className="text-sm text-primary hover:underline font-subheading">
+                  Clear filter
+                </button>
+              )}
+            </div>
+
+            {visibleItems?.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border/50 rounded-2xl bg-card/20">
                 <Shield className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-lg font-serif text-foreground mb-2">Your vault is empty</h3>
+                <h3 className="text-lg font-serif text-foreground mb-2">
+                  {activeCategory ? "Nothing here yet" : "Your vault is empty"}
+                </h3>
                 <p className="text-sm text-muted-foreground font-subheading">Store your most important documents and memories here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {vaultItems?.map((item) => {
-                  const Icon = CATEGORY_ICONS[item.category as keyof typeof CATEGORY_ICONS] || FileText;
-                  
+                {visibleItems?.map((item) => {
+                  const Icon = CATEGORY_ICONS[item.category as VaultCategory] || FileText;
                   return (
-                    <div key={item.id} className="p-5 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm group">
+                    <div key={item.id} className="p-5 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm group relative">
                       <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors shrink-0">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-serif text-lg text-foreground truncate">{item.name}</h4>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs font-subheading text-muted-foreground capitalize">
-                              {item.category.replace('_', ' ')}
+                              {item.category.replace("_", " ")}
                             </span>
                             <span className="text-muted-foreground/50">•</span>
                             <span className="text-xs font-subheading text-muted-foreground">
-                              {format(new Date(item.createdAt), 'MMM d, yyyy')}
+                              {format(new Date(item.createdAt), "MMM d, yyyy")}
                             </span>
                           </div>
+                          {item.content && (
+                            <p className="text-sm text-foreground/70 mt-2 line-clamp-2">{item.content}</p>
+                          )}
                         </div>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 shrink-0"
+                          aria-label="Delete item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   );
@@ -142,7 +178,94 @@ export default function Vault() {
   );
 }
 
-function Shield(props: any) {
+function VaultFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const createVaultItem = useCreateVaultItem();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<VaultCategory>("important_info");
+  const [content, setContent] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    createVaultItem.mutate(
+      { data: { name: name.trim(), category, content: content.trim() || undefined } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() });
+          setName("");
+          setCategory("important_info");
+          setContent("");
+          onOpenChange(false);
+        },
+        onError: () =>
+          toast({
+            variant: "destructive",
+            title: "Couldn't store item",
+            description: "We couldn't store that item. Please check your connection and try again.",
+          }),
+      }
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] bg-background border-border">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Store an Item</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Name</label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="bg-card border-border"
+              placeholder="Passport, will, wifi password…"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Category</label>
+            <Select value={category} onValueChange={(v: VaultCategory) => setCategory(v)}>
+              <SelectTrigger className="bg-card border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(CATEGORY_LABELS) as VaultCategory[]).map((cat) => (
+                  <SelectItem key={cat} value={cat}>{CATEGORY_LABELS[cat]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Notes / Content</label>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="bg-card border-border min-h-[120px] resize-none"
+              placeholder="The details you want to keep safe…"
+            />
+          </div>
+
+          <div className="flex justify-end pt-4 gap-3">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" disabled={!name.trim() || createVaultItem.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {createVaultItem.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Store Securely
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Shield(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -159,5 +282,5 @@ function Shield(props: any) {
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.13.89 6.87 1.71a1 1 0 0 1 .55.89l.58 7.4Z" />
       <path d="m15.5 10-4.5 4-1.5-1.5" />
     </svg>
-  )
+  );
 }
