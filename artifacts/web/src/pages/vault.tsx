@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useGetVaultItems, useCreateVaultItem, useDeleteVaultItem, getGetVaultItemsQueryKey } from "@workspace/api-client-react";
-import { Lock, FileText, Image as ImageIcon, Book, Mic, Info, Plus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useGetVaultItems, useCreateVaultItem, useUpdateVaultItem, useDeleteVaultItem, getGetVaultItemsQueryKey } from "@workspace/api-client-react";
+import type { VaultItem } from "@workspace/api-client-react";
+import { Lock, FileText, Image as ImageIcon, Book, Mic, Info, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,18 @@ export default function Vault() {
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<VaultItem | null>(null);
   const [activeCategory, setActiveCategory] = useState<VaultCategory | null>(null);
+
+  const openCreate = () => {
+    setEditingItem(null);
+    setIsFormOpen(true);
+  };
+
+  const openEdit = (item: VaultItem) => {
+    setEditingItem(item);
+    setIsFormOpen(true);
+  };
 
   function showError(description: string) {
     toast({ variant: "destructive", title: "Something went wrong", description });
@@ -73,13 +85,13 @@ export default function Vault() {
             Your private sanctuary. What goes in here, stays for your eyes only.
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
+        <Button onClick={openCreate} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6">
           <Plus className="w-4 h-4 mr-2" />
           Store Item
         </Button>
       </header>
 
-      <VaultFormDialog open={isFormOpen} onOpenChange={setIsFormOpen} />
+      <VaultFormDialog open={isFormOpen} onOpenChange={setIsFormOpen} editingItem={editingItem} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -158,13 +170,22 @@ export default function Vault() {
                             <p className="text-sm text-foreground/70 mt-2 line-clamp-2">{item.content}</p>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 shrink-0"
-                          aria-label="Delete item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                          <button
+                            onClick={() => openEdit(item)}
+                            className="text-muted-foreground hover:text-primary p-1"
+                            aria-label="Edit item"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-muted-foreground hover:text-destructive p-1"
+                            aria-label="Delete item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -178,43 +199,54 @@ export default function Vault() {
   );
 }
 
-function VaultFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+function VaultFormDialog({ open, onOpenChange, editingItem }: { open: boolean; onOpenChange: (o: boolean) => void; editingItem: VaultItem | null }) {
   const createVaultItem = useCreateVaultItem();
+  const updateVaultItem = useUpdateVaultItem();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const isEditing = editingItem !== null;
+  const isPending = createVaultItem.isPending || updateVaultItem.isPending;
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState<VaultCategory>("important_info");
   const [content, setContent] = useState("");
 
+  useEffect(() => {
+    if (open) {
+      setName(editingItem?.name ?? "");
+      setCategory((editingItem?.category as VaultCategory) ?? "important_info");
+      setContent(editingItem?.content ?? "");
+    }
+  }, [open, editingItem]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    createVaultItem.mutate(
-      { data: { name: name.trim(), category, content: content.trim() || undefined } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() });
-          setName("");
-          setCategory("important_info");
-          setContent("");
-          onOpenChange(false);
-        },
-        onError: () =>
-          toast({
-            variant: "destructive",
-            title: "Couldn't store item",
-            description: "We couldn't store that item. Please check your connection and try again.",
-          }),
-      }
-    );
+    const data = { name: name.trim(), category, content: content.trim() || undefined };
+    const onSuccess = () => {
+      queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() });
+      onOpenChange(false);
+    };
+    const onError = () =>
+      toast({
+        variant: "destructive",
+        title: isEditing ? "Couldn't update item" : "Couldn't store item",
+        description: `We couldn't ${isEditing ? "update" : "store"} that item. Please check your connection and try again.`,
+      });
+
+    if (isEditing && editingItem) {
+      updateVaultItem.mutate({ id: editingItem.id, data }, { onSuccess, onError });
+    } else {
+      createVaultItem.mutate({ data }, { onSuccess, onError });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">Store an Item</DialogTitle>
+          <DialogTitle className="font-serif text-2xl">{isEditing ? "Edit Item" : "Store an Item"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
@@ -254,9 +286,9 @@ function VaultFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
           <div className="flex justify-end pt-4 gap-3">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={!name.trim() || createVaultItem.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {createVaultItem.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Store Securely
+            <Button type="submit" disabled={!name.trim() || isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isEditing ? "Save Changes" : "Store Securely"}
             </Button>
           </div>
         </form>

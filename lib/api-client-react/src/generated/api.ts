@@ -84,6 +84,7 @@ import type {
   UpdatePersonBody,
   UpdateTaskBody,
   UpdateUserBody,
+  UpdateVaultItemBody,
   UpdateWorkoutBlockBody,
   UpdateWorkoutBody,
   UploadUrlRequest,
@@ -1175,6 +1176,77 @@ export function useGetVaultItem<TData = Awaited<ReturnType<typeof getVaultItem>>
 
 
 
+
+export const getUpdateVaultItemUrl = (id: number,) => {
+
+
+
+
+  return `/api/vault/${id}`
+}
+
+/**
+ * @summary Update a vault item
+ */
+export const updateVaultItem = async (id: number,
+    updateVaultItemBody: UpdateVaultItemBody, options?: RequestInit): Promise<VaultItem> => {
+
+  return customFetch<VaultItem>(getUpdateVaultItemUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateVaultItemBody)
+  }
+);}
+
+
+
+
+export const getUpdateVaultItemMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVaultItem>>, TError,{id: number;data: BodyType<UpdateVaultItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVaultItem>>, TError,{id: number;data: BodyType<UpdateVaultItemBody>}, TContext> => {
+
+const mutationKey = ['updateVaultItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVaultItem>>, {id: number;data: BodyType<UpdateVaultItemBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateVaultItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVaultItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateVaultItem>>>
+    export type UpdateVaultItemMutationBody = BodyType<UpdateVaultItemBody>
+    export type UpdateVaultItemMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update a vault item
+ */
+export const useUpdateVaultItem = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVaultItem>>, TError,{id: number;data: BodyType<UpdateVaultItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVaultItem>>,
+        TError,
+        {id: number;data: BodyType<UpdateVaultItemBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateVaultItemMutationOptions(options));
+    }
 
 export const getDeleteVaultItemUrl = (id: number,) => {
 

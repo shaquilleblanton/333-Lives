@@ -378,6 +378,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateVaultItem
+      tags: [vault]
+      summary: Update a vault item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVaultItemBody"
+      responses:
+        "200":
+          description: Updated vault item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteVaultItem
       tags: [vault]
@@ -2023,6 +2052,23 @@ components:
         sizeBytes:
           type: integer
       required: [name, category]
+
+    UpdateVaultItemBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum: [document, photo, journal, voice_note, important_info]
+        fileUrl:
+          type: string
+        content:
+          type: string
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
 
     CalendarEvent:
       type: object

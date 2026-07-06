@@ -289,6 +289,34 @@ export const GetVaultItemResponse = zod.object({
 
 
 /**
+ * @summary Update a vault item
+ */
+export const UpdateVaultItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateVaultItemBody = zod.object({
+  "name": zod.string().optional(),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']).optional(),
+  "fileUrl": zod.string().optional(),
+  "content": zod.string().optional(),
+  "mimeType": zod.string().optional(),
+  "sizeBytes": zod.number().optional()
+})
+
+export const UpdateVaultItemResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "fileUrl": zod.string().nullish(),
+  "content": zod.string().nullish(),
+  "mimeType": zod.string().nullish(),
+  "sizeBytes": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Delete a vault item
  */
 export const DeleteVaultItemParams = zod.object({

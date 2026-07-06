@@ -149,6 +149,26 @@ export interface CreateVaultItemBody {
   sizeBytes?: number;
 }
 
+export type UpdateVaultItemBodyCategory = typeof UpdateVaultItemBodyCategory[keyof typeof UpdateVaultItemBodyCategory];
+
+
+export const UpdateVaultItemBodyCategory = {
+  document: 'document',
+  photo: 'photo',
+  journal: 'journal',
+  voice_note: 'voice_note',
+  important_info: 'important_info',
+} as const;
+
+export interface UpdateVaultItemBody {
+  name?: string;
+  category?: UpdateVaultItemBodyCategory;
+  fileUrl?: string;
+  content?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+}
+
 export type CalendarEventType = typeof CalendarEventType[keyof typeof CalendarEventType];
 
 

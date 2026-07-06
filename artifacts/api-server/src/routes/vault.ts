@@ -27,6 +27,21 @@ router.get("/vault/:id", async (req, res) => {
   return res.json(rows[0]);
 });
 
+const updateVaultItemSchema = insertVaultItemSchema.partial().omit({ userId: true });
+
+router.patch("/vault/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const parsed = updateVaultItemSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
+  const updated = await db
+    .update(vaultItemsTable)
+    .set(parsed.data)
+    .where(and(eq(vaultItemsTable.id, id), eq(vaultItemsTable.userId, DEFAULT_USER_ID)))
+    .returning();
+  if (updated.length === 0) return res.status(404).json({ error: "Vault item not found" });
+  return res.json(updated[0]);
+});
+
 router.delete("/vault/:id", async (req, res) => {
   const id = Number(req.params.id);
   await db.delete(vaultItemsTable).where(and(eq(vaultItemsTable.id, id), eq(vaultItemsTable.userId, DEFAULT_USER_ID)));
