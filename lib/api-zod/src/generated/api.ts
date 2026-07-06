@@ -1153,7 +1153,8 @@ export const GetDashboardResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "vaultCount": zod.number(),
-  "habitCompletionToday": zod.number()
+  "habitCompletionToday": zod.number(),
+  "intentionsStreak": zod.number()
 })
 
 

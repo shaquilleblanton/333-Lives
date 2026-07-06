@@ -646,6 +646,7 @@ export interface Dashboard {
   todayEvents: CalendarEvent[];
   vaultCount: number;
   habitCompletionToday: number;
+  intentionsStreak: number;
 }
 
 export type LegacyLetterTriggerType = typeof LegacyLetterTriggerType[keyof typeof LegacyLetterTriggerType];

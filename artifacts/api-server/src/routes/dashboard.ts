@@ -44,6 +44,38 @@ router.get("/dashboard", async (req, res) => {
 
   const habitCompletionToday = todayHabits.filter((h) => h.checkedInToday).length;
 
+  // Intentions streak: consecutive days (ending today or yesterday) where the
+  // day had intentions set and all of them were completed.
+  const allIntentions = await db
+    .select()
+    .from(intentionsTable)
+    .where(eq(intentionsTable.userId, DEFAULT_USER_ID));
+
+  const intentionsByDate = new Map<string, { total: number; completed: number }>();
+  for (const i of allIntentions) {
+    const entry = intentionsByDate.get(i.date) || { total: 0, completed: 0 };
+    entry.total += 1;
+    if (i.isCompleted) entry.completed += 1;
+    intentionsByDate.set(i.date, entry);
+  }
+
+  const isDayComplete = (d: string) => {
+    const e = intentionsByDate.get(d);
+    return !!e && e.total > 0 && e.completed === e.total;
+  };
+
+  const ymd = (dt: Date) => dt.toISOString().split("T")[0];
+  let intentionsStreak = 0;
+  const cursor = new Date(today + "T00:00:00.000Z");
+  // If today isn't fully complete yet, don't break the streak — start counting from yesterday.
+  if (!isDayComplete(today)) {
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  while (isDayComplete(ymd(cursor))) {
+    intentionsStreak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
   return res.json({
     userName: user.name,
     streakDays: user.streakDays,
@@ -55,6 +87,7 @@ router.get("/dashboard", async (req, res) => {
     todayEvents: events,
     vaultCount: vaultItems.length,
     habitCompletionToday,
+    intentionsStreak,
   });
 });
 

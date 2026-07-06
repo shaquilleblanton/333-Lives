@@ -2110,7 +2110,9 @@ components:
           type: integer
         habitCompletionToday:
           type: integer
-      required: [userName, streakDays, messagesSent, goalsActive, todayIntentions, upcomingMessages, todayHabits, todayEvents, vaultCount, habitCompletionToday]
+        intentionsStreak:
+          type: integer
+      required: [userName, streakDays, messagesSent, goalsActive, todayIntentions, upcomingMessages, todayHabits, todayEvents, vaultCount, habitCompletionToday, intentionsStreak]
 
     LegacyLetter:
       type: object

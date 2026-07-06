@@ -103,28 +103,28 @@ export default function LegacyLetters() {
     e.preventDefault();
     const payload = { ...form, status: seal ? "sealed" as const : "draft" as const, isSealed: seal };
     if (editingId) {
-      await updateLetter.mutateAsync({ path: { id: editingId }, data: payload as any });
-      if (seal) await sealLetter.mutateAsync({ path: { id: editingId } });
+      await updateLetter.mutateAsync({ id: editingId, data: payload as any });
+      if (seal) await sealLetter.mutateAsync({ id: editingId });
     } else {
       const created = await createLetter.mutateAsync({ data: { ...payload, userId: 1 } as any });
-      if (seal) await sealLetter.mutateAsync({ path: { id: (created as LegacyLetter).id } });
+      if (seal) await sealLetter.mutateAsync({ id: (created as LegacyLetter).id });
     }
     invalidate();
     goBack();
   }
 
   async function handleSeal(id: number) {
-    await sealLetter.mutateAsync({ path: { id } });
+    await sealLetter.mutateAsync({ id });
     invalidate();
   }
 
   async function handleUnseal(id: number) {
-    await unsealLetter.mutateAsync({ path: { id } });
+    await unsealLetter.mutateAsync({ id });
     invalidate();
   }
 
   async function handleDelete(id: number) {
-    await deleteLetter.mutateAsync({ path: { id } });
+    await deleteLetter.mutateAsync({ id });
     invalidate();
     setConfirmDelete(null);
     if (view === "read") goBack();

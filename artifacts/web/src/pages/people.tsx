@@ -213,7 +213,7 @@ function PersonDetail({ person, onEdit, onMessage, onClose }: {
   onClose: () => void;
 }) {
   const qc = useQueryClient();
-  const { data: moments = [], isLoading: loadingMoments } = useGetRelationshipMoments({ path: { personId: person.id } });
+  const { data: moments = [], isLoading: loadingMoments } = useGetRelationshipMoments(person.id);
   const createMoment = useCreateRelationshipMoment();
   const deleteMoment = useDeleteRelationshipMoment();
   const [showAddMoment, setShowAddMoment] = useState(false);
@@ -226,13 +226,13 @@ function PersonDetail({ person, onEdit, onMessage, onClose }: {
   });
 
   function invalidateMoments() {
-    qc.invalidateQueries({ queryKey: getGetRelationshipMomentsQueryKey({ path: { personId: person.id } }) });
+    qc.invalidateQueries({ queryKey: getGetRelationshipMomentsQueryKey(person.id) });
   }
 
   async function handleAddMoment(e: React.FormEvent) {
     e.preventDefault();
     await createMoment.mutateAsync({
-      path: { personId: person.id },
+      personId: person.id,
       data: momentForm as any,
     });
     invalidateMoments();
@@ -241,7 +241,7 @@ function PersonDetail({ person, onEdit, onMessage, onClose }: {
   }
 
   async function handleDeleteMoment(momentId: number) {
-    await deleteMoment.mutateAsync({ path: { personId: person.id, id: momentId } });
+    await deleteMoment.mutateAsync({ personId: person.id, id: momentId });
     invalidateMoments();
     setConfirmDeleteId(null);
   }
@@ -550,6 +550,7 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
     if (!formData.name) return;
     const payload = {
       ...formData,
+      relationship: formData.relationship as Exclude<RelationshipFilter, "all">,
       birthday: formData.birthday || undefined,
       lostDate: formData.lostDate || undefined,
     };

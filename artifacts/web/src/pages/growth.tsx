@@ -57,7 +57,7 @@ function HabitsTab() {
 
   const handleCheckIn = (id: number) => {
     checkIn.mutate({
-      habitId: id,
+      id,
       data: { status: "great" }
     }, {
       onSuccess: () => {

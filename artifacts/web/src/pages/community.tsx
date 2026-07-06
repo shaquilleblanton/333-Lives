@@ -126,13 +126,13 @@ export default function Community() {
   }
 
   async function handleRespond(id: number, status: "confirmed" | "declined") {
-    await respondEvent.mutateAsync({ path: { id }, data: { status } });
+    await respondEvent.mutateAsync({ id, data: { status } });
     invalidate();
     setSelectedEvent(null);
   }
 
   async function handleDelete(id: number) {
-    await deleteEvent.mutateAsync({ path: { id } });
+    await deleteEvent.mutateAsync({ id });
     invalidate();
     setSelectedEvent(null);
   }
