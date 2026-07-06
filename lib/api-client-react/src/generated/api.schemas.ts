@@ -382,6 +382,99 @@ export interface UpdateGoalBody {
   color?: string;
 }
 
+export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
+
+
+export const TaskPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type TaskCategory = typeof TaskCategory[keyof typeof TaskCategory];
+
+
+export const TaskCategory = {
+  personal: 'personal',
+  finance: 'finance',
+  health: 'health',
+  family: 'family',
+  work: 'work',
+  other: 'other',
+} as const;
+
+export interface Task {
+  id: number;
+  userId: number;
+  title: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority: TaskPriority;
+  category: TaskCategory;
+  isCompleted: boolean;
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export type CreateTaskBodyPriority = typeof CreateTaskBodyPriority[keyof typeof CreateTaskBodyPriority];
+
+
+export const CreateTaskBodyPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type CreateTaskBodyCategory = typeof CreateTaskBodyCategory[keyof typeof CreateTaskBodyCategory];
+
+
+export const CreateTaskBodyCategory = {
+  personal: 'personal',
+  finance: 'finance',
+  health: 'health',
+  family: 'family',
+  work: 'work',
+  other: 'other',
+} as const;
+
+export interface CreateTaskBody {
+  title: string;
+  notes?: string;
+  dueDate?: string;
+  priority?: CreateTaskBodyPriority;
+  category?: CreateTaskBodyCategory;
+}
+
+export type UpdateTaskBodyPriority = typeof UpdateTaskBodyPriority[keyof typeof UpdateTaskBodyPriority];
+
+
+export const UpdateTaskBodyPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type UpdateTaskBodyCategory = typeof UpdateTaskBodyCategory[keyof typeof UpdateTaskBodyCategory];
+
+
+export const UpdateTaskBodyCategory = {
+  personal: 'personal',
+  finance: 'finance',
+  health: 'health',
+  family: 'family',
+  work: 'work',
+  other: 'other',
+} as const;
+
+export interface UpdateTaskBody {
+  title?: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority?: UpdateTaskBodyPriority;
+  category?: UpdateTaskBodyCategory;
+  isCompleted?: boolean;
+}
+
 export interface Affirmation {
   id: number;
   userId: number;

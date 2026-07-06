@@ -6,6 +6,8 @@ import {
   useDeleteIntention,
   useGetTodayGratitudeEntry,
   useGetIntentionHistory,
+  useGetTodayAffirmation,
+  useGetTasks,
   getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
 import type { Intention } from "@workspace/api-client-react";
@@ -14,15 +16,23 @@ import { format } from "date-fns";
 import {
   CheckCircle2, Circle, MessageSquare, Shield, Heart,
   Flame, Sparkles, Sunrise, Loader2, ArrowRight, Check,
-  Pencil, Trash2, X, Trophy,
+  Pencil, Trash2, X, Trophy, ListChecks, AlertTriangle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 
+function greetingForNow() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
 export default function Home() {
   const { data: dashboard, isLoading } = useGetDashboard();
   const { data: todayEntry } = useGetTodayGratitudeEntry();
+  const { data: todayAffirmation } = useGetTodayAffirmation();
 
   if (isLoading) {
     return (
@@ -47,7 +57,7 @@ export default function Home() {
       {/* Header */}
       <header className="space-y-2">
         <h1 className="text-4xl md:text-5xl tracking-tight text-foreground">
-          Good Morning, <span className="text-primary">{dashboard.userName || "James"}</span>.
+          {greetingForNow()}{dashboard.userName ? <>, <span className="text-primary">{dashboard.userName}</span></> : null}.
         </h1>
         <p className="text-muted-foreground font-subheading text-lg">
           {format(new Date(), "EEEE, MMMM do")}
@@ -60,6 +70,9 @@ export default function Home() {
         streak={dashboard.intentionsStreak ?? 0}
       />
 
+      {/* Today's responsibilities at a glance */}
+      <TasksSummary />
+
       {/* Intention streak history & best run */}
       <IntentionStreakHistory />
 
@@ -69,7 +82,7 @@ export default function Home() {
         <div className="relative z-10 max-w-3xl">
           <p className="text-sm font-subheading tracking-widest text-primary uppercase mb-6">Today's Truth</p>
           <blockquote className="text-2xl md:text-4xl leading-relaxed text-foreground/90 font-serif italic">
-            "Your private space. Secure. Encrypted. Yours."
+            &ldquo;{todayAffirmation?.text ?? "You are building a life worth remembering — one intention at a time."}&rdquo;
           </blockquote>
         </div>
       </section>
@@ -165,6 +178,74 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TasksSummary() {
+  const { data: tasks, isLoading } = useGetTasks();
+
+  if (isLoading) {
+    return <Skeleton className="h-28 w-full rounded-2xl bg-muted/30" />;
+  }
+
+  const all = tasks ?? [];
+  const active = all.filter((t) => !t.isCompleted);
+  const tk = format(new Date(), "yyyy-MM-dd");
+  const overdue = active.filter((t) => t.dueDate && t.dueDate < tk).length;
+  const dueToday = active.filter((t) => t.dueDate === tk).length;
+  const nextUp = active
+    .filter((t) => t.dueDate && t.dueDate >= tk)
+    .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1))[0]
+    ?? active[0];
+
+  return (
+    <Link
+      href="/tasks"
+      className="block relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-6 md:p-7 backdrop-blur-sm group hover:border-primary/30 transition-colors"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary">
+            <ListChecks className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-subheading tracking-widest text-primary uppercase">Responsibilities</p>
+            <h2 className="text-2xl font-serif text-foreground">Today&apos;s Tasks</h2>
+          </div>
+        </div>
+        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+      </div>
+
+      {active.length === 0 ? (
+        <p className="text-muted-foreground font-subheading text-sm mt-4">
+          Nothing on your plate — capture what needs doing so it never slips.
+        </p>
+      ) : (
+        <div className="flex items-center gap-6 mt-5 flex-wrap">
+          {overdue > 0 && (
+            <div className="flex items-center gap-2 text-rose-300">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="font-serif text-2xl">{overdue}</span>
+              <span className="text-xs font-subheading uppercase tracking-wider text-muted-foreground">Overdue</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-primary">
+            <span className="font-serif text-2xl">{dueToday}</span>
+            <span className="text-xs font-subheading uppercase tracking-wider text-muted-foreground">Due today</span>
+          </div>
+          <div className="flex items-center gap-2 text-foreground">
+            <span className="font-serif text-2xl">{active.length}</span>
+            <span className="text-xs font-subheading uppercase tracking-wider text-muted-foreground">Open</span>
+          </div>
+          {nextUp && (
+            <div className="ml-auto text-right max-w-[45%] hidden sm:block">
+              <p className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">Next up</p>
+              <p className="text-sm text-foreground/90 truncate">{nextUp.title}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </Link>
   );
 }
 

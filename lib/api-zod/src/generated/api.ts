@@ -1845,3 +1845,88 @@ export const DeleteWorkoutBlockResponse = zod.object({
 })
 
 
+/**
+ * @summary List all tasks
+ */
+export const GetTasksResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "notes": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['personal', 'finance', 'health', 'family', 'work', 'other']),
+  "isCompleted": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetTasksResponse = zod.array(GetTasksResponseItem)
+
+
+/**
+ * @summary Create a task
+ */
+export const CreateTaskBody = zod.object({
+  "title": zod.string(),
+  "notes": zod.string().optional(),
+  "dueDate": zod.coerce.date().optional(),
+  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "category": zod.enum(['personal', 'finance', 'health', 'family', 'work', 'other']).optional()
+})
+
+export const CreateTaskResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "notes": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['personal', 'finance', 'health', 'family', 'work', 'other']),
+  "isCompleted": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a task
+ */
+export const UpdateTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTaskBody = zod.object({
+  "title": zod.string().optional(),
+  "notes": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "category": zod.enum(['personal', 'finance', 'health', 'family', 'work', 'other']).optional(),
+  "isCompleted": zod.boolean().optional()
+})
+
+export const UpdateTaskResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "notes": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['personal', 'finance', 'health', 'family', 'work', 'other']),
+  "isCompleted": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a task
+ */
+export const DeleteTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteTaskResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

@@ -35,6 +35,8 @@ tags:
     description: Community & family connection calendar
   - name: workouts
     description: Workout planner — sessions built from ordered blocks
+  - name: tasks
+    description: Tasks and responsibilities — everyday to-dos with due dates, priority, and category
 
 paths:
   /storage/uploads/request-url:
@@ -1679,6 +1681,92 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /tasks:
+    get:
+      operationId: getTasks
+      tags: [tasks]
+      summary: List all tasks
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskBody"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    put:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskBody"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -2155,6 +2243,78 @@ components:
           type: boolean
         color:
           type: string
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high]
+        category:
+          type: string
+          enum: [personal, finance, health, family, work, other]
+        isCompleted:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, priority, category, isCompleted, createdAt]
+
+    CreateTaskBody:
+      type: object
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [low, medium, high]
+        category:
+          type: string
+          enum: [personal, finance, health, family, work, other]
+      required: [title]
+
+    UpdateTaskBody:
+      type: object
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, medium, high]
+        category:
+          type: string
+          enum: [personal, finance, health, family, work, other]
+        isCompleted:
+          type: boolean
 
     Affirmation:
       type: object
