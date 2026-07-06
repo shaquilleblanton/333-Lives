@@ -10,7 +10,7 @@ export default function Home() {
   const updateIntention = useUpdateIntention();
   const { data: todayEntry, isLoading: loadingGratitude } = useGetTodayGratitudeEntry();
 
-  if (isLoading || loadingGratitude) {
+  if (isLoading) {
     return (
       <div className="p-6 md:p-12 max-w-5xl mx-auto w-full space-y-12">
         <div className="space-y-4">

@@ -8,9 +8,11 @@ import {
   User,
   LogOut,
   Heart,
-  Users
+  Users,
+  Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo333 } from "@/components/logo";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
@@ -19,7 +21,8 @@ const NAV_ITEMS = [
   { href: "/growth", label: "Growth", icon: Sprout },
   { href: "/gratitude", label: "Gratitude", icon: Heart },
   { href: "/people", label: "People", icon: Users },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/community", label: "Community", icon: Calendar },
+  { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
@@ -27,13 +30,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row dark">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-6 gap-8">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/50">
-            <span className="font-serif text-primary text-lg leading-none">3</span>
-          </div>
+          <Logo333 size="sm" />
           <span className="font-serif text-xl tracking-wide text-foreground">333 Lives</span>
         </div>
         
