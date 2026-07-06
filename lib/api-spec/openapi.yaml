@@ -832,6 +832,13 @@ paths:
       operationId: getAffirmations
       tags: [affirmations]
       summary: List affirmations
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: Filter to a single date in YYYY-MM-DD format
       responses:
         "200":
           description: List of affirmations
@@ -902,6 +909,13 @@ paths:
       operationId: getGratitudeEntries
       tags: [gratitude]
       summary: List all gratitude entries
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: Filter to a single date in YYYY-MM-DD format
       responses:
         "200":
           description: List of gratitude entries

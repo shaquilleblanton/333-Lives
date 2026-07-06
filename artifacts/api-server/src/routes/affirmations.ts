@@ -21,7 +21,10 @@ const DAILY_AFFIRMATIONS = [
 ];
 
 router.get("/affirmations", async (req, res) => {
-  const rows = await db.select().from(affirmationsTable).where(eq(affirmationsTable.userId, DEFAULT_USER_ID));
+  const date = req.query.date as string | undefined;
+  const filters = [eq(affirmationsTable.userId, DEFAULT_USER_ID)];
+  if (date) filters.push(eq(affirmationsTable.date, date));
+  const rows = await db.select().from(affirmationsTable).where(and(...filters));
   return res.json(rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
 });
 

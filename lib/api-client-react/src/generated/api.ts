@@ -43,9 +43,11 @@ import type {
   DeleteLegacyLetter200,
   DeleteRelationshipMoment200,
   ErrorResponse,
+  GetAffirmationsParams,
   GetCommunityEventsParams,
   GetEventsParams,
   GetGoalsParams,
+  GetGratitudeEntriesParams,
   GetIntentionsParams,
   GetLegacyLettersParams,
   GetMessagesParams,
@@ -2853,20 +2855,27 @@ export const useDeleteGoal = <TError = ErrorType<unknown>,
       return useMutation(getDeleteGoalMutationOptions(options));
     }
 
-export const getGetAffirmationsUrl = () => {
+export const getGetAffirmationsUrl = (params?: GetAffirmationsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/affirmations`
+  return stringifiedParams.length > 0 ? `/api/affirmations?${stringifiedParams}` : `/api/affirmations`
 }
 
 /**
  * @summary List affirmations
  */
-export const getAffirmations = async ( options?: RequestInit): Promise<Affirmation[]> => {
+export const getAffirmations = async (params?: GetAffirmationsParams, options?: RequestInit): Promise<Affirmation[]> => {
 
-  return customFetch<Affirmation[]>(getGetAffirmationsUrl(),
+  return customFetch<Affirmation[]>(getGetAffirmationsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2879,23 +2888,23 @@ export const getAffirmations = async ( options?: RequestInit): Promise<Affirmati
 
 
 
-export const getGetAffirmationsQueryKey = () => {
+export const getGetAffirmationsQueryKey = (params?: GetAffirmationsParams,) => {
     return [
-    `/api/affirmations`
+    `/api/affirmations`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetAffirmationsQueryOptions = <TData = Awaited<ReturnType<typeof getAffirmations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAffirmations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetAffirmationsQueryOptions = <TData = Awaited<ReturnType<typeof getAffirmations>>, TError = ErrorType<unknown>>(params?: GetAffirmationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAffirmations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAffirmationsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetAffirmationsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAffirmations>>> = ({ signal }) => getAffirmations({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAffirmations>>> = ({ signal }) => getAffirmations(params, { signal, ...requestOptions });
 
 
 
@@ -2913,11 +2922,11 @@ export type GetAffirmationsQueryError = ErrorType<unknown>
  */
 
 export function useGetAffirmations<TData = Awaited<ReturnType<typeof getAffirmations>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAffirmations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetAffirmationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAffirmations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAffirmationsQueryOptions(options)
+  const queryOptions = getGetAffirmationsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -3148,20 +3157,27 @@ export const useUpdateAffirmation = <TError = ErrorType<unknown>,
       return useMutation(getUpdateAffirmationMutationOptions(options));
     }
 
-export const getGetGratitudeEntriesUrl = () => {
+export const getGetGratitudeEntriesUrl = (params?: GetGratitudeEntriesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/gratitude`
+  return stringifiedParams.length > 0 ? `/api/gratitude?${stringifiedParams}` : `/api/gratitude`
 }
 
 /**
  * @summary List all gratitude entries
  */
-export const getGratitudeEntries = async ( options?: RequestInit): Promise<GratitudeEntry[]> => {
+export const getGratitudeEntries = async (params?: GetGratitudeEntriesParams, options?: RequestInit): Promise<GratitudeEntry[]> => {
 
-  return customFetch<GratitudeEntry[]>(getGetGratitudeEntriesUrl(),
+  return customFetch<GratitudeEntry[]>(getGetGratitudeEntriesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -3174,23 +3190,23 @@ export const getGratitudeEntries = async ( options?: RequestInit): Promise<Grati
 
 
 
-export const getGetGratitudeEntriesQueryKey = () => {
+export const getGetGratitudeEntriesQueryKey = (params?: GetGratitudeEntriesParams,) => {
     return [
-    `/api/gratitude`
+    `/api/gratitude`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetGratitudeEntriesQueryOptions = <TData = Awaited<ReturnType<typeof getGratitudeEntries>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGratitudeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGratitudeEntriesQueryOptions = <TData = Awaited<ReturnType<typeof getGratitudeEntries>>, TError = ErrorType<unknown>>(params?: GetGratitudeEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGratitudeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetGratitudeEntriesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetGratitudeEntriesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGratitudeEntries>>> = ({ signal }) => getGratitudeEntries({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGratitudeEntries>>> = ({ signal }) => getGratitudeEntries(params, { signal, ...requestOptions });
 
 
 
@@ -3208,11 +3224,11 @@ export type GetGratitudeEntriesQueryError = ErrorType<unknown>
  */
 
 export function useGetGratitudeEntries<TData = Awaited<ReturnType<typeof getGratitudeEntries>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGratitudeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetGratitudeEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGratitudeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetGratitudeEntriesQueryOptions(options)
+  const queryOptions = getGetGratitudeEntriesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

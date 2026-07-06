@@ -8,10 +8,14 @@ import {
   useGetIntentionHistory,
   useGetIntentions,
   useGetTodayAffirmation,
+  useGetGratitudeEntries,
+  useGetAffirmations,
   useGetTasks,
   getGetDashboardQueryKey,
   getGetIntentionHistoryQueryKey,
   getGetIntentionsQueryKey,
+  getGetGratitudeEntriesQueryKey,
+  getGetAffirmationsQueryKey,
 } from "@workspace/api-client-react";
 import type { Intention } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -594,8 +598,35 @@ function DayIntentionsDialog({
     },
   );
 
+  const { data: gratitudeRows, isLoading: gratitudeLoading } = useGetGratitudeEntries(
+    { date: date ?? undefined },
+    {
+      query: {
+        enabled: !!date,
+        queryKey: getGetGratitudeEntriesQueryKey({ date: date ?? undefined }),
+      },
+    },
+  );
+
+  const { data: affirmationRows, isLoading: affirmationLoading } = useGetAffirmations(
+    { date: date ?? undefined },
+    {
+      query: {
+        enabled: !!date,
+        queryKey: getGetAffirmationsQueryKey({ date: date ?? undefined }),
+      },
+    },
+  );
+
   const sorted = [...(intentions ?? [])].sort((a, b) => a.order - b.order);
   const completedCount = sorted.filter((i) => i.isCompleted).length;
+  const gratitude = gratitudeRows?.[0];
+  const gratitudeItems = gratitude
+    ? [gratitude.item1, gratitude.item2, gratitude.item3].filter(
+        (item): item is string => !!item && item.trim().length > 0,
+      )
+    : [];
+  const affirmation = affirmationRows?.[0];
   const heading = date
     ? format(new Date(date + "T00:00:00"), "EEEE, MMMM d, yyyy")
     : "";
@@ -619,53 +650,107 @@ function DayIntentionsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="space-y-3 py-2">
-            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
-            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
-            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
-          </div>
-        ) : sorted.length === 0 ? (
-          <div className="py-6 text-center">
-            <Circle className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-muted-foreground text-sm">
-              Nothing was captured for this day.
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-2.5 py-1">
-            {sorted.map((intention, idx) => (
-              <li
-                key={intention.id}
-                className={cn(
-                  "flex items-start gap-3 rounded-xl border p-3.5 transition-colors",
-                  intention.isCompleted
-                    ? "border-primary/30 bg-primary/[0.06]"
-                    : "border-border/50 bg-card/40",
-                )}
-              >
-                {intention.isCompleted ? (
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                ) : (
-                  <Circle className="w-5 h-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">
-                    Intention {idx + 1}
-                  </span>
-                  <p
-                    className={cn(
-                      "text-foreground/90 leading-snug",
-                      intention.isCompleted && "line-through decoration-primary/40 text-foreground/60",
-                    )}
-                  >
-                    {intention.text}
+        <div className="max-h-[60vh] overflow-y-auto -mx-1 px-1 space-y-5">
+          {isLoading ? (
+            <div className="space-y-3 py-2">
+              <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+              <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+              <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+            </div>
+          ) : sorted.length === 0 ? (
+            <div className="py-6 text-center">
+              <Circle className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">
+                No intentions were set this day.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2.5 py-1">
+              {sorted.map((intention, idx) => (
+                <li
+                  key={intention.id}
+                  className={cn(
+                    "flex items-start gap-3 rounded-xl border p-3.5 transition-colors",
+                    intention.isCompleted
+                      ? "border-primary/30 bg-primary/[0.06]"
+                      : "border-border/50 bg-card/40",
+                  )}
+                >
+                  {intention.isCompleted ? (
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">
+                      Intention {idx + 1}
+                    </span>
+                    <p
+                      className={cn(
+                        "text-foreground/90 leading-snug",
+                        intention.isCompleted && "line-through decoration-primary/40 text-foreground/60",
+                      )}
+                    >
+                      {intention.text}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Heart className="w-4 h-4 text-primary/80" />
+              <span className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">
+                Gratitude
+              </span>
+            </div>
+            {gratitudeLoading ? (
+              <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+            ) : gratitudeItems.length === 0 ? (
+              <p className="text-muted-foreground text-sm rounded-xl border border-border/50 bg-card/40 p-3.5">
+                No gratitude logged this day.
+              </p>
+            ) : (
+              <div className="rounded-xl border border-border/50 bg-card/40 p-3.5 space-y-2">
+                <ul className="space-y-1.5">
+                  {gratitudeItems.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-foreground/90 leading-snug">
+                      <Sparkles className="w-3.5 h-3.5 text-primary/70 shrink-0 mt-1" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                {gratitude?.reflection && gratitude.reflection.trim().length > 0 && (
+                  <p className="text-muted-foreground text-sm italic border-t border-border/40 pt-2">
+                    {gratitude.reflection}
                   </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sunrise className="w-4 h-4 text-primary/80" />
+              <span className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">
+                Affirmation
+              </span>
+            </div>
+            {affirmationLoading ? (
+              <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+            ) : !affirmation ? (
+              <p className="text-muted-foreground text-sm rounded-xl border border-border/50 bg-card/40 p-3.5">
+                No affirmation was seen this day.
+              </p>
+            ) : (
+              <p className="rounded-xl border border-border/50 bg-card/40 p-3.5 font-serif text-foreground/90 leading-snug italic">
+                &ldquo;{affirmation.text}&rdquo;
+              </p>
+            )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

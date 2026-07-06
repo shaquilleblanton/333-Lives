@@ -1203,6 +1203,20 @@ export const GetGoalsCategory = {
   spiritual: 'spiritual',
 } as const;
 
+export type GetAffirmationsParams = {
+/**
+ * Filter to a single date in YYYY-MM-DD format
+ */
+date?: string;
+};
+
+export type GetGratitudeEntriesParams = {
+/**
+ * Filter to a single date in YYYY-MM-DD format
+ */
+date?: string;
+};
+
 export type GetCommunityEventsParams = {
 startDate?: string;
 endDate?: string;

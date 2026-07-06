@@ -751,6 +751,10 @@ export const DeleteGoalResponse = zod.object({
 /**
  * @summary List affirmations
  */
+export const GetAffirmationsQueryParams = zod.object({
+  "date": zod.date().optional().describe('Filter to a single date in YYYY-MM-DD format')
+})
+
 export const GetAffirmationsResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
@@ -819,6 +823,10 @@ export const UpdateAffirmationResponse = zod.object({
 /**
  * @summary List all gratitude entries
  */
+export const GetGratitudeEntriesQueryParams = zod.object({
+  "date": zod.date().optional().describe('Filter to a single date in YYYY-MM-DD format')
+})
+
 export const GetGratitudeEntriesResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
