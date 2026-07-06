@@ -255,6 +255,17 @@ function TasksSummary() {
 }
 
 const RECORD_CELEBRATED_KEY = "333:intentionRecordCelebrated";
+const MILESTONE_CELEBRATED_KEY = "333:intentionMilestoneCelebrated";
+
+// Round-number streak milestones worth celebrating on the way up, even when
+// they aren't a new personal best. Kept ascending so the "highest reached"
+// helpers stay simple.
+const STREAK_MILESTONES = [7, 30, 100, 365];
+
+const highestMilestoneAtOrBelow = (streak: number) =>
+  STREAK_MILESTONES.reduce((acc, m) => (streak >= m ? m : acc), 0);
+
+type Celebration = { type: "record" | "milestone"; value: number };
 
 const CONFETTI_COLORS = ["#BB734A", "#8FA67A", "#C8B57C", "#F7F4EF"];
 
@@ -298,9 +309,8 @@ function RecordConfetti() {
 function IntentionStreakHistory() {
   const { data, isLoading } = useGetIntentionHistory();
   const { toast } = useToast();
-  const [celebrating, setCelebrating] = useState(false);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [recordValue, setRecordValue] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {
@@ -313,41 +323,70 @@ function IntentionStreakHistory() {
     if (!data) return;
     const { currentStreak, longestStreak } = data;
 
-    let lastCelebrated: number | null = null;
-    try {
-      const stored = window.localStorage.getItem(RECORD_CELEBRATED_KEY);
-      lastCelebrated = stored === null ? null : Number(stored);
-    } catch {
-      lastCelebrated = null;
-    }
-
-    // First observation on this device: record the current best as the baseline
-    // so we never celebrate a record the user set before this moment.
-    if (lastCelebrated === null || Number.isNaN(lastCelebrated)) {
+    const readNumber = (key: string): number | null => {
       try {
-        window.localStorage.setItem(RECORD_CELEBRATED_KEY, String(longestStreak));
+        const stored = window.localStorage.getItem(key);
+        return stored === null ? null : Number(stored);
+      } catch {
+        return null;
+      }
+    };
+    const writeNumber = (key: string, value: number) => {
+      try {
+        window.localStorage.setItem(key, String(value));
       } catch {
         /* ignore storage failures */
       }
-      return;
+    };
+
+    const lastRecord = readNumber(RECORD_CELEBRATED_KEY);
+    const lastMilestone = readNumber(MILESTONE_CELEBRATED_KEY);
+
+    // First observation on this device: set both baselines to what the user has
+    // already achieved so we never celebrate a record or milestone earned before
+    // this moment. Bail this cycle once we've established the baselines.
+    const recordUninitialized = lastRecord === null || Number.isNaN(lastRecord);
+    const milestoneUninitialized =
+      lastMilestone === null || Number.isNaN(lastMilestone);
+    if (recordUninitialized) writeNumber(RECORD_CELEBRATED_KEY, longestStreak);
+    if (milestoneUninitialized) {
+      writeNumber(MILESTONE_CELEBRATED_KEY, highestMilestoneAtOrBelow(currentStreak));
     }
+    if (recordUninitialized || milestoneUninitialized) return;
 
     // The current run is the all-time best when it equals the longest streak.
     // Celebrate only when that best value has grown beyond what we last cheered
     // for — i.e. the transition to a new record, not every completion or reload.
     const isRecordRun = currentStreak > 0 && currentStreak === longestStreak;
-    if (isRecordRun && currentStreak > lastCelebrated) {
-      try {
-        window.localStorage.setItem(RECORD_CELEBRATED_KEY, String(currentStreak));
-      } catch {
-        /* ignore storage failures */
-      }
-      setRecordValue(currentStreak);
-      setCelebrating(true);
+    const isNewRecord = isRecordRun && currentStreak > lastRecord;
+
+    // The highest round-number milestone the current streak has now crossed but
+    // that we haven't celebrated yet. Only fires on the crossing transition.
+    const crossedMilestone = highestMilestoneAtOrBelow(currentStreak);
+    const isNewMilestone = crossedMilestone > lastMilestone;
+
+    // A new record wins when both would fire on the same day, so we never
+    // stack two celebrations. Still advance the milestone marker so the
+    // coincident milestone isn't cheered again later.
+    if (isNewRecord) {
+      writeNumber(RECORD_CELEBRATED_KEY, currentStreak);
+      if (isNewMilestone) writeNumber(MILESTONE_CELEBRATED_KEY, crossedMilestone);
+      setCelebration({ type: "record", value: currentStreak });
       setShowConfetti(true);
       toast({
         title: "New record! 🎉",
         description: `${currentStreak} days of completing all three intentions — your best run yet.`,
+      });
+      return;
+    }
+
+    if (isNewMilestone) {
+      writeNumber(MILESTONE_CELEBRATED_KEY, crossedMilestone);
+      setCelebration({ type: "milestone", value: crossedMilestone });
+      setShowConfetti(true);
+      toast({
+        title: `${crossedMilestone}-day milestone! 🔥`,
+        description: `${crossedMilestone} straight days of completing all three intentions. Keep the momentum.`,
       });
     }
   }, [data, toast]);
@@ -386,7 +425,7 @@ function IntentionStreakHistory() {
     <section
       className={cn(
         "relative overflow-hidden rounded-2xl border bg-card/40 p-7 md:p-9 backdrop-blur-sm transition-colors duration-700",
-        celebrating ? "border-primary/60 shadow-[0_0_60px_-15px] shadow-primary/30" : "border-primary/20",
+        celebration ? "border-primary/60 shadow-[0_0_60px_-15px] shadow-primary/30" : "border-primary/20",
       )}
     >
       <div className="absolute top-0 right-0 w-56 h-56 bg-primary/10 rounded-bl-[120px] -z-10 blur-2xl" />
@@ -394,7 +433,7 @@ function IntentionStreakHistory() {
       <AnimatePresence>{showConfetti && <RecordConfetti key="confetti" />}</AnimatePresence>
 
       <AnimatePresence>
-        {celebrating && (
+        {celebration && (
           <motion.div
             initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}
@@ -403,18 +442,35 @@ function IntentionStreakHistory() {
             className="mb-6 overflow-hidden"
           >
             <div className="flex items-start gap-3 rounded-xl border border-primary/40 bg-primary/[0.08] p-4">
-              <Trophy className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              {celebration.type === "record" ? (
+                <Trophy className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              ) : (
+                <Flame className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              )}
               <div className="flex-1">
-                <p className="font-serif text-lg text-foreground">
-                  A new personal best — {recordValue} day{recordValue === 1 ? "" : "s"} strong.
-                </p>
-                <p className="text-sm text-muted-foreground font-subheading">
-                  You&apos;ve never kept the 333 streak alive this long. Keep it going.
-                </p>
+                {celebration.type === "record" ? (
+                  <>
+                    <p className="font-serif text-lg text-foreground">
+                      A new personal best — {celebration.value} day{celebration.value === 1 ? "" : "s"} strong.
+                    </p>
+                    <p className="text-sm text-muted-foreground font-subheading">
+                      You&apos;ve never kept the 333 streak alive this long. Keep it going.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-serif text-lg text-foreground">
+                      {celebration.value}-day milestone reached. 🔥
+                    </p>
+                    <p className="text-sm text-muted-foreground font-subheading">
+                      {celebration.value} straight days of all three intentions — a legacy built one day at a time.
+                    </p>
+                  </>
+                )}
               </div>
               <button
                 type="button"
-                onClick={() => setCelebrating(false)}
+                onClick={() => setCelebration(null)}
                 aria-label="Dismiss celebration"
                 className="text-muted-foreground/60 hover:text-foreground transition-colors shrink-0"
               >
