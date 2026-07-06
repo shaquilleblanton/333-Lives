@@ -342,6 +342,7 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
   const [drafts, setDrafts] = useState<string[]>(["", "", ""]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+  const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
   const sorted = [...intentions].sort((a, b) => a.order - b.order);
   const total = sorted.length;
@@ -417,6 +418,7 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
         onSuccess: () => {
           invalidate();
           if (editingId === intention.id) cancelEdit();
+          setConfirmingId((id) => (id === intention.id ? null : id));
         },
       }
     );
@@ -604,24 +606,48 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
                     {intention.text}
                   </span>
                 </button>
-                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => startEdit(intention)}
-                    disabled={isBusy}
-                    aria-label="Edit intention"
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => remove(intention)}
-                    disabled={isBusy}
-                    aria-label="Remove intention"
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
-                  >
-                    {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  </button>
-                </div>
+                {confirmingId === intention.id ? (
+                  <div className="flex items-center gap-2 shrink-0" role="group" aria-label="Confirm removal">
+                    <span className="hidden sm:inline text-xs font-subheading text-muted-foreground">Remove?</span>
+                    <button
+                      onClick={() => remove(intention)}
+                      disabled={isBusy}
+                      autoFocus
+                      aria-label="Confirm remove intention"
+                      className="inline-flex items-center gap-1 h-8 px-3 rounded-full text-xs font-subheading bg-destructive/15 text-destructive hover:bg-destructive/25 disabled:opacity-40 transition-colors"
+                    >
+                      {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => setConfirmingId(null)}
+                      disabled={isBusy}
+                      aria-label="Cancel remove intention"
+                      className="inline-flex items-center h-8 px-3 rounded-full text-xs font-subheading text-muted-foreground hover:bg-muted/40 disabled:opacity-40 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => startEdit(intention)}
+                      disabled={isBusy}
+                      aria-label="Edit intention"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmingId(intention.id)}
+                      disabled={isBusy}
+                      aria-label="Remove intention"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
+                    >
+                      {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
