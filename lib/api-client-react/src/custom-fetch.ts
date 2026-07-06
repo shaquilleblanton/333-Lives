@@ -10,6 +10,22 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
+const TIMEZONE_HEADER = "x-timezone";
+
+/**
+ * The client's IANA timezone (e.g. "America/New_York"), resolved once.
+ * Sent with every request so the API can compute the user's local "today"
+ * instead of relying on the server's UTC clock.
+ */
+function resolveTimezone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+const _timezone = resolveTimezone();
 
 // ---------------------------------------------------------------------------
 // Module-level configuration
@@ -347,6 +363,12 @@ export async function customFetch<T = unknown>(
 
   if (responseType === "json" && !headers.has("accept")) {
     headers.set("accept", DEFAULT_JSON_ACCEPT);
+  }
+
+  // Advertise the client's local timezone so the API can key day-scoped
+  // data (intentions, habits, gratitude, …) off the user's local "today".
+  if (_timezone && !headers.has(TIMEZONE_HEADER)) {
+    headers.set(TIMEZONE_HEADER, _timezone);
   }
 
   // Attach bearer token when an auth getter is configured and no

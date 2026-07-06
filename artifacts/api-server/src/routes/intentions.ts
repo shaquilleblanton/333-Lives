@@ -2,22 +2,19 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { intentionsTable, insertIntentionSchema, updateIntentionSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getTodayDate } from "../lib/date";
 
 const router = Router();
 const DEFAULT_USER_ID = 1;
 
-function getTodayDate() {
-  return new Date().toISOString().split("T")[0];
-}
-
 router.get("/intentions", async (req, res) => {
-  const date = (req.query.date as string) || getTodayDate();
+  const date = (req.query.date as string) || getTodayDate(req);
   const rows = await db.select().from(intentionsTable).where(and(eq(intentionsTable.userId, DEFAULT_USER_ID), eq(intentionsTable.date, date)));
   return res.json(rows);
 });
 
 router.post("/intentions", async (req, res) => {
-  const date = req.body.date || getTodayDate();
+  const date = req.body.date || getTodayDate(req);
   const parsed = insertIntentionSchema.safeParse({ ...req.body, userId: DEFAULT_USER_ID, date });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const inserted = await db.insert(intentionsTable).values(parsed.data).returning();

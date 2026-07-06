@@ -1,2 +1,4 @@
 - [333 Lives architecture](333-lives-arch.md) — full-stack life management app; API on port 8080, web on port 22333; orval fix required indexFiles:false
 - [CSS import order](css-import-order.md) — Google Fonts @import must be first line in index.css, before tailwindcss imports, or PostCSS throws
+- [App-wide "today"](timezone-today.md) — day-scoped data uses user's local day via x-timezone header + getTodayDate(req), not UTC
+- [Web project references](web-project-references.md) — web typecheck reads api-client-react built .d.ts; run `pnpm run typecheck:libs` after lib changes

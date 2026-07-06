@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { affirmationsTable, insertAffirmationSchema, updateAffirmationSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getTodayDate } from "../lib/date";
 
 const router = Router();
 const DEFAULT_USER_ID = 1;
@@ -19,17 +20,13 @@ const DAILY_AFFIRMATIONS = [
   "I protect my peace and pour into what matters most.",
 ];
 
-function getTodayDate() {
-  return new Date().toISOString().split("T")[0];
-}
-
 router.get("/affirmations", async (req, res) => {
   const rows = await db.select().from(affirmationsTable).where(eq(affirmationsTable.userId, DEFAULT_USER_ID));
   return res.json(rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
 });
 
 router.get("/affirmations/today", async (req, res) => {
-  const today = getTodayDate();
+  const today = getTodayDate(req);
   const existing = await db.select().from(affirmationsTable).where(and(eq(affirmationsTable.userId, DEFAULT_USER_ID), eq(affirmationsTable.date, today))).limit(1);
   if (existing.length > 0) return res.json(existing[0]);
   const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
@@ -39,7 +36,7 @@ router.get("/affirmations/today", async (req, res) => {
 });
 
 router.post("/affirmations", async (req, res) => {
-  const date = req.body.date || getTodayDate();
+  const date = req.body.date || getTodayDate(req);
   const parsed = insertAffirmationSchema.safeParse({ ...req.body, userId: DEFAULT_USER_ID, date });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const inserted = await db.insert(affirmationsTable).values(parsed.data).returning();
