@@ -1158,6 +1158,95 @@ export const GetDashboardResponse = zod.object({
 
 
 /**
+ * @summary Get all moments for a person
+ */
+export const GetRelationshipMomentsParams = zod.object({
+  "personId": zod.coerce.number()
+})
+
+export const GetRelationshipMomentsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "personId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetRelationshipMomentsResponse = zod.array(GetRelationshipMomentsResponseItem)
+
+
+/**
+ * @summary Add a moment for a person
+ */
+export const CreateRelationshipMomentParams = zod.object({
+  "personId": zod.coerce.number()
+})
+
+export const CreateRelationshipMomentBody = zod.object({
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional()
+})
+
+export const CreateRelationshipMomentResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "personId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a moment
+ */
+export const UpdateRelationshipMomentParams = zod.object({
+  "personId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const UpdateRelationshipMomentBody = zod.object({
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional()
+})
+
+export const UpdateRelationshipMomentResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "personId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a moment
+ */
+export const DeleteRelationshipMomentParams = zod.object({
+  "personId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const DeleteRelationshipMomentResponse = zod.object({
+  "success": zod.boolean().optional()
+})
+
+
+/**
  * @summary Get all legacy letters
  */
 export const GetLegacyLettersQueryParams = zod.object({

@@ -1069,6 +1069,105 @@ paths:
               schema:
                 $ref: "#/components/schemas/Dashboard"
 
+  /people/{personId}/moments:
+    get:
+      operationId: getRelationshipMoments
+      tags: [people]
+      summary: Get all moments for a person
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of moments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelationshipMoment"
+    post:
+      operationId: createRelationshipMoment
+      tags: [people]
+      summary: Add a moment for a person
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRelationshipMomentBody"
+      responses:
+        "201":
+          description: Moment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipMoment"
+
+  /people/{personId}/moments/{id}:
+    put:
+      operationId: updateRelationshipMoment
+      tags: [people]
+      summary: Update a moment
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRelationshipMomentBody"
+      responses:
+        "200":
+          description: Moment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipMoment"
+    delete:
+      operationId: deleteRelationshipMoment
+      tags: [people]
+      summary: Delete a moment
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
   /legacy-letters:
     get:
       operationId: getLegacyLetters
@@ -2079,6 +2178,48 @@ components:
         isPublic:
           type: boolean
       required: [title, content, recipientName, triggerType]
+
+    RelationshipMoment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        personId:
+          type: integer
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [conversation, promise, milestone, memory, birthday, loss, gratitude, other]
+        title:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, personId, date, type, title, createdAt, updatedAt]
+
+    CreateRelationshipMomentBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [conversation, promise, milestone, memory, birthday, loss, gratitude, other]
+        title:
+          type: string
+        description:
+          type: string
+      required: [date, type, title]
 
     UpdateLegacyLetterBody:
       type: object

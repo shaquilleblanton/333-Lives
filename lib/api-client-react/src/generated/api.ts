@@ -34,9 +34,11 @@ import type {
   CreateLegacyLetterBody,
   CreateMessageBody,
   CreatePersonBody,
+  CreateRelationshipMomentBody,
   CreateVaultItemBody,
   Dashboard,
   DeleteLegacyLetter200,
+  DeleteRelationshipMoment200,
   ErrorResponse,
   GetCommunityEventsParams,
   GetEventsParams,
@@ -56,6 +58,7 @@ import type {
   LegacyLetter,
   Message,
   Person,
+  RelationshipMoment,
   RespondToCommunityEventBody,
   SuccessResponse,
   UpdateAffirmationBody,
@@ -4009,6 +4012,299 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
 
 
 
+
+export const getGetRelationshipMomentsUrl = (personId: number,) => {
+
+
+
+
+  return `/api/people/${personId}/moments`
+}
+
+/**
+ * @summary Get all moments for a person
+ */
+export const getRelationshipMoments = async (personId: number, options?: RequestInit): Promise<RelationshipMoment[]> => {
+
+  return customFetch<RelationshipMoment[]>(getGetRelationshipMomentsUrl(personId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRelationshipMomentsQueryKey = (personId: number,) => {
+    return [
+    `/api/people/${personId}/moments`
+    ] as const;
+    }
+
+
+export const getGetRelationshipMomentsQueryOptions = <TData = Awaited<ReturnType<typeof getRelationshipMoments>>, TError = ErrorType<unknown>>(personId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRelationshipMoments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRelationshipMomentsQueryKey(personId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRelationshipMoments>>> = ({ signal }) => getRelationshipMoments(personId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: personId !== null && personId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRelationshipMoments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRelationshipMomentsQueryResult = NonNullable<Awaited<ReturnType<typeof getRelationshipMoments>>>
+export type GetRelationshipMomentsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all moments for a person
+ */
+
+export function useGetRelationshipMoments<TData = Awaited<ReturnType<typeof getRelationshipMoments>>, TError = ErrorType<unknown>>(
+ personId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRelationshipMoments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRelationshipMomentsQueryOptions(personId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateRelationshipMomentUrl = (personId: number,) => {
+
+
+
+
+  return `/api/people/${personId}/moments`
+}
+
+/**
+ * @summary Add a moment for a person
+ */
+export const createRelationshipMoment = async (personId: number,
+    createRelationshipMomentBody: CreateRelationshipMomentBody, options?: RequestInit): Promise<RelationshipMoment> => {
+
+  return customFetch<RelationshipMoment>(getCreateRelationshipMomentUrl(personId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createRelationshipMomentBody)
+  }
+);}
+
+
+
+
+export const getCreateRelationshipMomentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRelationshipMoment>>, TError,{personId: number;data: BodyType<CreateRelationshipMomentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRelationshipMoment>>, TError,{personId: number;data: BodyType<CreateRelationshipMomentBody>}, TContext> => {
+
+const mutationKey = ['createRelationshipMoment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRelationshipMoment>>, {personId: number;data: BodyType<CreateRelationshipMomentBody>}> = (props) => {
+          const {personId,data} = props ?? {};
+
+          return  createRelationshipMoment(personId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRelationshipMomentMutationResult = NonNullable<Awaited<ReturnType<typeof createRelationshipMoment>>>
+    export type CreateRelationshipMomentMutationBody = BodyType<CreateRelationshipMomentBody>
+    export type CreateRelationshipMomentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a moment for a person
+ */
+export const useCreateRelationshipMoment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRelationshipMoment>>, TError,{personId: number;data: BodyType<CreateRelationshipMomentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRelationshipMoment>>,
+        TError,
+        {personId: number;data: BodyType<CreateRelationshipMomentBody>},
+        TContext
+      > => {
+      return useMutation(getCreateRelationshipMomentMutationOptions(options));
+    }
+
+export const getUpdateRelationshipMomentUrl = (personId: number,
+    id: number,) => {
+
+
+
+
+  return `/api/people/${personId}/moments/${id}`
+}
+
+/**
+ * @summary Update a moment
+ */
+export const updateRelationshipMoment = async (personId: number,
+    id: number,
+    createRelationshipMomentBody: CreateRelationshipMomentBody, options?: RequestInit): Promise<RelationshipMoment> => {
+
+  return customFetch<RelationshipMoment>(getUpdateRelationshipMomentUrl(personId,id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createRelationshipMomentBody)
+  }
+);}
+
+
+
+
+export const getUpdateRelationshipMomentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRelationshipMoment>>, TError,{personId: number;id: number;data: BodyType<CreateRelationshipMomentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRelationshipMoment>>, TError,{personId: number;id: number;data: BodyType<CreateRelationshipMomentBody>}, TContext> => {
+
+const mutationKey = ['updateRelationshipMoment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRelationshipMoment>>, {personId: number;id: number;data: BodyType<CreateRelationshipMomentBody>}> = (props) => {
+          const {personId,id,data} = props ?? {};
+
+          return  updateRelationshipMoment(personId,id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRelationshipMomentMutationResult = NonNullable<Awaited<ReturnType<typeof updateRelationshipMoment>>>
+    export type UpdateRelationshipMomentMutationBody = BodyType<CreateRelationshipMomentBody>
+    export type UpdateRelationshipMomentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a moment
+ */
+export const useUpdateRelationshipMoment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRelationshipMoment>>, TError,{personId: number;id: number;data: BodyType<CreateRelationshipMomentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRelationshipMoment>>,
+        TError,
+        {personId: number;id: number;data: BodyType<CreateRelationshipMomentBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateRelationshipMomentMutationOptions(options));
+    }
+
+export const getDeleteRelationshipMomentUrl = (personId: number,
+    id: number,) => {
+
+
+
+
+  return `/api/people/${personId}/moments/${id}`
+}
+
+/**
+ * @summary Delete a moment
+ */
+export const deleteRelationshipMoment = async (personId: number,
+    id: number, options?: RequestInit): Promise<DeleteRelationshipMoment200> => {
+
+  return customFetch<DeleteRelationshipMoment200>(getDeleteRelationshipMomentUrl(personId,id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteRelationshipMomentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRelationshipMoment>>, TError,{personId: number;id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRelationshipMoment>>, TError,{personId: number;id: number}, TContext> => {
+
+const mutationKey = ['deleteRelationshipMoment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRelationshipMoment>>, {personId: number;id: number}> = (props) => {
+          const {personId,id} = props ?? {};
+
+          return  deleteRelationshipMoment(personId,id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRelationshipMomentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRelationshipMoment>>>
+
+    export type DeleteRelationshipMomentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a moment
+ */
+export const useDeleteRelationshipMoment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRelationshipMoment>>, TError,{personId: number;id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRelationshipMoment>>,
+        TError,
+        {personId: number;id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteRelationshipMomentMutationOptions(options));
+    }
 
 export const getGetLegacyLettersUrl = (params?: GetLegacyLettersParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -14,6 +14,7 @@ import gratitudeRouter from "./gratitude";
 import peopleRouter from "./people";
 import communityRouter from "./community";
 import legacyLettersRouter from "./legacy-letters";
+import relationshipMomentsRouter from "./relationship-moments";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(gratitudeRouter);
 router.use(peopleRouter);
 router.use(communityRouter);
 router.use(legacyLettersRouter);
+router.use(relationshipMomentsRouter);
 
 export default router;

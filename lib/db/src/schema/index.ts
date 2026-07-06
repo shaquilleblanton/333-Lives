@@ -11,3 +11,4 @@ export * from "./gratitude";
 export * from "./people";
 export * from "./community";
 export * from "./legacy-letters";
+export * from "./relationship-moments";

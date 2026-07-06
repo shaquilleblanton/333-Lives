@@ -716,6 +716,53 @@ export interface CreateLegacyLetterBody {
   isPublic?: boolean;
 }
 
+export type RelationshipMomentType = typeof RelationshipMomentType[keyof typeof RelationshipMomentType];
+
+
+export const RelationshipMomentType = {
+  conversation: 'conversation',
+  promise: 'promise',
+  milestone: 'milestone',
+  memory: 'memory',
+  birthday: 'birthday',
+  loss: 'loss',
+  gratitude: 'gratitude',
+  other: 'other',
+} as const;
+
+export interface RelationshipMoment {
+  id: number;
+  userId: number;
+  personId: number;
+  date: string;
+  type: RelationshipMomentType;
+  title: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateRelationshipMomentBodyType = typeof CreateRelationshipMomentBodyType[keyof typeof CreateRelationshipMomentBodyType];
+
+
+export const CreateRelationshipMomentBodyType = {
+  conversation: 'conversation',
+  promise: 'promise',
+  milestone: 'milestone',
+  memory: 'memory',
+  birthday: 'birthday',
+  loss: 'loss',
+  gratitude: 'gratitude',
+  other: 'other',
+} as const;
+
+export interface CreateRelationshipMomentBody {
+  date: string;
+  type: CreateRelationshipMomentBodyType;
+  title: string;
+  description?: string;
+}
+
 export type UpdateLegacyLetterBodyTriggerType = typeof UpdateLegacyLetterBodyTriggerType[keyof typeof UpdateLegacyLetterBodyTriggerType];
 
 
@@ -831,6 +878,10 @@ export const GetCommunityEventsCategory = {
   request: 'request',
   other: 'other',
 } as const;
+
+export type DeleteRelationshipMoment200 = {
+  success?: boolean;
+};
 
 export type GetLegacyLettersParams = {
 status?: GetLegacyLettersStatus;
