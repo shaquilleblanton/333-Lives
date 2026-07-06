@@ -3,6 +3,7 @@ import { Lock, FileText, Image as ImageIcon, Book, Mic, Info, Plus } from "lucid
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORY_ICONS = {
@@ -25,6 +26,15 @@ export default function Vault() {
   const { data: vaultItems, isLoading } = useGetVaultItems();
   const createVaultItem = useCreateVaultItem();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  function showError(description: string) {
+    toast({
+      variant: "destructive",
+      title: "Something went wrong",
+      description,
+    });
+  }
 
   const handleAddDemoItem = () => {
     createVaultItem.mutate({
@@ -36,7 +46,9 @@ export default function Vault() {
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() });
-      }
+      },
+      onError: () =>
+        showError("We couldn't store that item. Please check your connection and try again."),
     });
   };
 

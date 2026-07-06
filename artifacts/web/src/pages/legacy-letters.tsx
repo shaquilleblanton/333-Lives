@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -104,12 +105,21 @@ const EMPTY_FORM: FormState = {
 
 export default function LegacyLetters() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const { data: letters = [], isLoading } = useGetLegacyLetters();
   const createLetter = useCreateLegacyLetter();
   const updateLetter = useUpdateLegacyLetter();
   const deleteLetter = useDeleteLegacyLetter();
   const sealLetter = useSealLegacyLetter();
   const unsealLetter = useUnsealLegacyLetter();
+
+  function showError(description: string) {
+    toast({
+      variant: "destructive",
+      title: "Something went wrong",
+      description,
+    });
+  }
 
   const [view, setView] = useState<"list" | "write" | "read">("list");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -176,32 +186,56 @@ export default function LegacyLetters() {
       status: seal ? "sealed" as const : "draft" as const,
       isSealed: seal,
     };
-    if (editingId) {
-      await updateLetter.mutateAsync({ id: editingId, data: payload as any });
-      if (seal) await sealLetter.mutateAsync({ id: editingId });
-    } else {
-      const created = await createLetter.mutateAsync({ data: { ...payload, userId: 1 } as any });
-      if (seal) await sealLetter.mutateAsync({ id: (created as LegacyLetter).id });
+    try {
+      if (editingId) {
+        await updateLetter.mutateAsync({ id: editingId, data: payload as any });
+        if (seal) await sealLetter.mutateAsync({ id: editingId });
+      } else {
+        const created = await createLetter.mutateAsync({ data: { ...payload, userId: 1 } as any });
+        if (seal) await sealLetter.mutateAsync({ id: (created as LegacyLetter).id });
+      }
+      invalidate();
+      goBack();
+    } catch {
+      invalidate();
+      showError(
+        seal
+          ? "We couldn't seal your letter. Please check your connection and try again."
+          : "We couldn't save your letter. Please check your connection and try again."
+      );
     }
-    invalidate();
-    goBack();
   }
 
   async function handleSeal(id: number) {
-    await sealLetter.mutateAsync({ id });
-    invalidate();
+    try {
+      await sealLetter.mutateAsync({ id });
+      invalidate();
+    } catch {
+      invalidate();
+      showError("We couldn't seal that letter. Please try again.");
+    }
   }
 
   async function handleUnseal(id: number) {
-    await unsealLetter.mutateAsync({ id });
-    invalidate();
+    try {
+      await unsealLetter.mutateAsync({ id });
+      invalidate();
+    } catch {
+      invalidate();
+      showError("We couldn't unseal that letter. Please try again.");
+    }
   }
 
   async function handleDelete(id: number) {
-    await deleteLetter.mutateAsync({ id });
-    invalidate();
-    setConfirmDelete(null);
-    if (view === "read") goBack();
+    try {
+      await deleteLetter.mutateAsync({ id });
+      invalidate();
+      setConfirmDelete(null);
+      if (view === "read") goBack();
+    } catch {
+      invalidate();
+      showError("We couldn't delete that letter. Please try again.");
+    }
   }
 
   const filtered = letters.filter(l => {

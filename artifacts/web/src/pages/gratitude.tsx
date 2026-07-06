@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function Gratitude() {
@@ -58,8 +59,17 @@ export default function Gratitude() {
   }, [entries]);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const createEntry = useCreateGratitudeEntry();
   const updateEntry = useUpdateGratitudeEntry();
+
+  function showError(description: string) {
+    toast({
+      variant: "destructive",
+      title: "Something went wrong",
+      description,
+    });
+  }
 
   const [formData, setFormData] = useState({
     item1: "",
@@ -94,7 +104,9 @@ export default function Gratitude() {
             queryClient.invalidateQueries({ queryKey: getGetTodayGratitudeEntryQueryKey() });
             queryClient.invalidateQueries({ queryKey: getGetGratitudeEntriesQueryKey() });
             setIsFormOpen(false);
-          }
+          },
+          onError: () =>
+            showError("We couldn't save your gratitude. Please check your connection and try again."),
         }
       );
     } else {
@@ -105,7 +117,9 @@ export default function Gratitude() {
             queryClient.invalidateQueries({ queryKey: getGetTodayGratitudeEntryQueryKey() });
             queryClient.invalidateQueries({ queryKey: getGetGratitudeEntriesQueryKey() });
             setIsFormOpen(false);
-          }
+          },
+          onError: () =>
+            showError("We couldn't save your gratitude. Please check your connection and try again."),
         }
       );
     }
