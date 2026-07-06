@@ -1187,6 +1187,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Dashboard"
 
+  /intentions/history:
+    get:
+      operationId: getIntentionHistory
+      tags: [intentions]
+      summary: Get intention streak history and best run
+      responses:
+        "200":
+          description: Streak history — current streak, longest streak, and fully-completed days
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentionHistory"
+
   /people/{personId}/moments:
     get:
       operationId: getRelationshipMoments
@@ -2231,6 +2244,23 @@ components:
         intentionsStreak:
           type: integer
       required: [userName, streakDays, messagesSent, goalsActive, todayIntentions, upcomingMessages, todayHabits, todayEvents, vaultCount, habitCompletionToday, intentionsStreak]
+
+    IntentionHistory:
+      type: object
+      properties:
+        currentStreak:
+          type: integer
+          description: Current consecutive-day streak of fully-completed 333 days
+        longestStreak:
+          type: integer
+          description: Longest-ever consecutive-day streak of fully-completed 333 days
+        completedDays:
+          type: array
+          description: Every day (YYYY-MM-DD) where all three intentions were set and completed
+          items:
+            type: string
+            format: date
+      required: [currentStreak, longestStreak, completedDays]
 
     LegacyLetter:
       type: object

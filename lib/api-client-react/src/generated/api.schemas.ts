@@ -649,6 +649,15 @@ export interface Dashboard {
   intentionsStreak: number;
 }
 
+export interface IntentionHistory {
+  /** Current consecutive-day streak of fully-completed 333 days */
+  currentStreak: number;
+  /** Longest-ever consecutive-day streak of fully-completed 333 days */
+  longestStreak: number;
+  /** Every day (YYYY-MM-DD) where all three intentions were set and completed */
+  completedDays: string[];
+}
+
 export type LegacyLetterTriggerType = typeof LegacyLetterTriggerType[keyof typeof LegacyLetterTriggerType];
 
 

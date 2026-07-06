@@ -5,6 +5,7 @@ import {
   useCreateIntention,
   useDeleteIntention,
   useGetTodayGratitudeEntry,
+  useGetIntentionHistory,
   getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
 import type { Intention } from "@workspace/api-client-react";
@@ -13,7 +14,7 @@ import { format } from "date-fns";
 import {
   CheckCircle2, Circle, MessageSquare, Shield, Heart,
   Flame, Sparkles, Sunrise, Loader2, ArrowRight, Check,
-  Pencil, Trash2, X,
+  Pencil, Trash2, X, Trophy,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,9 @@ export default function Home() {
         intentions={dashboard.todayIntentions ?? []}
         streak={dashboard.intentionsStreak ?? 0}
       />
+
+      {/* Intention streak history & best run */}
+      <IntentionStreakHistory />
 
       {/* Affirmation Hero */}
       <section className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/30 p-8 md:p-12 backdrop-blur-sm">
@@ -161,6 +165,124 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+function IntentionStreakHistory() {
+  const { data, isLoading } = useGetIntentionHistory();
+
+  if (isLoading) {
+    return <Skeleton className="h-56 w-full rounded-2xl bg-muted/30" />;
+  }
+  if (!data) return null;
+
+  const completedSet = new Set(data.completedDays);
+  const hasHistory = data.completedDays.length > 0;
+
+  // Build a GitHub-style grid of the last 18 weeks, columns = weeks (Sun→Sat).
+  const WEEKS = 18;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayKey = format(today, "yyyy-MM-dd");
+
+  const end = new Date(today);
+  end.setDate(end.getDate() + (6 - end.getDay())); // Saturday of this week
+  const start = new Date(end);
+  start.setDate(start.getDate() - (WEEKS * 7 - 1));
+
+  const columns: Date[][] = [];
+  const cursor = new Date(start);
+  for (let w = 0; w < WEEKS; w++) {
+    const week: Date[] = [];
+    for (let d = 0; d < 7; d++) {
+      week.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    columns.push(week);
+  }
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card/40 p-7 md:p-9 backdrop-blur-sm">
+      <div className="absolute top-0 right-0 w-56 h-56 bg-primary/10 rounded-bl-[120px] -z-10 blur-2xl" />
+
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary">
+            <Flame className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-subheading tracking-widest text-primary uppercase">Your Legacy, One Day at a Time</p>
+            <h2 className="text-2xl font-serif text-foreground">Intention Streak</h2>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-8 max-w-sm">
+        <div className="bg-card/50 border border-border/50 rounded-xl p-4 flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider font-subheading">Current</span>
+          <span className="text-2xl font-serif text-foreground flex items-baseline gap-1.5">
+            {data.currentStreak}
+            <span className="text-sm font-sans text-muted-foreground">day{data.currentStreak === 1 ? "" : "s"}</span>
+          </span>
+        </div>
+        <div className="bg-primary/[0.06] border border-primary/25 rounded-xl p-4 flex flex-col gap-1">
+          <span className="text-xs text-primary/80 uppercase tracking-wider font-subheading flex items-center gap-1.5">
+            <Trophy className="w-3.5 h-3.5" /> Best Run
+          </span>
+          <span className="text-2xl font-serif text-foreground flex items-baseline gap-1.5">
+            {data.longestStreak}
+            <span className="text-sm font-sans text-muted-foreground">day{data.longestStreak === 1 ? "" : "s"}</span>
+          </span>
+        </div>
+      </div>
+
+      {hasHistory ? (
+        <div className="space-y-3">
+          <div className="flex gap-1 overflow-x-auto pb-1">
+            {columns.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-1">
+                {week.map((day) => {
+                  const key = format(day, "yyyy-MM-dd");
+                  const isFuture = key > todayKey;
+                  const isComplete = completedSet.has(key);
+                  const isToday = key === todayKey;
+                  return (
+                    <div
+                      key={key}
+                      title={`${format(day, "MMM d, yyyy")}${isComplete ? " — all 3 complete" : isFuture ? "" : " — not completed"}`}
+                      className={cn(
+                        "w-3.5 h-3.5 rounded-[3px] transition-colors",
+                        isFuture
+                          ? "bg-transparent"
+                          : isComplete
+                            ? "bg-primary"
+                            : "bg-muted/40",
+                        isToday && "ring-1 ring-primary/60 ring-offset-1 ring-offset-background",
+                      )}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-subheading">
+            <span>Less</span>
+            <span className="w-3 h-3 rounded-[3px] bg-muted/40" />
+            <span className="w-3 h-3 rounded-[3px] bg-primary/40" />
+            <span className="w-3 h-3 rounded-[3px] bg-primary" />
+            <span>More</span>
+            <span className="ml-auto">Each filled square is a day you completed all three intentions.</span>
+          </div>
+        </div>
+      ) : (
+        <div className="border border-dashed border-border/50 rounded-xl bg-card/20 p-6 text-center">
+          <Sparkles className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-muted-foreground text-sm">
+            Complete all three intentions in a day to begin your streak history.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 

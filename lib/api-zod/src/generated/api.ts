@@ -1229,6 +1229,16 @@ export const GetDashboardResponse = zod.object({
 
 
 /**
+ * @summary Get intention streak history and best run
+ */
+export const GetIntentionHistoryResponse = zod.object({
+  "currentStreak": zod.number().describe('Current consecutive-day streak of fully-completed 333 days'),
+  "longestStreak": zod.number().describe('Longest-ever consecutive-day streak of fully-completed 333 days'),
+  "completedDays": zod.array(zod.coerce.date()).describe('Every day (YYYY-MM-DD) where all three intentions were set and completed')
+})
+
+
+/**
  * @summary Get all moments for a person
  */
 export const GetRelationshipMomentsParams = zod.object({

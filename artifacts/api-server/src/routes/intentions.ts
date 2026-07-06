@@ -13,6 +13,59 @@ router.get("/intentions", async (req, res) => {
   return res.json(rows);
 });
 
+// Streak history: longest-ever run and every fully-completed 333 day.
+router.get("/intentions/history", async (req, res) => {
+  const today = getTodayDate(req);
+  const all = await db.select().from(intentionsTable).where(eq(intentionsTable.userId, DEFAULT_USER_ID));
+
+  const byDate = new Map<string, { total: number; completed: number }>();
+  for (const i of all) {
+    const entry = byDate.get(i.date) || { total: 0, completed: 0 };
+    entry.total += 1;
+    if (i.isCompleted) entry.completed += 1;
+    byDate.set(i.date, entry);
+  }
+
+  const isDayComplete = (d: string) => {
+    const e = byDate.get(d);
+    return !!e && e.total >= 3 && e.completed === e.total;
+  };
+
+  // Fully-completed 333 days, ascending.
+  const completedDays = [...byDate.keys()].filter(isDayComplete).sort();
+
+  // Longest run of consecutive calendar days among completed days.
+  const dayMs = 86400000;
+  let longestStreak = 0;
+  let run = 0;
+  let prev: number | null = null;
+  for (const d of completedDays) {
+    const t = new Date(d + "T00:00:00.000Z").getTime();
+    if (prev !== null && t - prev === dayMs) {
+      run += 1;
+    } else {
+      run = 1;
+    }
+    if (run > longestStreak) longestStreak = run;
+    prev = t;
+  }
+
+  // Current streak: consecutive completed days ending today (or yesterday if
+  // today isn't finished yet), matching the dashboard's streak semantics.
+  const ymd = (dt: Date) => dt.toISOString().split("T")[0];
+  let currentStreak = 0;
+  const cursor = new Date(today + "T00:00:00.000Z");
+  if (!isDayComplete(today)) {
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  while (isDayComplete(ymd(cursor))) {
+    currentStreak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  return res.json({ currentStreak, longestStreak, completedDays });
+});
+
 router.post("/intentions", async (req, res) => {
   const date = req.body.date || getTodayDate(req);
   const parsed = insertIntentionSchema.safeParse({ ...req.body, userId: DEFAULT_USER_ID, date });

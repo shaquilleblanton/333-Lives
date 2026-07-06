@@ -54,6 +54,7 @@ import type {
   HabitCheckinBody,
   HealthStatus,
   Intention,
+  IntentionHistory,
   JournalEntry,
   LegacyLetter,
   Message,
@@ -4301,6 +4302,83 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetIntentionHistoryUrl = () => {
+
+
+
+
+  return `/api/intentions/history`
+}
+
+/**
+ * @summary Get intention streak history and best run
+ */
+export const getIntentionHistory = async ( options?: RequestInit): Promise<IntentionHistory> => {
+
+  return customFetch<IntentionHistory>(getGetIntentionHistoryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetIntentionHistoryQueryKey = () => {
+    return [
+    `/api/intentions/history`
+    ] as const;
+    }
+
+
+export const getGetIntentionHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getIntentionHistory>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIntentionHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetIntentionHistoryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIntentionHistory>>> = ({ signal }) => getIntentionHistory({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIntentionHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetIntentionHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getIntentionHistory>>>
+export type GetIntentionHistoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get intention streak history and best run
+ */
+
+export function useGetIntentionHistory<TData = Awaited<ReturnType<typeof getIntentionHistory>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIntentionHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetIntentionHistoryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
