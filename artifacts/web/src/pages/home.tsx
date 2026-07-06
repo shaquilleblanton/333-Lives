@@ -6,10 +6,12 @@ import {
   useDeleteIntention,
   useGetTodayGratitudeEntry,
   useGetIntentionHistory,
+  useGetIntentions,
   useGetTodayAffirmation,
   useGetTasks,
   getGetDashboardQueryKey,
   getGetIntentionHistoryQueryKey,
+  getGetIntentionsQueryKey,
 } from "@workspace/api-client-react";
 import type { Intention } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +23,13 @@ import {
   Pencil, Trash2, X, Trophy, ListChecks, AlertTriangle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
@@ -299,6 +308,7 @@ function IntentionStreakHistory() {
   const [celebrating, setCelebrating] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [recordValue, setRecordValue] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showConfetti) return;
@@ -463,17 +473,24 @@ function IntentionStreakHistory() {
                   const isFuture = key > todayKey;
                   const isComplete = completedSet.has(key);
                   const isToday = key === todayKey;
+                  if (isFuture) {
+                    return (
+                      <div
+                        key={key}
+                        className="w-3.5 h-3.5 rounded-[3px] bg-transparent"
+                      />
+                    );
+                  }
                   return (
-                    <div
+                    <button
                       key={key}
-                      title={`${format(day, "MMM d, yyyy")}${isComplete ? " — all 3 complete" : isFuture ? "" : " — not completed"}`}
+                      type="button"
+                      onClick={() => setSelectedDay(key)}
+                      title={`${format(day, "MMM d, yyyy")}${isComplete ? " — all 3 complete" : " — not completed"} · tap to view`}
+                      aria-label={`View intentions for ${format(day, "MMMM d, yyyy")}`}
                       className={cn(
-                        "w-3.5 h-3.5 rounded-[3px] transition-colors",
-                        isFuture
-                          ? "bg-transparent"
-                          : isComplete
-                            ? "bg-primary"
-                            : "bg-muted/40",
+                        "w-3.5 h-3.5 rounded-[3px] transition-colors cursor-pointer hover:ring-2 hover:ring-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        isComplete ? "bg-primary" : "bg-muted/40",
                         isToday && "ring-1 ring-primary/60 ring-offset-1 ring-offset-background",
                       )}
                     />
@@ -499,7 +516,109 @@ function IntentionStreakHistory() {
           </p>
         </div>
       )}
+
+      <DayIntentionsDialog
+        date={selectedDay}
+        wasComplete={selectedDay ? completedSet.has(selectedDay) : false}
+        onClose={() => setSelectedDay(null)}
+      />
     </section>
+  );
+}
+
+function DayIntentionsDialog({
+  date,
+  wasComplete,
+  onClose,
+}: {
+  date: string | null;
+  wasComplete: boolean;
+  onClose: () => void;
+}) {
+  const { data: intentions, isLoading } = useGetIntentions(
+    { date: date ?? undefined },
+    {
+      query: {
+        enabled: !!date,
+        queryKey: getGetIntentionsQueryKey({ date: date ?? undefined }),
+      },
+    },
+  );
+
+  const sorted = [...(intentions ?? [])].sort((a, b) => a.order - b.order);
+  const completedCount = sorted.filter((i) => i.isCompleted).length;
+  const heading = date
+    ? format(new Date(date + "T00:00:00"), "EEEE, MMMM d, yyyy")
+    : "";
+
+  return (
+    <Dialog open={!!date} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md bg-card/95 border-border/60 backdrop-blur-xl">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-xl flex items-center gap-2">
+            {wasComplete && <Sparkles className="w-5 h-5 text-primary" />}
+            {heading}
+          </DialogTitle>
+          <DialogDescription className="font-subheading">
+            {isLoading
+              ? "Loading your intentions…"
+              : sorted.length === 0
+                ? "No intentions were set this day."
+                : wasComplete
+                  ? "You completed all three intentions this day."
+                  : `${completedCount} of ${sorted.length} intention${sorted.length === 1 ? "" : "s"} completed.`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="space-y-3 py-2">
+            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+            <Skeleton className="h-12 w-full rounded-xl bg-muted/40" />
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="py-6 text-center">
+            <Circle className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">
+              Nothing was captured for this day.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-2.5 py-1">
+            {sorted.map((intention, idx) => (
+              <li
+                key={intention.id}
+                className={cn(
+                  "flex items-start gap-3 rounded-xl border p-3.5 transition-colors",
+                  intention.isCompleted
+                    ? "border-primary/30 bg-primary/[0.06]"
+                    : "border-border/50 bg-card/40",
+                )}
+              >
+                {intention.isCompleted ? (
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                ) : (
+                  <Circle className="w-5 h-5 text-muted-foreground/40 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] font-subheading uppercase tracking-wider text-muted-foreground">
+                    Intention {idx + 1}
+                  </span>
+                  <p
+                    className={cn(
+                      "text-foreground/90 leading-snug",
+                      intention.isCompleted && "line-through decoration-primary/40 text-foreground/60",
+                    )}
+                  >
+                    {intention.text}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
