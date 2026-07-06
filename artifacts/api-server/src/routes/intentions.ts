@@ -33,4 +33,11 @@ router.put("/intentions/:id", async (req, res) => {
   return res.json(updated[0]);
 });
 
+router.delete("/intentions/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const deleted = await db.delete(intentionsTable).where(and(eq(intentionsTable.id, id), eq(intentionsTable.userId, DEFAULT_USER_ID))).returning();
+  if (deleted.length === 0) return res.status(404).json({ error: "Intention not found" });
+  return res.status(204).send();
+});
+
 export default router;

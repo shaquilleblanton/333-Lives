@@ -465,6 +465,16 @@ export const UpdateIntentionResponse = zod.object({
 
 
 /**
+ * @summary Delete an intention
+ */
+export const DeleteIntentionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteIntentionResponse = zod.void()
+
+
+/**
  * @summary List all journal entries
  */
 export const GetJournalEntriesResponseItem = zod.object({

@@ -1808,6 +1808,76 @@ export const useUpdateIntention = <TError = ErrorType<unknown>,
       return useMutation(getUpdateIntentionMutationOptions(options));
     }
 
+export const getDeleteIntentionUrl = (id: number,) => {
+
+
+
+
+  return `/api/intentions/${id}`
+}
+
+/**
+ * @summary Delete an intention
+ */
+export const deleteIntention = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteIntentionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteIntentionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIntention>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteIntention>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteIntention'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteIntention>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteIntention(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteIntentionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteIntention>>>
+
+    export type DeleteIntentionMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an intention
+ */
+export const useDeleteIntention = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIntention>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteIntention>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteIntentionMutationOptions(options));
+    }
+
 export const getGetJournalEntriesUrl = () => {
 
 

@@ -3,6 +3,7 @@ import {
   useGetDashboard,
   useUpdateIntention,
   useCreateIntention,
+  useDeleteIntention,
   useGetTodayGratitudeEntry,
   getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
@@ -12,6 +13,7 @@ import { format } from "date-fns";
 import {
   CheckCircle2, Circle, MessageSquare, Shield, Heart,
   Flame, Sparkles, Sunrise, Loader2, ArrowRight, Check,
+  Pencil, Trash2, X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -214,7 +216,10 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
   const qc = useQueryClient();
   const createIntention = useCreateIntention();
   const updateIntention = useUpdateIntention();
+  const deleteIntention = useDeleteIntention();
   const [drafts, setDrafts] = useState<string[]>(["", "", ""]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
 
   const sorted = [...intentions].sort((a, b) => a.order - b.order);
   const total = sorted.length;
@@ -253,6 +258,45 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
     updateIntention.mutate(
       { id: intention.id, data: { isCompleted: !intention.isCompleted } },
       { onSuccess: invalidate }
+    );
+  }
+
+  function startEdit(intention: Intention) {
+    setEditingId(intention.id);
+    setEditText(intention.text);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditText("");
+  }
+
+  function saveEdit(intention: Intention) {
+    const text = editText.trim();
+    if (text.length === 0 || text === intention.text) {
+      cancelEdit();
+      return;
+    }
+    updateIntention.mutate(
+      { id: intention.id, data: { text } },
+      {
+        onSuccess: () => {
+          invalidate();
+          cancelEdit();
+        },
+      }
+    );
+  }
+
+  function remove(intention: Intention) {
+    deleteIntention.mutate(
+      { id: intention.id },
+      {
+        onSuccess: () => {
+          invalidate();
+          if (editingId === intention.id) cancelEdit();
+        },
+      }
     );
   }
 
@@ -381,20 +425,84 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
         </div>
 
         <div className="flex-1 w-full space-y-2">
-          {sorted.map((intention) => (
-            <button
-              key={intention.id}
-              onClick={() => toggle(intention)}
-              className="flex items-start gap-3 w-full text-left group rounded-xl p-3 hover:bg-muted/30 transition-colors"
-            >
-              <div className={cn("mt-0.5 transition-colors", intention.isCompleted ? "text-primary" : "text-muted-foreground group-hover:text-primary/70")}>
-                {intention.isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+          {sorted.map((intention) => {
+            const isEditing = editingId === intention.id;
+            const isBusy =
+              (updateIntention.isPending && updateIntention.variables?.id === intention.id) ||
+              (deleteIntention.isPending && deleteIntention.variables?.id === intention.id);
+
+            if (isEditing) {
+              return (
+                <div key={intention.id} className="flex items-center gap-3 rounded-xl p-3 bg-muted/20">
+                  <div className="mt-0.5 text-primary/70 shrink-0">
+                    <Circle className="w-5 h-5" />
+                  </div>
+                  <input
+                    autoFocus
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveEdit(intention);
+                      if (e.key === "Escape") cancelEdit();
+                    }}
+                    className="flex-1 bg-background/60 border border-primary/40 rounded-lg px-3 py-2 text-base text-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
+                  <button
+                    onClick={() => saveEdit(intention)}
+                    disabled={isBusy}
+                    aria-label="Save intention"
+                    className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-primary hover:bg-primary/15 disabled:opacity-40 transition-colors"
+                  >
+                    {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    aria-label="Cancel edit"
+                    className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={intention.id}
+                className="flex items-start gap-3 w-full group rounded-xl p-3 hover:bg-muted/30 transition-colors"
+              >
+                <button
+                  onClick={() => toggle(intention)}
+                  className="flex items-start gap-3 flex-1 text-left"
+                >
+                  <div className={cn("mt-0.5 transition-colors", intention.isCompleted ? "text-primary" : "text-muted-foreground group-hover:text-primary/70")}>
+                    {intention.isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                  </div>
+                  <span className={cn("text-base transition-all", intention.isCompleted ? "text-muted-foreground line-through" : "text-foreground")}>
+                    {intention.text}
+                  </span>
+                </button>
+                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => startEdit(intention)}
+                    disabled={isBusy}
+                    aria-label="Edit intention"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => remove(intention)}
+                    disabled={isBusy}
+                    aria-label="Remove intention"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
+                  >
+                    {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-              <span className={cn("text-base transition-all", intention.isCompleted ? "text-muted-foreground line-through" : "text-foreground")}>
-                {intention.text}
-              </span>
-            </button>
-          ))}
+            );
+          })}
 
           {allDone && (
             <div className="flex items-center gap-2 pt-3 mt-1 border-t border-primary/15 text-primary">
