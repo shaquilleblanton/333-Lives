@@ -16,6 +16,7 @@ import peopleRouter from "./people";
 import communityRouter from "./community";
 import legacyLettersRouter from "./legacy-letters";
 import relationshipMomentsRouter from "./relationship-moments";
+import workoutsRouter from "./workouts";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(peopleRouter);
 router.use(communityRouter);
 router.use(legacyLettersRouter);
 router.use(relationshipMomentsRouter);
+router.use(workoutsRouter);
 
 export default router;

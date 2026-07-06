@@ -10,7 +10,8 @@ import {
   Heart,
   Users,
   Calendar,
-  Mail
+  Mail,
+  Dumbbell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/gratitude", label: "Gratitude", icon: Heart },
   { href: "/people", label: "People", icon: Users },
   { href: "/legacy-letters", label: "Legacy Letters", icon: Mail },
+  { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: User },

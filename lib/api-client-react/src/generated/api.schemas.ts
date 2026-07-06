@@ -843,6 +843,148 @@ export interface UpdateLegacyLetterBody {
   promptText?: string;
 }
 
+export type WorkoutBlockKind = typeof WorkoutBlockKind[keyof typeof WorkoutBlockKind];
+
+
+export const WorkoutBlockKind = {
+  exercise: 'exercise',
+  cardio: 'cardio',
+  break: 'break',
+  hydration: 'hydration',
+} as const;
+
+export interface WorkoutBlock {
+  id: number;
+  sessionId: number;
+  kind: WorkoutBlockKind;
+  name: string;
+  durationMin: number;
+  position: number;
+  completed: boolean;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type WorkoutSessionFocus = typeof WorkoutSessionFocus[keyof typeof WorkoutSessionFocus];
+
+
+export const WorkoutSessionFocus = {
+  strength: 'strength',
+  cardio: 'cardio',
+  mobility: 'mobility',
+  hiit: 'hiit',
+  recovery: 'recovery',
+  mixed: 'mixed',
+} as const;
+
+export type WorkoutSessionStatus = typeof WorkoutSessionStatus[keyof typeof WorkoutSessionStatus];
+
+
+export const WorkoutSessionStatus = {
+  planned: 'planned',
+  completed: 'completed',
+} as const;
+
+export interface WorkoutSession {
+  id: number;
+  userId: number;
+  title: string;
+  date: string;
+  focus: WorkoutSessionFocus;
+  status: WorkoutSessionStatus;
+  notes?: string | null;
+  position: number;
+  blocks: WorkoutBlock[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateWorkoutBodyFocus = typeof CreateWorkoutBodyFocus[keyof typeof CreateWorkoutBodyFocus];
+
+
+export const CreateWorkoutBodyFocus = {
+  strength: 'strength',
+  cardio: 'cardio',
+  mobility: 'mobility',
+  hiit: 'hiit',
+  recovery: 'recovery',
+  mixed: 'mixed',
+} as const;
+
+export interface CreateWorkoutBody {
+  title: string;
+  date: string;
+  focus?: CreateWorkoutBodyFocus;
+  notes?: string;
+}
+
+export type UpdateWorkoutBodyFocus = typeof UpdateWorkoutBodyFocus[keyof typeof UpdateWorkoutBodyFocus];
+
+
+export const UpdateWorkoutBodyFocus = {
+  strength: 'strength',
+  cardio: 'cardio',
+  mobility: 'mobility',
+  hiit: 'hiit',
+  recovery: 'recovery',
+  mixed: 'mixed',
+} as const;
+
+export type UpdateWorkoutBodyStatus = typeof UpdateWorkoutBodyStatus[keyof typeof UpdateWorkoutBodyStatus];
+
+
+export const UpdateWorkoutBodyStatus = {
+  planned: 'planned',
+  completed: 'completed',
+} as const;
+
+export interface UpdateWorkoutBody {
+  title?: string;
+  date?: string;
+  focus?: UpdateWorkoutBodyFocus;
+  status?: UpdateWorkoutBodyStatus;
+  notes?: string;
+}
+
+export type CreateWorkoutBlockBodyKind = typeof CreateWorkoutBlockBodyKind[keyof typeof CreateWorkoutBlockBodyKind];
+
+
+export const CreateWorkoutBlockBodyKind = {
+  exercise: 'exercise',
+  cardio: 'cardio',
+  break: 'break',
+  hydration: 'hydration',
+} as const;
+
+export interface CreateWorkoutBlockBody {
+  kind: CreateWorkoutBlockBodyKind;
+  name: string;
+  durationMin?: number;
+  notes?: string;
+}
+
+export type UpdateWorkoutBlockBodyKind = typeof UpdateWorkoutBlockBodyKind[keyof typeof UpdateWorkoutBlockBodyKind];
+
+
+export const UpdateWorkoutBlockBodyKind = {
+  exercise: 'exercise',
+  cardio: 'cardio',
+  break: 'break',
+  hydration: 'hydration',
+} as const;
+
+export interface UpdateWorkoutBlockBody {
+  kind?: UpdateWorkoutBlockBodyKind;
+  name?: string;
+  durationMin?: number;
+  completed?: boolean;
+  notes?: string;
+}
+
+export interface ReorderBlocksBody {
+  blockIds: number[];
+}
+
 export interface UploadUrlRequest {
   /**
      * Original file name.
@@ -975,5 +1117,10 @@ export const GetLegacyLettersStatus = {
 
 export type DeleteLegacyLetter200 = {
   success?: boolean;
+};
+
+export type GetWorkoutsParams = {
+start?: string;
+end?: string;
 };
 

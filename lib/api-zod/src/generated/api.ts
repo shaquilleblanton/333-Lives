@@ -1543,3 +1543,305 @@ export const UnsealLegacyLetterResponse = zod.object({
 })
 
 
+/**
+ * @summary List workout sessions (with ordered blocks) in a date range
+ */
+export const GetWorkoutsQueryParams = zod.object({
+  "start": zod.date().optional(),
+  "end": zod.date().optional()
+})
+
+export const GetWorkoutsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetWorkoutsResponse = zod.array(GetWorkoutsResponseItem)
+
+
+/**
+ * @summary Create a workout session
+ */
+export const CreateWorkoutBody = zod.object({
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']).optional(),
+  "notes": zod.string().optional()
+})
+
+export const CreateWorkoutResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a single workout session with its blocks
+ */
+export const GetWorkoutParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetWorkoutResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a workout session
+ */
+export const UpdateWorkoutParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWorkoutBody = zod.object({
+  "title": zod.string().optional(),
+  "date": zod.coerce.date().optional(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']).optional(),
+  "status": zod.enum(['planned', 'completed']).optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateWorkoutResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a workout session
+ */
+export const DeleteWorkoutParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWorkoutResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Add a block to a workout session
+ */
+export const AddWorkoutBlockParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddWorkoutBlockBody = zod.object({
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number().optional(),
+  "notes": zod.string().optional()
+})
+
+export const AddWorkoutBlockResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reorder the blocks in a workout session
+ */
+export const ReorderWorkoutBlocksParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReorderWorkoutBlocksBody = zod.object({
+  "blockIds": zod.array(zod.number())
+})
+
+export const ReorderWorkoutBlocksResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a block within a workout session
+ */
+export const UpdateWorkoutBlockParams = zod.object({
+  "id": zod.coerce.number(),
+  "blockId": zod.coerce.number()
+})
+
+export const UpdateWorkoutBlockBody = zod.object({
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']).optional(),
+  "name": zod.string().optional(),
+  "durationMin": zod.number().optional(),
+  "completed": zod.boolean().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateWorkoutBlockResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a block from a workout session
+ */
+export const DeleteWorkoutBlockParams = zod.object({
+  "id": zod.coerce.number(),
+  "blockId": zod.coerce.number()
+})
+
+export const DeleteWorkoutBlockResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.coerce.date(),
+  "focus": zod.enum(['strength', 'cardio', 'mobility', 'hiit', 'recovery', 'mixed']),
+  "status": zod.enum(['planned', 'completed']),
+  "notes": zod.string().nullish(),
+  "position": zod.number(),
+  "blocks": zod.array(zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "kind": zod.enum(['exercise', 'cardio', 'break', 'hydration']),
+  "name": zod.string(),
+  "durationMin": zod.number(),
+  "position": zod.number(),
+  "completed": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

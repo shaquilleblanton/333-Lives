@@ -33,6 +33,8 @@ tags:
     description: People in your life — family, friends, loved ones
   - name: community
     description: Community & family connection calendar
+  - name: workouts
+    description: Workout planner — sessions built from ordered blocks
 
 paths:
   /storage/uploads/request-url:
@@ -1437,6 +1439,246 @@ paths:
               schema:
                 $ref: "#/components/schemas/LegacyLetter"
 
+  /workouts:
+    get:
+      operationId: getWorkouts
+      tags: [workouts]
+      summary: List workout sessions (with ordered blocks) in a date range
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: List of workout sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkoutSession"
+    post:
+      operationId: createWorkout
+      tags: [workouts]
+      summary: Create a workout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkoutBody"
+      responses:
+        "201":
+          description: Created workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+
+  /workouts/{id}:
+    get:
+      operationId: getWorkout
+      tags: [workouts]
+      summary: Get a single workout session with its blocks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateWorkout
+      tags: [workouts]
+      summary: Update a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkoutBody"
+      responses:
+        "200":
+          description: Updated workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteWorkout
+      tags: [workouts]
+      summary: Delete a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /workouts/{id}/blocks:
+    post:
+      operationId: addWorkoutBlock
+      tags: [workouts]
+      summary: Add a block to a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkoutBlockBody"
+      responses:
+        "201":
+          description: Updated workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /workouts/{id}/blocks/reorder:
+    put:
+      operationId: reorderWorkoutBlocks
+      tags: [workouts]
+      summary: Reorder the blocks in a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderBlocksBody"
+      responses:
+        "200":
+          description: Updated workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /workouts/{id}/blocks/{blockId}:
+    put:
+      operationId: updateWorkoutBlock
+      tags: [workouts]
+      summary: Update a block within a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: blockId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkoutBlockBody"
+      responses:
+        "200":
+          description: Updated workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteWorkoutBlock
+      tags: [workouts]
+      summary: Delete a block from a workout session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: blockId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -2422,6 +2664,137 @@ components:
           type: integer
         promptText:
           type: string
+
+    WorkoutBlock:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        kind:
+          type: string
+          enum: [exercise, cardio, break, hydration]
+        name:
+          type: string
+        durationMin:
+          type: integer
+        position:
+          type: integer
+        completed:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, sessionId, kind, name, durationMin, position, completed, createdAt]
+
+    WorkoutSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        focus:
+          type: string
+          enum: [strength, cardio, mobility, hiit, recovery, mixed]
+        status:
+          type: string
+          enum: [planned, completed]
+        notes:
+          type: string
+          nullable: true
+        position:
+          type: integer
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutBlock"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, date, focus, status, position, blocks, createdAt, updatedAt]
+
+    CreateWorkoutBody:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        focus:
+          type: string
+          enum: [strength, cardio, mobility, hiit, recovery, mixed]
+        notes:
+          type: string
+      required: [title, date]
+
+    UpdateWorkoutBody:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        focus:
+          type: string
+          enum: [strength, cardio, mobility, hiit, recovery, mixed]
+        status:
+          type: string
+          enum: [planned, completed]
+        notes:
+          type: string
+
+    CreateWorkoutBlockBody:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [exercise, cardio, break, hydration]
+        name:
+          type: string
+        durationMin:
+          type: integer
+        notes:
+          type: string
+      required: [kind, name]
+
+    UpdateWorkoutBlockBody:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [exercise, cardio, break, hydration]
+        name:
+          type: string
+        durationMin:
+          type: integer
+        completed:
+          type: boolean
+        notes:
+          type: string
+
+    ReorderBlocksBody:
+      type: object
+      properties:
+        blockIds:
+          type: array
+          items:
+            type: integer
+      required: [blockIds]
 
     UploadUrlRequest:
       type: object

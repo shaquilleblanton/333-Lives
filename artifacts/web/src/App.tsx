@@ -16,6 +16,7 @@ import Gratitude from "@/pages/gratitude";
 import People from "@/pages/people";
 import Community from "@/pages/community";
 import LegacyLetters from "@/pages/legacy-letters";
+import Workouts from "@/pages/workouts";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/people" component={People} />
         <Route path="/community" component={Community} />
         <Route path="/legacy-letters" component={LegacyLetters} />
+        <Route path="/workouts" component={Workouts} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

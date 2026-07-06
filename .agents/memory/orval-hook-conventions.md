@@ -16,3 +16,9 @@ The generated client (produced by the api-spec codegen script) **flattens** path
 **Why:** Several pages were written with a nested `{ path: { id } }` convention. That compiles at runtime under Vite (esbuild strips types without checking them), so the bug stays invisible in dev and only surfaces when you run the web `typecheck` script — and it would have sent malformed requests.
 
 **How to apply:** Treat the web typecheck as the gate after any codegen change; Vite dev never type-checks. When wiring a new endpoint hook, match the flat signature above rather than assuming a `{ path }` wrapper.
+
+## String-enum fields become named union types
+
+An OpenAPI `type: string, enum: [...]` property generates a *named union type* (e.g. `CreateWorkoutBodyFocus`), not `string`. If your local component state holds the value as plain `string`, passing it as the mutation `data` fails the web typecheck ("Type 'string' is not assignable to type 'XxxFocus'").
+
+**Fix:** cast the payload at the mutation call site, e.g. `data: payload as Parameters<typeof createWorkout.mutateAsync>[0]["data"]`. This keeps the field free-form `string` in local UI state while satisfying the generated types.
