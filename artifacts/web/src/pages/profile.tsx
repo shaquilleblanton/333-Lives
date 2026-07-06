@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useGetMe, useUpdateMe, getGetMeQueryKey } from "@workspace/api-client-react";
-import { User as UserIcon, Shield, Activity, Award, Save } from "lucide-react";
+import { useUpload } from "@workspace/object-storage-web";
+import { User as UserIcon, Shield, Activity, Award, Target, Save, Camera, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,15 +9,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+function avatarSrc(path: string) {
+  return `/api/storage${path}`;
+}
+
 export default function Profile() {
   const { data: user, isLoading } = useGetMe();
   const updateMe = useUpdateMe();
+  const { uploadFile } = useUpload();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const handleEdit = () => {
     if (user) {
@@ -27,18 +35,43 @@ export default function Profile() {
   };
 
   const handleSave = () => {
-    updateMe.mutate({
-      data: { name, bio }
-    }, {
+    updateMe.mutate({ data: { name, bio } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         setIsEditing(false);
-        toast({
-          title: "Identity updated",
-          description: "Your changes have been saved to your profile.",
-        });
-      }
+        toast({ title: "Identity updated", description: "Your changes have been saved to your profile." });
+      },
+      onError: () => toast({ variant: "destructive", title: "Couldn't save", description: "Please try again." }),
     });
+  };
+
+  const handleAvatarSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ variant: "destructive", title: "Unsupported file", description: "Please choose an image." });
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      const res = await uploadFile(file);
+      if (!res?.objectPath) throw new Error("no path");
+      await new Promise<void>((resolve, reject) => {
+        updateMe.mutate({ data: { avatarUrl: res.objectPath } }, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+            toast({ title: "Photo updated", description: "Your new profile photo is live." });
+            resolve();
+          },
+          onError: () => reject(new Error("save failed")),
+        });
+      });
+    } catch {
+      toast({ variant: "destructive", title: "Upload failed", description: "We couldn't update your photo. Please try again." });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   if (isLoading) {
@@ -63,29 +96,37 @@ export default function Profile() {
         </div>
       </header>
 
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelected} />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-6">
           <div className="bg-card/40 border border-border/50 p-6 rounded-2xl text-center backdrop-blur-sm relative">
-            <div className="w-24 h-24 mx-auto bg-primary/10 border border-primary/30 rounded-full flex items-center justify-center mb-4 text-primary">
-              <UserIcon className="w-10 h-10" />
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <div className="w-24 h-24 bg-primary/10 border border-primary/30 rounded-full flex items-center justify-center text-primary overflow-hidden">
+                {user.avatarUrl ? (
+                  <img src={avatarSrc(user.avatarUrl)} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon className="w-10 h-10" />
+                )}
+              </div>
+              <button
+                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-card hover:bg-primary/90 transition-colors disabled:opacity-70"
+                aria-label="Change profile photo"
+              >
+                {isUploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+              </button>
             </div>
             {isEditing ? (
               <div className="space-y-4 text-left">
                 <div className="space-y-2">
                   <label className="text-xs font-subheading uppercase tracking-wider text-muted-foreground">Full Name</label>
-                  <Input 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    className="bg-background border-border/50"
-                  />
+                  <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-background border-border/50" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-subheading uppercase tracking-wider text-muted-foreground">Biography</label>
-                  <Textarea 
-                    value={bio} 
-                    onChange={(e) => setBio(e.target.value)} 
-                    className="bg-background border-border/50 resize-none h-24"
-                  />
+                  <Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="bg-background border-border/50 resize-none h-24" />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button onClick={() => setIsEditing(false)} variant="outline" className="flex-1">Cancel</Button>
@@ -126,7 +167,7 @@ export default function Profile() {
         </div>
 
         <div className="md:col-span-2 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-card/30 border border-border/50 p-6 rounded-2xl">
               <Activity className="w-6 h-6 text-secondary mb-3" />
               <p className="text-3xl font-serif text-foreground">{user.streakDays}</p>
@@ -136,6 +177,11 @@ export default function Profile() {
               <Award className="w-6 h-6 text-accent mb-3" />
               <p className="text-3xl font-serif text-foreground">{user.messagesSent}</p>
               <p className="text-sm text-muted-foreground font-subheading uppercase tracking-wider mt-1">Messages Secured</p>
+            </div>
+            <div className="bg-card/30 border border-border/50 p-6 rounded-2xl">
+              <Target className="w-6 h-6 text-primary mb-3" />
+              <p className="text-3xl font-serif text-foreground">{user.goalsActive}</p>
+              <p className="text-sm text-muted-foreground font-subheading uppercase tracking-wider mt-1">Active Goals</p>
             </div>
           </div>
         </div>

@@ -4,3 +4,4 @@
 - [Web project references](web-project-references.md) — web typecheck reads api-client-react built .d.ts; run `pnpm run typecheck:libs` after lib changes
 - [Orval hook conventions](orval-hook-conventions.md) — generated hooks flatten path params (`mutate({id,data})`), not `{path:{...}}`; web typecheck is the gate
 - [Future messages gating](future-messages-gating.md) — sealed content never leaves server (present() sanitizer + unlock endpoint); drizzle-zod timestamps need `new Date()` coercion on create
+- [React types pinning](react-types-pinning.md) — keep @types/react on 19.1.x (catalog + overrides) to match pinned react@19.1.0; dual versions break Radix `--radix-*` CSSProperties augmentation
