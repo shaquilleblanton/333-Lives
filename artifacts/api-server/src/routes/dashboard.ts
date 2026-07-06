@@ -45,7 +45,7 @@ router.get("/dashboard", async (req, res) => {
   const habitCompletionToday = todayHabits.filter((h) => h.checkedInToday).length;
 
   // Intentions streak: consecutive days (ending today or yesterday) where the
-  // day had intentions set and all of them were completed.
+  // full 333 set (all three intentions) was set and every one completed.
   const allIntentions = await db
     .select()
     .from(intentionsTable)
@@ -61,7 +61,7 @@ router.get("/dashboard", async (req, res) => {
 
   const isDayComplete = (d: string) => {
     const e = intentionsByDate.get(d);
-    return !!e && e.total > 0 && e.completed === e.total;
+    return !!e && e.total >= 3 && e.completed === e.total;
   };
 
   const ymd = (dt: Date) => dt.toISOString().split("T")[0];

@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   CheckCircle2, Circle, MessageSquare, Shield, Heart,
-  Flame, Sparkles, Sunrise, Loader2, ArrowRight,
+  Flame, Sparkles, Sunrise, Loader2, ArrowRight, Check,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -219,7 +219,14 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
   const sorted = [...intentions].sort((a, b) => a.order - b.order);
   const total = sorted.length;
   const completed = sorted.filter((i) => i.isCompleted).length;
-  const allDone = total > 0 && completed === total;
+  // The 333 Method requires all three intentions to be set for the day.
+  const isSet = total >= 3;
+  const allDone = isSet && completed === total;
+
+  // Orders (0..2) not yet taken by an existing intention — the slots left to fill.
+  const usedOrders = new Set(sorted.map((i) => i.order));
+  const freeOrders = [0, 1, 2].filter((o) => !usedOrders.has(o));
+  const missingCount = freeOrders.length;
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
@@ -227,13 +234,14 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
 
   async function handleSet(e: React.FormEvent) {
     e.preventDefault();
-    const filled = drafts
-      .map((text, order) => ({ text: text.trim(), order }))
+    const toCreate = freeOrders
+      .map((order, idx) => ({ order, text: (drafts[idx] ?? "").trim() }))
       .filter((d) => d.text.length > 0);
-    if (filled.length === 0) return;
+    // Enforce the full set: only save once every remaining slot is filled.
+    if (toCreate.length < missingCount) return;
     try {
       await Promise.all(
-        filled.map((d) => createIntention.mutateAsync({ data: { text: d.text, order: d.order } }))
+        toCreate.map((d) => createIntention.mutateAsync({ data: { text: d.text, order: d.order } }))
       );
       setDrafts(["", "", ""]);
     } finally {
@@ -258,8 +266,16 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
       </div>
     ) : null;
 
-  // ---- Empty state: set today's intentions ----
-  if (total === 0) {
+  // ---- Setup state: the full set of three isn't in place yet ----
+  if (!isSet) {
+    const canSave =
+      !createIntention.isPending &&
+      drafts.slice(0, missingCount).every((d) => d.trim().length > 0);
+    const placeholders = [
+      "e.g. Call Mom and really listen",
+      "e.g. Finish the proposal draft",
+      "e.g. Move my body for 30 minutes",
+    ];
     return (
       <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card/40 p-7 md:p-9 backdrop-blur-sm">
         <div className="absolute top-0 right-0 w-56 h-56 bg-primary/10 rounded-bl-[120px] -z-10 blur-2xl" />
@@ -270,35 +286,55 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
             </div>
             <div>
               <p className="text-xs font-subheading tracking-widest text-primary uppercase">The 333 Method</p>
-              <h2 className="text-2xl font-serif text-foreground">Set Your 3 Intentions</h2>
+              <h2 className="text-2xl font-serif text-foreground">
+                {total === 0 ? "Set Your 3 Intentions" : "Finish Your 3 Intentions"}
+              </h2>
             </div>
           </div>
           <StreakBadge />
         </div>
         <p className="text-muted-foreground font-subheading text-sm mb-6 max-w-lg">
-          What are the three things that matter most today? Name them, then move through your day with purpose.
+          {total === 0
+            ? "What are the three things that matter most today? Name all three, then move through your day with purpose."
+            : `You've named ${total} of 3 — add the ${missingCount === 1 ? "last one" : "rest"} to begin your day.`}
         </p>
 
         <form onSubmit={handleSet} className="space-y-3">
-          {drafts.map((value, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="w-7 h-7 shrink-0 rounded-full border border-primary/30 text-primary/70 flex items-center justify-center font-serif text-sm">
-                {i + 1}
-              </span>
-              <input
-                value={value}
-                onChange={(e) => setDrafts((d) => d.map((v, idx) => (idx === i ? e.target.value : v)))}
-                placeholder={
-                  i === 0 ? "e.g. Call Mom and really listen" : i === 1 ? "e.g. Ship the intentions feature" : "e.g. Move my body for 30 minutes"
-                }
-                className="flex-1 bg-background/60 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
-              />
-            </div>
-          ))}
+          {[0, 1, 2].map((slot) => {
+            const existing = sorted[slot];
+            if (existing) {
+              return (
+                <div key={existing.id} className="flex items-center gap-3">
+                  <span className="w-7 h-7 shrink-0 rounded-full bg-primary/15 border border-primary/30 text-primary flex items-center justify-center">
+                    <Check className="w-4 h-4" />
+                  </span>
+                  <div className="flex-1 rounded-lg px-4 py-2.5 text-sm text-foreground bg-primary/[0.04] border border-primary/15">
+                    {existing.text}
+                  </div>
+                </div>
+              );
+            }
+            const draftIdx = slot - total;
+            return (
+              <div key={slot} className="flex items-center gap-3">
+                <span className="w-7 h-7 shrink-0 rounded-full border border-primary/30 text-primary/70 flex items-center justify-center font-serif text-sm">
+                  {slot + 1}
+                </span>
+                <input
+                  value={drafts[draftIdx] ?? ""}
+                  onChange={(e) =>
+                    setDrafts((d) => d.map((v, idx) => (idx === draftIdx ? e.target.value : v)))
+                  }
+                  placeholder={placeholders[slot]}
+                  className="flex-1 bg-background/60 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            );
+          })}
           <div className="pt-2">
             <button
               type="submit"
-              disabled={createIntention.isPending || drafts.every((d) => !d.trim())}
+              disabled={!canSave}
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground font-subheading text-sm rounded-full px-6 py-2.5 transition-colors"
             >
               {createIntention.isPending ? (
