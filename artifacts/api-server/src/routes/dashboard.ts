@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, messagesTable, vaultItemsTable, habitsTable, habitCheckinsTable, eventsTable, intentionsTable } from "@workspace/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { getTodayDate } from "../lib/date";
+import { getTodayDate, getLocalDayRange } from "../lib/date";
 
 const router = Router();
 const DEFAULT_USER_ID = 1;
@@ -10,8 +10,7 @@ const DEFAULT_USER_ID = 1;
 router.get("/dashboard", async (req, res) => {
   const today = getTodayDate(req);
   const now = new Date();
-  const startOfDay = new Date(today + "T00:00:00.000Z");
-  const endOfDay = new Date(today + "T23:59:59.999Z");
+  const { startOfDay, endOfDay } = getLocalDayRange(req);
 
   const [users, messages, vaultItems, habits, events, intentions] = await Promise.all([
     db.select().from(usersTable).where(eq(usersTable.id, DEFAULT_USER_ID)).limit(1),

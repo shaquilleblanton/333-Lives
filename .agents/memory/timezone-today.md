@@ -23,3 +23,14 @@ computing the day in the client's timezone.
 - Any new day-scoped route must call `getTodayDate(req)` and pass `req` through.
 - The dashboard streak walk uses UTC calendar arithmetic on the already-local
   `today` string — that's fine (pure date stepping), only the seed matters.
+
+## Filtering timestamp columns by "today"
+
+For columns storing an actual instant (e.g. `eventsTable.startTime`), do NOT
+build the window as `today + "T00:00:00Z"` / `...T23:59:59Z` — those are UTC
+boundaries and reintroduce the evening-Americas bug. Use `getLocalDayRange(req)`
+from `date.ts`, which converts the local day's wall-clock midnight→midnight to
+the correct UTC instants (two-pass offset lookup, DST-safe).
+
+**Rule of thumb:** date-string columns (`.date` = `YYYY-MM-DD`) → compare with
+`getTodayDate(req)`; timestamp columns → filter with `getLocalDayRange(req)`.
