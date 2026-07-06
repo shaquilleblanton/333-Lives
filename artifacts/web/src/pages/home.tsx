@@ -19,6 +19,7 @@ import {
   Pencil, Trash2, X, Trophy, ListChecks, AlertTriangle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 
@@ -417,9 +418,18 @@ function CompletionRing({ completed, total }: { completed: number; total: number
 
 function DailyIntentions({ intentions, streak }: { intentions: Intention[]; streak: number }) {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const createIntention = useCreateIntention();
   const updateIntention = useUpdateIntention();
   const deleteIntention = useDeleteIntention();
+
+  function showError(description: string) {
+    toast({
+      variant: "destructive",
+      title: "Something went wrong",
+      description,
+    });
+  }
   const [drafts, setDrafts] = useState<string[]>(["", "", ""]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
@@ -453,6 +463,8 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
         toCreate.map((d) => createIntention.mutateAsync({ data: { text: d.text, order: d.order } }))
       );
       setDrafts(["", "", ""]);
+    } catch {
+      showError("We couldn't save your intentions. Please check your connection and try again.");
     } finally {
       invalidate();
     }
@@ -461,7 +473,11 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
   function toggle(intention: Intention) {
     updateIntention.mutate(
       { id: intention.id, data: { isCompleted: !intention.isCompleted } },
-      { onSuccess: invalidate }
+      {
+        onSuccess: invalidate,
+        onError: () =>
+          showError("We couldn't update that intention. Please try again."),
+      }
     );
   }
 
@@ -488,6 +504,8 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
           invalidate();
           cancelEdit();
         },
+        onError: () =>
+          showError("We couldn't save your changes. Please try again."),
       }
     );
   }
@@ -501,6 +519,8 @@ function DailyIntentions({ intentions, streak }: { intentions: Intention[]; stre
           if (editingId === intention.id) cancelEdit();
           setConfirmingId((id) => (id === intention.id ? null : id));
         },
+        onError: () =>
+          showError("We couldn't remove that intention. Please try again."),
       }
     );
   }
