@@ -37,6 +37,8 @@ tags:
     description: Workout planner — sessions built from ordered blocks
   - name: tasks
     description: Tasks and responsibilities — everyday to-dos with due dates, priority, and category
+  - name: shop
+    description: Shop — live catalog and checkout backed by the connected Shopify store
 
 paths:
   /storage/uploads/request-url:
@@ -1857,6 +1859,58 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /shop/products:
+    get:
+      operationId: getShopProducts
+      tags: [shop]
+      summary: List live products from the connected Shopify store
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShopProduct"
+        "502":
+          description: Shopify unreachable or returned an error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /shop/checkout:
+    post:
+      operationId: createShopCheckout
+      tags: [shop]
+      summary: Create a Shopify cart and return the hosted checkout URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShopCheckoutBody"
+      responses:
+        "200":
+          description: Checkout URL created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShopCheckout"
+        "400":
+          description: Invalid variant or quantity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Shopify unreachable or returned an error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -3138,3 +3192,70 @@ components:
           description: Normalized object path (e.g. /objects/uploads/uuid).
         metadata:
           $ref: "#/components/schemas/UploadUrlRequest"
+
+    ShopVariant:
+      type: object
+      required: [id, title, price, availableForSale]
+      properties:
+        id:
+          type: string
+          description: Shopify ProductVariant GID (used as merchandiseId at checkout).
+        title:
+          type: string
+        price:
+          type: string
+          description: Decimal amount as a string, e.g. "35.00".
+        availableForSale:
+          type: boolean
+
+    ShopProduct:
+      type: object
+      required: [id, title, handle, price, currencyCode, availableForSale, variants]
+      properties:
+        id:
+          type: string
+          description: Shopify Product GID.
+        title:
+          type: string
+        handle:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        imageAlt:
+          type: string
+        price:
+          type: string
+          description: Minimum variant price as a decimal string.
+        currencyCode:
+          type: string
+        availableForSale:
+          type: boolean
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ShopVariant"
+
+    CreateShopCheckoutBody:
+      type: object
+      required: [variantId]
+      properties:
+        variantId:
+          type: string
+          minLength: 1
+          description: Shopify ProductVariant GID to purchase.
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 99
+          default: 1
+
+    ShopCheckout:
+      type: object
+      required: [checkoutUrl]
+      properties:
+        checkoutUrl:
+          type: string
+          format: uri
+          description: Shopify-hosted checkout URL to open in the browser.

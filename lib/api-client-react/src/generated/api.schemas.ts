@@ -1159,6 +1159,48 @@ export interface UploadUrlResponse {
   metadata?: UploadUrlRequest;
 }
 
+export interface ShopVariant {
+  /** Shopify ProductVariant GID (used as merchandiseId at checkout). */
+  id: string;
+  title: string;
+  /** Decimal amount as a string, e.g. "35.00". */
+  price: string;
+  availableForSale: boolean;
+}
+
+export interface ShopProduct {
+  /** Shopify Product GID. */
+  id: string;
+  title: string;
+  handle: string;
+  description?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  /** Minimum variant price as a decimal string. */
+  price: string;
+  currencyCode: string;
+  availableForSale: boolean;
+  variants: ShopVariant[];
+}
+
+export interface CreateShopCheckoutBody {
+  /**
+     * Shopify ProductVariant GID to purchase.
+     * @minLength 1
+     */
+  variantId: string;
+  /**
+     * @minimum 1
+     * @maximum 99
+     */
+  quantity?: number;
+}
+
+export interface ShopCheckout {
+  /** Shopify-hosted checkout URL to open in the browser. */
+  checkoutUrl: string;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

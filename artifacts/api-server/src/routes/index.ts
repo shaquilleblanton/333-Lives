@@ -18,6 +18,7 @@ import legacyLettersRouter from "./legacy-letters";
 import relationshipMomentsRouter from "./relationship-moments";
 import workoutsRouter from "./workouts";
 import tasksRouter from "./tasks";
+import shopRouter from "./shop";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(legacyLettersRouter);
 router.use(relationshipMomentsRouter);
 router.use(workoutsRouter);
 router.use(tasksRouter);
+router.use(shopRouter);
 
 export default router;

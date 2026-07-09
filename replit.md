@@ -1,5 +1,9 @@
 # 333 Lives
 
+## Shop / Shopify
+- The Shop (web `/shop`, mobile Shop tab) reads live products from the connected Shopify store via server-only routes (`/api/shop/products`, `/api/shop/checkout`). Storefront token never leaves the server.
+- The store is an unclaimed Replit dev store. Checkout URLs get a `channel=online_store` preview param so checkout works pre-claim. After Go Live (claiming/transferring the store), set the env var `SHOPIFY_LIVE_STORE=true` to drop it.
+
 A life management, wellness, and legacy app — send messages to the future, track habits, secure your documents, and live with intention.
 
 ## Run & Operate

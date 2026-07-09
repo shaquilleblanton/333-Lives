@@ -2002,3 +2002,45 @@ export const DeleteTaskResponse = zod.object({
 })
 
 
+/**
+ * @summary List live products from the connected Shopify store
+ */
+export const GetShopProductsResponseItem = zod.object({
+  "id": zod.string().describe('Shopify Product GID.'),
+  "title": zod.string(),
+  "handle": zod.string(),
+  "description": zod.string().optional(),
+  "imageUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "price": zod.string().describe('Minimum variant price as a decimal string.'),
+  "currencyCode": zod.string(),
+  "availableForSale": zod.boolean(),
+  "variants": zod.array(zod.object({
+  "id": zod.string().describe('Shopify ProductVariant GID (used as merchandiseId at checkout).'),
+  "title": zod.string(),
+  "price": zod.string().describe('Decimal amount as a string, e.g. \"35.00\".'),
+  "availableForSale": zod.boolean()
+}))
+})
+export const GetShopProductsResponse = zod.array(GetShopProductsResponseItem)
+
+
+/**
+ * @summary Create a Shopify cart and return the hosted checkout URL
+ */
+
+export const createShopCheckoutBodyQuantityDefault = 1;
+export const createShopCheckoutBodyQuantityMax = 99;
+
+
+
+export const CreateShopCheckoutBody = zod.object({
+  "variantId": zod.string().min(1).describe('Shopify ProductVariant GID to purchase.'),
+  "quantity": zod.number().min(1).max(createShopCheckoutBodyQuantityMax).default(createShopCheckoutBodyQuantityDefault)
+})
+
+export const CreateShopCheckoutResponse = zod.object({
+  "checkoutUrl": zod.string().url().describe('Shopify-hosted checkout URL to open in the browser.')
+})
+
+

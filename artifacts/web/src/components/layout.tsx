@@ -13,6 +13,7 @@ import {
   Mail,
   Dumbbell,
   ListChecks,
+  ShoppingBag,
   MoreHorizontal,
   X
 } from "lucide-react";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/people", label: "People", icon: Users },
   { href: "/legacy-letters", label: "Legacy Letters", icon: Mail },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
+  { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: User },

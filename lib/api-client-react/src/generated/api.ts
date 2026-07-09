@@ -35,6 +35,7 @@ import type {
   CreateMessageBody,
   CreatePersonBody,
   CreateRelationshipMomentBody,
+  CreateShopCheckoutBody,
   CreateTaskBody,
   CreateVaultItemBody,
   CreateWorkoutBlockBody,
@@ -68,6 +69,8 @@ import type {
   RelationshipMoment,
   ReorderBlocksBody,
   RespondToCommunityEventBody,
+  ShopCheckout,
+  ShopProduct,
   SuccessResponse,
   Task,
   UnlockMessageBody,
@@ -6313,5 +6316,152 @@ export const useDeleteTask = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDeleteTaskMutationOptions(options));
+    }
+
+export const getGetShopProductsUrl = () => {
+
+
+
+
+  return `/api/shop/products`
+}
+
+/**
+ * @summary List live products from the connected Shopify store
+ */
+export const getShopProducts = async ( options?: RequestInit): Promise<ShopProduct[]> => {
+
+  return customFetch<ShopProduct[]>(getGetShopProductsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetShopProductsQueryKey = () => {
+    return [
+    `/api/shop/products`
+    ] as const;
+    }
+
+
+export const getGetShopProductsQueryOptions = <TData = Awaited<ReturnType<typeof getShopProducts>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShopProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetShopProductsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getShopProducts>>> = ({ signal }) => getShopProducts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getShopProducts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetShopProductsQueryResult = NonNullable<Awaited<ReturnType<typeof getShopProducts>>>
+export type GetShopProductsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List live products from the connected Shopify store
+ */
+
+export function useGetShopProducts<TData = Awaited<ReturnType<typeof getShopProducts>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShopProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetShopProductsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateShopCheckoutUrl = () => {
+
+
+
+
+  return `/api/shop/checkout`
+}
+
+/**
+ * @summary Create a Shopify cart and return the hosted checkout URL
+ */
+export const createShopCheckout = async (createShopCheckoutBody: CreateShopCheckoutBody, options?: RequestInit): Promise<ShopCheckout> => {
+
+  return customFetch<ShopCheckout>(getCreateShopCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createShopCheckoutBody)
+  }
+);}
+
+
+
+
+export const getCreateShopCheckoutMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createShopCheckout>>, TError,{data: BodyType<CreateShopCheckoutBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createShopCheckout>>, TError,{data: BodyType<CreateShopCheckoutBody>}, TContext> => {
+
+const mutationKey = ['createShopCheckout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createShopCheckout>>, {data: BodyType<CreateShopCheckoutBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createShopCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateShopCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createShopCheckout>>>
+    export type CreateShopCheckoutMutationBody = BodyType<CreateShopCheckoutBody>
+    export type CreateShopCheckoutMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a Shopify cart and return the hosted checkout URL
+ */
+export const useCreateShopCheckout = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createShopCheckout>>, TError,{data: BodyType<CreateShopCheckoutBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createShopCheckout>>,
+        TError,
+        {data: BodyType<CreateShopCheckoutBody>},
+        TContext
+      > => {
+      return useMutation(getCreateShopCheckoutMutationOptions(options));
     }
 
