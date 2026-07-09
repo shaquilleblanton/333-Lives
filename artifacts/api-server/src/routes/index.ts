@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { requireAuth } from "../middlewares/auth";
 import healthRouter from "./health";
 import storageRouter from "./storage";
 import usersRouter from "./users";
@@ -23,8 +24,14 @@ import voiceMemosRouter from "./voice-memos";
 
 const router: IRouter = Router();
 
+// Public routes: health checks, storage (handles its own auth per-route so
+// public assets stay public), and the read-only shop catalog.
 router.use(healthRouter);
 router.use(storageRouter);
+router.use(shopRouter);
+
+// Everything below is per-user data and requires a signed-in user.
+router.use(requireAuth);
 router.use(usersRouter);
 router.use(messagesRouter);
 router.use(vaultRouter);
@@ -42,7 +49,6 @@ router.use(legacyLettersRouter);
 router.use(relationshipMomentsRouter);
 router.use(workoutsRouter);
 router.use(tasksRouter);
-router.use(shopRouter);
 router.use(voiceMemosRouter);
 
 export default router;

@@ -1,3 +1,4 @@
+import { useClerk } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -41,6 +42,33 @@ const PLACEHOLDERS = [
   "Finish the proposal draft",
   "Move my body for 30 minutes",
 ];
+
+function SignOutButton() {
+  const { signOut } = useClerk();
+  const colors = useColors();
+
+  const confirmSignOut = () => {
+    if (Platform.OS === "web") {
+      void signOut();
+      return;
+    }
+    Alert.alert("Sign out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign out", style: "destructive", onPress: () => void signOut() },
+    ]);
+  };
+
+  return (
+    <Pressable
+      onPress={confirmSignOut}
+      hitSlop={10}
+      style={({ pressed }) => [{ marginLeft: 10, opacity: pressed ? 0.6 : 1 }]}
+      accessibilityLabel="Sign out"
+    >
+      <Feather name="log-out" size={18} color={colors.mutedForeground} />
+    </Pressable>
+  );
+}
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -218,6 +246,7 @@ export default function TodayScreen() {
           </Text>
         </View>
       )}
+      <SignOutButton />
     </View>
   );
 

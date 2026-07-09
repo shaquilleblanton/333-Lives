@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { useGetMe, useUpdateMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import { User as UserIcon, Shield, Activity, Award, Target, Save, Camera, Loader2 } from "lucide-react";
+import { User as UserIcon, Shield, Activity, Award, Target, Save, Camera, Loader2, LogOut } from "lucide-react";
+import { useClerk } from "@clerk/react";
+import { basePath } from "@/lib/clerk";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +17,7 @@ function avatarSrc(path: string) {
 
 export default function Profile() {
   const { data: user, isLoading } = useGetMe();
+  const { signOut } = useClerk();
   const updateMe = useUpdateMe();
   const { uploadFile } = useUpload();
   const queryClient = useQueryClient();
@@ -94,6 +97,15 @@ export default function Profile() {
             Manage your presence and platform preferences.
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => signOut({ redirectUrl: basePath || "/" })}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign out
+        </Button>
       </header>
 
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelected} />

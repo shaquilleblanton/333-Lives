@@ -30,7 +30,9 @@ export default defineConfig({
   base: basePath,
   plugins: [
     react(),
-    tailwindcss(),
+    // optimize: false keeps lightningcss from reordering Clerk's nested
+    // @layer imports in prod builds (dev-correct, prod-broken otherwise).
+    tailwindcss({ optimize: false }),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined

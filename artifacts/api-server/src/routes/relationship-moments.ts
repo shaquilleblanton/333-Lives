@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import {
   relationshipMomentsTable,
@@ -8,7 +9,6 @@ import {
 import { eq, and, desc } from "drizzle-orm";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 
 router.get("/people/:personId/moments", async (req, res) => {
   const personId = Number(req.params.personId);
@@ -17,7 +17,7 @@ router.get("/people/:personId/moments", async (req, res) => {
     .from(relationshipMomentsTable)
     .where(
       and(
-        eq(relationshipMomentsTable.userId, DEFAULT_USER_ID),
+        eq(relationshipMomentsTable.userId, getUserId(req)),
         eq(relationshipMomentsTable.personId, personId)
       )
     )
@@ -29,7 +29,7 @@ router.post("/people/:personId/moments", async (req, res) => {
   const personId = Number(req.params.personId);
   const parsed = insertRelationshipMomentSchema.safeParse({
     ...req.body,
-    userId: DEFAULT_USER_ID,
+    userId: getUserId(req),
     personId,
   });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
@@ -47,7 +47,7 @@ router.put("/people/:personId/moments/:id", async (req, res) => {
     .where(
       and(
         eq(relationshipMomentsTable.id, id),
-        eq(relationshipMomentsTable.userId, DEFAULT_USER_ID)
+        eq(relationshipMomentsTable.userId, getUserId(req))
       )
     )
     .returning();
@@ -62,7 +62,7 @@ router.delete("/people/:personId/moments/:id", async (req, res) => {
     .where(
       and(
         eq(relationshipMomentsTable.id, id),
-        eq(relationshipMomentsTable.userId, DEFAULT_USER_ID)
+        eq(relationshipMomentsTable.userId, getUserId(req))
       )
     );
   return res.json({ success: true });

@@ -1,11 +1,11 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import crypto from "node:crypto";
 import { db } from "@workspace/db";
 import { messagesTable, insertMessageSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 
 type MessageRow = typeof messagesTable.$inferSelect;
 
@@ -73,7 +73,7 @@ function present(m: MessageRow, now: Date) {
 
 router.get("/messages", async (req, res) => {
   const { type } = req.query;
-  const rows = await db.select().from(messagesTable).where(eq(messagesTable.userId, DEFAULT_USER_ID));
+  const rows = await db.select().from(messagesTable).where(eq(messagesTable.userId, getUserId(req)));
   const now = new Date();
   const result = rows
     .filter((m) => !type || m.type === type)
@@ -86,7 +86,7 @@ router.post("/messages", async (req, res) => {
   const parsed = insertMessageSchema.safeParse({
     ...body,
     unlockDate: body.unlockDate ? new Date(body.unlockDate) : undefined,
-    userId: DEFAULT_USER_ID,
+    userId: getUserId(req),
   });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
 
@@ -105,7 +105,7 @@ router.get("/messages/:id", async (req, res) => {
   const rows = await db
     .select()
     .from(messagesTable)
-    .where(and(eq(messagesTable.id, id), eq(messagesTable.userId, DEFAULT_USER_ID)))
+    .where(and(eq(messagesTable.id, id), eq(messagesTable.userId, getUserId(req))))
     .limit(1);
   if (rows.length === 0) return res.status(404).json({ error: "Message not found" });
   return res.json(present(rows[0], new Date()));
@@ -120,7 +120,7 @@ router.post("/messages/:id/unlock", async (req, res) => {
   const rows = await db
     .select()
     .from(messagesTable)
-    .where(and(eq(messagesTable.id, id), eq(messagesTable.userId, DEFAULT_USER_ID)))
+    .where(and(eq(messagesTable.id, id), eq(messagesTable.userId, getUserId(req))))
     .limit(1);
   if (rows.length === 0) return res.status(404).json({ error: "Message not found" });
 
@@ -155,7 +155,7 @@ router.post("/messages/:id/unlock", async (req, res) => {
 router.delete("/messages/:id", async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ error: "Invalid message id" });
-  await db.delete(messagesTable).where(and(eq(messagesTable.id, id), eq(messagesTable.userId, DEFAULT_USER_ID)));
+  await db.delete(messagesTable).where(and(eq(messagesTable.id, id), eq(messagesTable.userId, getUserId(req))));
   return res.json({ success: true });
 });
 

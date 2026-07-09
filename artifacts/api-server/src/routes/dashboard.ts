@@ -1,11 +1,11 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { usersTable, messagesTable, vaultItemsTable, habitsTable, habitCheckinsTable, eventsTable, intentionsTable } from "@workspace/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { getTodayDate, getLocalDayRange } from "../lib/date";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 
 router.get("/dashboard", async (req, res) => {
   const today = getTodayDate(req);
@@ -13,12 +13,12 @@ router.get("/dashboard", async (req, res) => {
   const { startOfDay, endOfDay } = getLocalDayRange(req);
 
   const [users, messages, vaultItems, habits, events, intentions] = await Promise.all([
-    db.select().from(usersTable).where(eq(usersTable.id, DEFAULT_USER_ID)).limit(1),
-    db.select().from(messagesTable).where(eq(messagesTable.userId, DEFAULT_USER_ID)),
-    db.select().from(vaultItemsTable).where(eq(vaultItemsTable.userId, DEFAULT_USER_ID)),
-    db.select().from(habitsTable).where(eq(habitsTable.userId, DEFAULT_USER_ID)),
-    db.select().from(eventsTable).where(and(eq(eventsTable.userId, DEFAULT_USER_ID), gte(eventsTable.startTime, startOfDay), lte(eventsTable.startTime, endOfDay))),
-    db.select().from(intentionsTable).where(and(eq(intentionsTable.userId, DEFAULT_USER_ID), eq(intentionsTable.date, today))),
+    db.select().from(usersTable).where(eq(usersTable.id, getUserId(req))).limit(1),
+    db.select().from(messagesTable).where(eq(messagesTable.userId, getUserId(req))),
+    db.select().from(vaultItemsTable).where(eq(vaultItemsTable.userId, getUserId(req))),
+    db.select().from(habitsTable).where(eq(habitsTable.userId, getUserId(req))),
+    db.select().from(eventsTable).where(and(eq(eventsTable.userId, getUserId(req)), gte(eventsTable.startTime, startOfDay), lte(eventsTable.startTime, endOfDay))),
+    db.select().from(intentionsTable).where(and(eq(intentionsTable.userId, getUserId(req)), eq(intentionsTable.date, today))),
   ]);
 
   const user = users[0] || { name: "User", streakDays: 0, messagesSent: 0, goalsActive: 0 };
@@ -49,7 +49,7 @@ router.get("/dashboard", async (req, res) => {
   const allIntentions = await db
     .select()
     .from(intentionsTable)
-    .where(eq(intentionsTable.userId, DEFAULT_USER_ID));
+    .where(eq(intentionsTable.userId, getUserId(req)));
 
   const intentionsByDate = new Map<string, { total: number; completed: number }>();
   for (const i of allIntentions) {

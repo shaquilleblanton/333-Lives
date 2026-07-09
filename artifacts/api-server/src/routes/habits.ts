@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { habitsTable, habitCheckinsTable, insertHabitSchema, updateHabitSchema, insertHabitCheckinSchema } from "@workspace/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -6,7 +7,6 @@ import type { Request } from "express";
 import { getTodayDate } from "../lib/date";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 
 async function buildHabitResponse(habit: typeof habitsTable.$inferSelect, req: Request) {
   const today = getTodayDate(req);
@@ -18,13 +18,13 @@ async function buildHabitResponse(habit: typeof habitsTable.$inferSelect, req: R
 }
 
 router.get("/habits", async (req, res) => {
-  const habits = await db.select().from(habitsTable).where(eq(habitsTable.userId, DEFAULT_USER_ID));
+  const habits = await db.select().from(habitsTable).where(eq(habitsTable.userId, getUserId(req)));
   const result = await Promise.all(habits.map((h) => buildHabitResponse(h, req)));
   return res.json(result);
 });
 
 router.post("/habits", async (req, res) => {
-  const parsed = insertHabitSchema.safeParse({ ...req.body, userId: DEFAULT_USER_ID });
+  const parsed = insertHabitSchema.safeParse({ ...req.body, userId: getUserId(req) });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const inserted = await db.insert(habitsTable).values(parsed.data).returning();
   const habit = await buildHabitResponse(inserted[0], req);
@@ -35,7 +35,7 @@ router.put("/habits/:id", async (req, res) => {
   const id = Number(req.params.id);
   const parsed = updateHabitSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
-  const updated = await db.update(habitsTable).set(parsed.data).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, DEFAULT_USER_ID))).returning();
+  const updated = await db.update(habitsTable).set(parsed.data).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, getUserId(req)))).returning();
   if (updated.length === 0) return res.status(404).json({ error: "Habit not found" });
   const habit = await buildHabitResponse(updated[0], req);
   return res.json(habit);
@@ -43,13 +43,16 @@ router.put("/habits/:id", async (req, res) => {
 
 router.delete("/habits/:id", async (req, res) => {
   const id = Number(req.params.id);
-  await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, DEFAULT_USER_ID)));
+  await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, getUserId(req))));
   return res.json({ success: true });
 });
 
 router.post("/habits/:id/checkin", async (req, res) => {
   const habitId = Number(req.params.id);
   const today = getTodayDate(req);
+
+  const habit = await db.select().from(habitsTable).where(and(eq(habitsTable.id, habitId), eq(habitsTable.userId, getUserId(req)))).limit(1);
+  if (habit.length === 0) return res.status(404).json({ error: "Habit not found" });
 
   const existing = await db.select().from(habitCheckinsTable).where(and(eq(habitCheckinsTable.habitId, habitId), eq(habitCheckinsTable.date, today))).limit(1);
   if (existing.length > 0) return res.status(409).json({ error: "Already checked in today" });
@@ -61,11 +64,8 @@ router.post("/habits/:id/checkin", async (req, res) => {
 
   const checkins = await db.select().from(habitCheckinsTable).where(eq(habitCheckinsTable.habitId, habitId));
   const newStreak = checkins.length;
-  const habit = await db.select().from(habitsTable).where(eq(habitsTable.id, habitId)).limit(1);
-  if (habit.length > 0) {
-    const longestStreak = Math.max(habit[0].longestStreak, newStreak);
-    await db.update(habitsTable).set({ currentStreak: newStreak, longestStreak, totalCheckins: newStreak }).where(eq(habitsTable.id, habitId));
-  }
+  const longestStreak = Math.max(habit[0].longestStreak, newStreak);
+  await db.update(habitsTable).set({ currentStreak: newStreak, longestStreak, totalCheckins: newStreak }).where(eq(habitsTable.id, habitId));
 
   return res.json(inserted[0]);
 });

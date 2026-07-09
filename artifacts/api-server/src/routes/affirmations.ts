@@ -1,11 +1,11 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { affirmationsTable, insertAffirmationSchema, updateAffirmationSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getTodayDate } from "../lib/date";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 
 const DAILY_AFFIRMATIONS = [
   "I am becoming the person I needed when I was younger.",
@@ -22,7 +22,7 @@ const DAILY_AFFIRMATIONS = [
 
 router.get("/affirmations", async (req, res) => {
   const date = req.query.date as string | undefined;
-  const filters = [eq(affirmationsTable.userId, DEFAULT_USER_ID)];
+  const filters = [eq(affirmationsTable.userId, getUserId(req))];
   if (date) filters.push(eq(affirmationsTable.date, date));
   const rows = await db.select().from(affirmationsTable).where(and(...filters));
   return res.json(rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
@@ -30,17 +30,17 @@ router.get("/affirmations", async (req, res) => {
 
 router.get("/affirmations/today", async (req, res) => {
   const today = getTodayDate(req);
-  const existing = await db.select().from(affirmationsTable).where(and(eq(affirmationsTable.userId, DEFAULT_USER_ID), eq(affirmationsTable.date, today))).limit(1);
+  const existing = await db.select().from(affirmationsTable).where(and(eq(affirmationsTable.userId, getUserId(req)), eq(affirmationsTable.date, today))).limit(1);
   if (existing.length > 0) return res.json(existing[0]);
   const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
   const text = DAILY_AFFIRMATIONS[dayOfYear % DAILY_AFFIRMATIONS.length];
-  const inserted = await db.insert(affirmationsTable).values({ userId: DEFAULT_USER_ID, text, date: today }).returning();
+  const inserted = await db.insert(affirmationsTable).values({ userId: getUserId(req), text, date: today }).returning();
   return res.json(inserted[0]);
 });
 
 router.post("/affirmations", async (req, res) => {
   const date = req.body.date || getTodayDate(req);
-  const parsed = insertAffirmationSchema.safeParse({ ...req.body, userId: DEFAULT_USER_ID, date });
+  const parsed = insertAffirmationSchema.safeParse({ ...req.body, userId: getUserId(req), date });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const inserted = await db.insert(affirmationsTable).values(parsed.data).returning();
   return res.status(201).json(inserted[0]);
@@ -50,7 +50,7 @@ router.put("/affirmations/:id", async (req, res) => {
   const id = Number(req.params.id);
   const parsed = updateAffirmationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
-  const updated = await db.update(affirmationsTable).set(parsed.data).where(and(eq(affirmationsTable.id, id), eq(affirmationsTable.userId, DEFAULT_USER_ID))).returning();
+  const updated = await db.update(affirmationsTable).set(parsed.data).where(and(eq(affirmationsTable.id, id), eq(affirmationsTable.userId, getUserId(req)))).returning();
   if (updated.length === 0) return res.status(404).json({ error: "Affirmation not found" });
   return res.json(updated[0]);
 });

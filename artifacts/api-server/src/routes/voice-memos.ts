@@ -1,11 +1,11 @@
 import { Router } from "express";
+import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { voiceMemosTable } from "@workspace/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 
 const router = Router();
-const DEFAULT_USER_ID = 1;
 const objectStorageService = new ObjectStorageService();
 
 function present(memo: typeof voiceMemosTable.$inferSelect) {
@@ -18,11 +18,11 @@ function present(memo: typeof voiceMemosTable.$inferSelect) {
   };
 }
 
-router.get("/voice-memos", async (_req, res) => {
+router.get("/voice-memos", async (req, res) => {
   const memos = await db
     .select()
     .from(voiceMemosTable)
-    .where(eq(voiceMemosTable.userId, DEFAULT_USER_ID))
+    .where(eq(voiceMemosTable.userId, getUserId(req)))
     .orderBy(desc(voiceMemosTable.recordedAt));
   return res.json(memos.map(present));
 });
@@ -61,7 +61,7 @@ router.post("/voice-memos", async (req, res) => {
   // loudly rather than saving a memo that can't play.
   try {
     await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
-      owner: String(DEFAULT_USER_ID),
+      owner: String(getUserId(req)),
       visibility: "private",
     });
   } catch (err) {
@@ -72,7 +72,7 @@ router.post("/voice-memos", async (req, res) => {
   const [memo] = await db
     .insert(voiceMemosTable)
     .values({
-      userId: DEFAULT_USER_ID,
+      userId: getUserId(req),
       title,
       objectPath,
       durationSeconds: Math.round(durationSeconds),
@@ -93,7 +93,7 @@ router.patch("/voice-memos/:id", async (req, res) => {
   const [memo] = await db
     .update(voiceMemosTable)
     .set({ title, updatedAt: new Date() })
-    .where(and(eq(voiceMemosTable.id, id), eq(voiceMemosTable.userId, DEFAULT_USER_ID)))
+    .where(and(eq(voiceMemosTable.id, id), eq(voiceMemosTable.userId, getUserId(req))))
     .returning();
 
   if (!memo) {
@@ -107,7 +107,7 @@ router.delete("/voice-memos/:id", async (req, res) => {
 
   const [memo] = await db
     .delete(voiceMemosTable)
-    .where(and(eq(voiceMemosTable.id, id), eq(voiceMemosTable.userId, DEFAULT_USER_ID)))
+    .where(and(eq(voiceMemosTable.id, id), eq(voiceMemosTable.userId, getUserId(req))))
     .returning();
 
   if (!memo) {

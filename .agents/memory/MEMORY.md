@@ -5,3 +5,4 @@
 - [Orval hook conventions](orval-hook-conventions.md) — generated hooks flatten path params (`mutate({id,data})`), not `{path:{...}}`; web typecheck is the gate
 - [Future messages gating](future-messages-gating.md) — sealed content never leaves server (present() sanitizer + unlock endpoint); drizzle-zod timestamps need `new Date()` coercion on create
 - [React types pinning](react-types-pinning.md) — keep @types/react on 19.1.x (catalog + overrides) to match pinned react@19.1.0; dual versions break Radix `--radix-*` CSSProperties augmentation
+- [Legacy account linking](legacy-account-linking.md) — link users by clerkId or unlinked email match ONLY; never "first sign-in claims legacy row"; check parent ownership on nested routes (IDOR)

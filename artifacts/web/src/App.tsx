@@ -1,12 +1,24 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { Switch, Route, Redirect, useLocation, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ClerkProvider, Show, useClerk } from "@clerk/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { RecorderProvider } from "@/contexts/recorder-context";
+import {
+  basePath,
+  clerkAppearance,
+  clerkLocalization,
+  clerkProxyUrl,
+  clerkPubKey,
+  stripBase,
+} from "@/lib/clerk";
 import NotFound from "@/pages/not-found";
 
+import Landing from "@/pages/landing";
+import { SignInPage, SignUpPage } from "@/pages/auth";
 import Home from "@/pages/home";
 import Future from "@/pages/future";
 import Vault from "@/pages/vault";
@@ -24,43 +36,132 @@ import Memos from "@/pages/memos";
 
 const queryClient = new QueryClient();
 
+if (!clerkPubKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+}
+
+const APP_ROUTES: Array<{ path: string; component: React.ComponentType }> = [
+  { path: "/future", component: Future },
+  { path: "/vault", component: Vault },
+  { path: "/growth", component: Growth },
+  { path: "/calendar", component: Calendar },
+  { path: "/profile", component: Profile },
+  { path: "/gratitude", component: Gratitude },
+  { path: "/people", component: People },
+  { path: "/community", component: Community },
+  { path: "/legacy-letters", component: LegacyLetters },
+  { path: "/workouts", component: Workouts },
+  { path: "/tasks", component: Tasks },
+  { path: "/shop", component: Shop },
+  { path: "/memos", component: Memos },
+];
+
+// Signed-in users land straight in the app; signed-out visitors get the
+// public landing page (never an auto-redirect to sign-in).
+function HomeGate() {
+  return (
+    <>
+      <Show when="signed-in">
+        <RecorderProvider>
+          <Layout>
+            <Home />
+          </Layout>
+        </RecorderProvider>
+      </Show>
+      <Show when="signed-out">
+        <Landing />
+      </Show>
+    </>
+  );
+}
+
+function ProtectedPage({ component: Component }: { component: React.ComponentType }) {
+  return (
+    <>
+      <Show when="signed-in">
+        <RecorderProvider>
+          <Layout>
+            <Component />
+          </Layout>
+        </RecorderProvider>
+      </Show>
+      <Show when="signed-out">
+        <Redirect to="/" />
+      </Show>
+    </>
+  );
+}
+
+// Clears the query cache when the signed-in user changes so no data leaks
+// between accounts in the same browser tab.
+function ClerkQueryClientCacheInvalidator() {
+  const { addListener } = useClerk();
+  const qc = useQueryClient();
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const unsubscribe = addListener(({ user }) => {
+      const userId = user?.id ?? null;
+      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
+        qc.clear();
+      }
+      prevUserIdRef.current = userId;
+    });
+    return unsubscribe;
+  }, [addListener, qc]);
+
+  return null;
+}
+
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/future" component={Future} />
-        <Route path="/vault" component={Vault} />
-        <Route path="/growth" component={Growth} />
-        <Route path="/calendar" component={Calendar} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/gratitude" component={Gratitude} />
-        <Route path="/people" component={People} />
-        <Route path="/community" component={Community} />
-        <Route path="/legacy-letters" component={LegacyLetters} />
-        <Route path="/workouts" component={Workouts} />
-        <Route path="/tasks" component={Tasks} />
-        <Route path="/shop" component={Shop} />
-        <Route path="/memos" component={Memos} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/" component={HomeGate} />
+      {/* REQUIRED — "/sign-in/*?" and "/sign-up/*?" verbatim so Clerk's OAuth
+          sub-paths (sso-callback, factor-one) match too. */}
+      <Route path="/sign-in/*?" component={SignInPage} />
+      <Route path="/sign-up/*?" component={SignUpPage} />
+      {APP_ROUTES.map(({ path, component }) => (
+        <Route key={path} path={path}>
+          <ProtectedPage component={component} />
+        </Route>
+      ))}
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function ClerkProviderWithRoutes() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={clerkLocalization}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <QueryClientProvider client={queryClient}>
+        <ClerkQueryClientCacheInvalidator />
+        <TooltipProvider>
+          <Router />
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }
 
 function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <RecorderProvider>
-              <Router />
-            </RecorderProvider>
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <WouterRouter base={basePath}>
+        <ClerkProviderWithRoutes />
+      </WouterRouter>
     </ThemeProvider>
   );
 }
