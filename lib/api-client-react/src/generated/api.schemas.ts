@@ -26,6 +26,7 @@ export interface User {
   streakDays: number;
   messagesSent: number;
   goalsActive: number;
+  isOwner: boolean;
   createdAt: string;
 }
 
@@ -546,6 +547,74 @@ export interface CreateAffirmationBody {
 export interface UpdateAffirmationBody {
   text?: string;
   isFavorited?: boolean;
+}
+
+export type FeedbackItemType = typeof FeedbackItemType[keyof typeof FeedbackItemType];
+
+
+export const FeedbackItemType = {
+  feature: 'feature',
+  improvement: 'improvement',
+  bug: 'bug',
+} as const;
+
+export type FeedbackItemStatus = typeof FeedbackItemStatus[keyof typeof FeedbackItemStatus];
+
+
+export const FeedbackItemStatus = {
+  new: 'new',
+  planned: 'planned',
+  done: 'done',
+  declined: 'declined',
+} as const;
+
+export interface FeedbackItem {
+  id: number;
+  userId: number;
+  type: FeedbackItemType;
+  title: string;
+  details: string;
+  appArea?: string | null;
+  status: FeedbackItemStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AdminFeedbackItem = FeedbackItem & ({
+  adminNote?: string | null;
+  submitterName?: string;
+  submitterEmail?: string;
+});
+
+export type CreateFeedbackBodyType = typeof CreateFeedbackBodyType[keyof typeof CreateFeedbackBodyType];
+
+
+export const CreateFeedbackBodyType = {
+  feature: 'feature',
+  improvement: 'improvement',
+  bug: 'bug',
+} as const;
+
+export interface CreateFeedbackBody {
+  type: CreateFeedbackBodyType;
+  title: string;
+  details: string;
+  appArea?: string;
+}
+
+export type UpdateFeedbackBodyStatus = typeof UpdateFeedbackBodyStatus[keyof typeof UpdateFeedbackBodyStatus];
+
+
+export const UpdateFeedbackBodyStatus = {
+  new: 'new',
+  planned: 'planned',
+  done: 'done',
+  declined: 'declined',
+} as const;
+
+export interface UpdateFeedbackBody {
+  status?: UpdateFeedbackBodyStatus;
+  adminNote?: string | null;
 }
 
 export interface GratitudeEntry {

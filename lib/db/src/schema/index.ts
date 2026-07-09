@@ -15,3 +15,4 @@ export * from "./relationship-moments";
 export * from "./workouts";
 export * from "./tasks";
 export * from "./voice-memos";
+export * from "./feedback";

@@ -15,6 +15,7 @@ import {
   ListChecks,
   ShoppingBag,
   Mic,
+  MessageSquare,
   MoreHorizontal,
   X
 } from "lucide-react";
@@ -35,12 +36,59 @@ const NAV_ITEMS = [
   { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
+  { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
 // The few destinations that live directly in the mobile bottom bar; the rest
 // are reachable through the "More" drawer to avoid a cramped, unreadable nav.
 const MOBILE_PRIMARY = ["/", "/tasks", "/growth", "/people"];
+
+// Shown during the last few days of each month to nudge members to submit
+// feedback before the owner's end-of-month update pass. Dismissal is
+// remembered per calendar month.
+function FeedbackNudgeBanner() {
+  const [location] = useLocation();
+  const now = new Date();
+  const monthKey = `feedback-nudge-dismissed-${now.getFullYear()}-${now.getMonth() + 1}`;
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(monthKey) === "1";
+    } catch {
+      return true;
+    }
+  });
+
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const isMonthEnd = now.getDate() > lastDay - 4;
+
+  if (!isMonthEnd || dismissed || location === "/feedback") return null;
+
+  const dismiss = () => {
+    try {
+      localStorage.setItem(monthKey, "1");
+    } catch {
+      // Private-mode storage failures just mean the banner reappears.
+    }
+    setDismissed(true);
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-primary/10 border-b border-primary/20 px-4 py-2.5 text-sm">
+      <MessageSquare className="w-4 h-4 text-primary shrink-0" />
+      <p className="text-foreground/90 flex-1 min-w-0">
+        Monthly updates are coming — <span className="hidden sm:inline">got an idea or found a bug? </span>
+        <Link href="/feedback" className="text-primary underline underline-offset-2 hover:text-primary/80">
+          Send feedback
+        </Link>{" "}
+        before the end of the month.
+      </p>
+      <button onClick={dismiss} aria-label="Dismiss" className="text-muted-foreground hover:text-foreground p-1 shrink-0">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -85,6 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 pb-20 md:pb-0 overflow-y-auto">
+        <FeedbackNudgeBanner />
         {children}
       </main>
 

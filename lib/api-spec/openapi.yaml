@@ -41,6 +41,8 @@ tags:
     description: Shop — live catalog and checkout backed by the connected Shopify store
   - name: voice-memos
     description: Voice memos — one-tap private audio recordings
+  - name: feedback
+    description: Feedback hub — suggestions and bug reports, with owner-only triage
 
 paths:
   /storage/uploads/request-url:
@@ -1036,6 +1038,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+
+  /feedback:
+    get:
+      operationId: getMyFeedback
+      tags: [feedback]
+      summary: List the signed-in user's own feedback submissions
+      responses:
+        "200":
+          description: List of the user's feedback items (without internal admin notes)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedbackItem"
+    post:
+      operationId: createFeedback
+      tags: [feedback]
+      summary: Submit feedback or a bug report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeedbackBody"
+      responses:
+        "201":
+          description: Created feedback item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackItem"
+
+  /feedback/all:
+    get:
+      operationId: getAllFeedback
+      tags: [feedback]
+      summary: List all feedback from all users (owner only)
+      responses:
+        "200":
+          description: All feedback items with submitter info and admin notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminFeedbackItem"
+        "403":
+          description: Forbidden — not the app owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /feedback/{id}:
+    patch:
+      operationId: updateFeedback
+      tags: [feedback]
+      summary: Update feedback status or admin note (owner only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFeedbackBody"
+      responses:
+        "200":
+          description: Updated feedback item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminFeedbackItem"
+        "403":
+          description: Forbidden — not the app owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /people:
     get:
@@ -2049,10 +2141,12 @@ components:
           type: integer
         goalsActive:
           type: integer
+        isOwner:
+          type: boolean
         createdAt:
           type: string
           format: date-time
-      required: [id, name, email, streakDays, messagesSent, goalsActive, createdAt]
+      required: [id, name, email, streakDays, messagesSent, goalsActive, isOwner, createdAt]
 
     UpdateUserBody:
       type: object
@@ -2653,6 +2747,71 @@ components:
           type: string
         isFavorited:
           type: boolean
+
+    FeedbackItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [feature, improvement, bug]
+        title:
+          type: string
+        details:
+          type: string
+        appArea:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [new, planned, done, declined]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, type, title, details, status, createdAt, updatedAt]
+
+    AdminFeedbackItem:
+      allOf:
+        - $ref: "#/components/schemas/FeedbackItem"
+        - type: object
+          properties:
+            adminNote:
+              type: string
+              nullable: true
+            submitterName:
+              type: string
+            submitterEmail:
+              type: string
+
+    CreateFeedbackBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [feature, improvement, bug]
+        title:
+          type: string
+        details:
+          type: string
+        appArea:
+          type: string
+      required: [type, title, details]
+
+    UpdateFeedbackBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, planned, done, declined]
+        adminNote:
+          type: string
+          nullable: true
 
     GratitudeEntry:
       type: object

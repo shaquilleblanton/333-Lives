@@ -93,6 +93,34 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
 // Small in-process cache so we do not hit the users table on every request.
 const localIdCache = new Map<string, number>();
 
+/**
+ * Gate for admin-only routes. Must be mounted after requireAuth. Checks the
+ * is_owner flag on the local users row (set only for the app owner's account).
+ * Looked up fresh on every request — no cache — so revoking the flag takes
+ * effect immediately.
+ */
+export async function requireOwner(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const rows = await db
+      .select({ isOwner: usersTable.isOwner })
+      .from(usersTable)
+      .where(eq(usersTable.id, getUserId(req)))
+      .limit(1);
+    if (rows.length === 0 || !rows[0].isOwner) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+    next();
+  } catch (error) {
+    req.log.error({ err: error }, "Owner check failure");
+    res.status(500).json({ error: "Authorization failed" });
+  }
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,

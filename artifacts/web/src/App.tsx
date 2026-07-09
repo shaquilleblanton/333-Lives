@@ -33,6 +33,7 @@ import Workouts from "@/pages/workouts";
 import Tasks from "@/pages/tasks";
 import Shop from "@/pages/shop";
 import Memos from "@/pages/memos";
+import Feedback from "@/pages/feedback";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const APP_ROUTES: Array<{ path: string; component: React.ComponentType }> = [
   { path: "/tasks", component: Tasks },
   { path: "/shop", component: Shop },
   { path: "/memos", component: Memos },
+  { path: "/feedback", component: Feedback },
 ];
 
 // Signed-in users land straight in the app; signed-out visitors get the

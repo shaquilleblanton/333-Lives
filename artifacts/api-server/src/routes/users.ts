@@ -16,7 +16,8 @@ router.put("/users/me", async (req, res) => {
   const parsed = updateUserSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   // Identity fields are managed by the auth system, not editable via profile.
-  const { clerkId: _clerkId, email: _email, ...safe } = parsed.data;
+  // isOwner is a privilege flag that must never be self-assignable.
+  const { clerkId: _clerkId, email: _email, isOwner: _isOwner, ...safe } = parsed.data;
   const updated = await db.update(usersTable).set(safe).where(eq(usersTable.id, getUserId(req))).returning();
   if (updated.length === 0) return res.status(404).json({ error: "User not found" });
   return res.json(updated[0]);

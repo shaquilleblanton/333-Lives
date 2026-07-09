@@ -21,6 +21,7 @@ import workoutsRouter from "./workouts";
 import tasksRouter from "./tasks";
 import shopRouter from "./shop";
 import voiceMemosRouter from "./voice-memos";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -50,5 +51,6 @@ router.use(relationshipMomentsRouter);
 router.use(workoutsRouter);
 router.use(tasksRouter);
 router.use(voiceMemosRouter);
+router.use(feedbackRouter);
 
 export default router;

@@ -30,6 +30,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "bag", selected: "bag.fill" }} />
         <Label>Shop</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="feedback">
+        <Icon sf={{ default: "bubble.left", selected: "bubble.left.fill" }} />
+        <Label>Feedback</Label>
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
@@ -118,6 +122,18 @@ function ClassicTabLayout() {
               <SymbolView name="bag" tintColor={color} size={24} />
             ) : (
               <Feather name="shopping-bag" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="feedback"
+        options={{
+          title: "Feedback",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="bubble.left" tintColor={color} size={24} />
+            ) : (
+              <Feather name="message-square" size={22} color={color} />
             ),
         }}
       />

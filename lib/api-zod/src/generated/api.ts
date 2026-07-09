@@ -88,6 +88,7 @@ export const GetMeResponse = zod.object({
   "streakDays": zod.number(),
   "messagesSent": zod.number(),
   "goalsActive": zod.number(),
+  "isOwner": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -110,6 +111,7 @@ export const UpdateMeResponse = zod.object({
   "streakDays": zod.number(),
   "messagesSent": zod.number(),
   "goalsActive": zod.number(),
+  "isOwner": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -946,6 +948,96 @@ export const DeleteGratitudeEntryParams = zod.object({
 export const DeleteGratitudeEntryResponse = zod.object({
   "success": zod.boolean()
 })
+
+
+/**
+ * @summary List the signed-in user's own feedback submissions
+ */
+export const GetMyFeedbackResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['feature', 'improvement', 'bug']),
+  "title": zod.string(),
+  "details": zod.string(),
+  "appArea": zod.string().nullish(),
+  "status": zod.enum(['new', 'planned', 'done', 'declined']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetMyFeedbackResponse = zod.array(GetMyFeedbackResponseItem)
+
+
+/**
+ * @summary Submit feedback or a bug report
+ */
+export const CreateFeedbackBody = zod.object({
+  "type": zod.enum(['feature', 'improvement', 'bug']),
+  "title": zod.string(),
+  "details": zod.string(),
+  "appArea": zod.string().optional()
+})
+
+export const CreateFeedbackResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['feature', 'improvement', 'bug']),
+  "title": zod.string(),
+  "details": zod.string(),
+  "appArea": zod.string().nullish(),
+  "status": zod.enum(['new', 'planned', 'done', 'declined']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List all feedback from all users (owner only)
+ */
+export const GetAllFeedbackResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['feature', 'improvement', 'bug']),
+  "title": zod.string(),
+  "details": zod.string(),
+  "appArea": zod.string().nullish(),
+  "status": zod.enum(['new', 'planned', 'done', 'declined']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "adminNote": zod.string().nullish(),
+  "submitterName": zod.string().optional(),
+  "submitterEmail": zod.string().optional()
+}))
+export const GetAllFeedbackResponse = zod.array(GetAllFeedbackResponseItem)
+
+
+/**
+ * @summary Update feedback status or admin note (owner only)
+ */
+export const UpdateFeedbackParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFeedbackBody = zod.object({
+  "status": zod.enum(['new', 'planned', 'done', 'declined']).optional(),
+  "adminNote": zod.string().nullish()
+})
+
+export const UpdateFeedbackResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['feature', 'improvement', 'bug']),
+  "title": zod.string(),
+  "details": zod.string(),
+  "appArea": zod.string().nullish(),
+  "status": zod.enum(['new', 'planned', 'done', 'declined']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "adminNote": zod.string().nullish(),
+  "submitterName": zod.string().optional(),
+  "submitterEmail": zod.string().optional()
+}))
 
 
 /**
