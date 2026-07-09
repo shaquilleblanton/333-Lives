@@ -1201,6 +1201,38 @@ export interface ShopCheckout {
   checkoutUrl: string;
 }
 
+export interface VoiceMemo {
+  id: number;
+  title: string;
+  /** Private object path (e.g. /objects/uploads/uuid); stream via /api/storage{objectPath}. */
+  objectPath: string;
+  durationSeconds: number;
+  recordedAt: string;
+}
+
+export interface CreateVoiceMemoBody {
+  /**
+     * Optional; auto-named from the recording date/time when omitted.
+     * @maxLength 200
+     */
+  title?: string;
+  /**
+     * Object path returned by the upload flow.
+     * @minLength 1
+     */
+  objectPath: string;
+  /** @minimum 0 */
+  durationSeconds?: number;
+}
+
+export interface UpdateVoiceMemoBody {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

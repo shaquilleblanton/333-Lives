@@ -20,6 +20,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "flame", selected: "flame.fill" }} />
         <Label>Streak</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="memos">
+        <Icon sf={{ default: "mic", selected: "mic.fill" }} />
+        <Label>Memos</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="shop">
         <Icon sf={{ default: "bag", selected: "bag.fill" }} />
         <Label>Shop</Label>
@@ -88,6 +92,18 @@ function ClassicTabLayout() {
               <SymbolView name="flame" tintColor={color} size={24} />
             ) : (
               <Feather name="award" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="memos"
+        options={{
+          title: "Memos",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="mic" tintColor={color} size={24} />
+            ) : (
+              <Feather name="mic" size={22} color={color} />
             ),
         }}
       />

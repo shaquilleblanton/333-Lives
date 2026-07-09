@@ -39,6 +39,8 @@ tags:
     description: Tasks and responsibilities — everyday to-dos with due dates, priority, and category
   - name: shop
     description: Shop — live catalog and checkout backed by the connected Shopify store
+  - name: voice-memos
+    description: Voice memos — one-tap private audio recordings
 
 paths:
   /storage/uploads/request-url:
@@ -1911,6 +1913,98 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /voice-memos:
+    get:
+      operationId: getVoiceMemos
+      tags: [voice-memos]
+      summary: List all voice memos (newest first)
+      responses:
+        "200":
+          description: List of voice memos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VoiceMemo"
+    post:
+      operationId: createVoiceMemo
+      tags: [voice-memos]
+      summary: Save a recorded voice memo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoiceMemoBody"
+      responses:
+        "201":
+          description: Created voice memo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceMemo"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /voice-memos/{id}:
+    patch:
+      operationId: updateVoiceMemo
+      tags: [voice-memos]
+      summary: Rename a voice memo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoiceMemoBody"
+      responses:
+        "200":
+          description: Updated voice memo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceMemo"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteVoiceMemo
+      tags: [voice-memos]
+      summary: Delete a voice memo (and its stored audio)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -3259,3 +3353,46 @@ components:
           type: string
           format: uri
           description: Shopify-hosted checkout URL to open in the browser.
+
+    VoiceMemo:
+      type: object
+      required: [id, title, objectPath, durationSeconds, recordedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        objectPath:
+          type: string
+          description: Private object path (e.g. /objects/uploads/uuid); stream via /api/storage{objectPath}.
+        durationSeconds:
+          type: integer
+        recordedAt:
+          type: string
+          format: date-time
+
+    CreateVoiceMemoBody:
+      type: object
+      required: [objectPath]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          description: Optional; auto-named from the recording date/time when omitted.
+        objectPath:
+          type: string
+          minLength: 1
+          description: Object path returned by the upload flow.
+        durationSeconds:
+          type: integer
+          minimum: 0
+          default: 0
+
+    UpdateVoiceMemoBody:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200

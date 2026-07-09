@@ -19,6 +19,7 @@ import relationshipMomentsRouter from "./relationship-moments";
 import workoutsRouter from "./workouts";
 import tasksRouter from "./tasks";
 import shopRouter from "./shop";
+import voiceMemosRouter from "./voice-memos";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(relationshipMomentsRouter);
 router.use(workoutsRouter);
 router.use(tasksRouter);
 router.use(shopRouter);
+router.use(voiceMemosRouter);
 
 export default router;

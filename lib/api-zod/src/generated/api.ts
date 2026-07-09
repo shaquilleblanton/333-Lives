@@ -2044,3 +2044,78 @@ export const CreateShopCheckoutResponse = zod.object({
 })
 
 
+/**
+ * @summary List all voice memos (newest first)
+ */
+export const GetVoiceMemosResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "objectPath": zod.string().describe('Private object path (e.g. \/objects\/uploads\/uuid); stream via \/api\/storage{objectPath}.'),
+  "durationSeconds": zod.number(),
+  "recordedAt": zod.coerce.date()
+})
+export const GetVoiceMemosResponse = zod.array(GetVoiceMemosResponseItem)
+
+
+/**
+ * @summary Save a recorded voice memo
+ */
+export const createVoiceMemoBodyTitleMax = 200;
+
+
+export const createVoiceMemoBodyDurationSecondsDefault = 0;
+export const createVoiceMemoBodyDurationSecondsMin = 0;
+
+
+
+export const CreateVoiceMemoBody = zod.object({
+  "title": zod.string().max(createVoiceMemoBodyTitleMax).optional().describe('Optional; auto-named from the recording date\/time when omitted.'),
+  "objectPath": zod.string().min(1).describe('Object path returned by the upload flow.'),
+  "durationSeconds": zod.number().min(createVoiceMemoBodyDurationSecondsMin).default(createVoiceMemoBodyDurationSecondsDefault)
+})
+
+export const CreateVoiceMemoResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "objectPath": zod.string().describe('Private object path (e.g. \/objects\/uploads\/uuid); stream via \/api\/storage{objectPath}.'),
+  "durationSeconds": zod.number(),
+  "recordedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Rename a voice memo
+ */
+export const UpdateVoiceMemoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const updateVoiceMemoBodyTitleMax = 200;
+
+
+
+export const UpdateVoiceMemoBody = zod.object({
+  "title": zod.string().min(1).max(updateVoiceMemoBodyTitleMax)
+})
+
+export const UpdateVoiceMemoResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "objectPath": zod.string().describe('Private object path (e.g. \/objects\/uploads\/uuid); stream via \/api\/storage{objectPath}.'),
+  "durationSeconds": zod.number(),
+  "recordedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a voice memo (and its stored audio)
+ */
+export const DeleteVoiceMemoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteVoiceMemoResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

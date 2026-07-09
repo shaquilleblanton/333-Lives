@@ -19,6 +19,7 @@ import LegacyLetters from "@/pages/legacy-letters";
 import Workouts from "@/pages/workouts";
 import Tasks from "@/pages/tasks";
 import Shop from "@/pages/shop";
+import Memos from "@/pages/memos";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/workouts" component={Workouts} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/shop" component={Shop} />
+        <Route path="/memos" component={Memos} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

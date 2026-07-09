@@ -38,6 +38,7 @@ import type {
   CreateShopCheckoutBody,
   CreateTaskBody,
   CreateVaultItemBody,
+  CreateVoiceMemoBody,
   CreateWorkoutBlockBody,
   CreateWorkoutBody,
   Dashboard,
@@ -88,12 +89,14 @@ import type {
   UpdateTaskBody,
   UpdateUserBody,
   UpdateVaultItemBody,
+  UpdateVoiceMemoBody,
   UpdateWorkoutBlockBody,
   UpdateWorkoutBody,
   UploadUrlRequest,
   UploadUrlResponse,
   User,
   VaultItem,
+  VoiceMemo,
   WorkoutSession
 } from './api.schemas';
 
@@ -6463,5 +6466,293 @@ export const useCreateShopCheckout = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCreateShopCheckoutMutationOptions(options));
+    }
+
+export const getGetVoiceMemosUrl = () => {
+
+
+
+
+  return `/api/voice-memos`
+}
+
+/**
+ * @summary List all voice memos (newest first)
+ */
+export const getVoiceMemos = async ( options?: RequestInit): Promise<VoiceMemo[]> => {
+
+  return customFetch<VoiceMemo[]>(getGetVoiceMemosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVoiceMemosQueryKey = () => {
+    return [
+    `/api/voice-memos`
+    ] as const;
+    }
+
+
+export const getGetVoiceMemosQueryOptions = <TData = Awaited<ReturnType<typeof getVoiceMemos>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVoiceMemos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVoiceMemosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVoiceMemos>>> = ({ signal }) => getVoiceMemos({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVoiceMemos>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVoiceMemosQueryResult = NonNullable<Awaited<ReturnType<typeof getVoiceMemos>>>
+export type GetVoiceMemosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all voice memos (newest first)
+ */
+
+export function useGetVoiceMemos<TData = Awaited<ReturnType<typeof getVoiceMemos>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVoiceMemos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVoiceMemosQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVoiceMemoUrl = () => {
+
+
+
+
+  return `/api/voice-memos`
+}
+
+/**
+ * @summary Save a recorded voice memo
+ */
+export const createVoiceMemo = async (createVoiceMemoBody: CreateVoiceMemoBody, options?: RequestInit): Promise<VoiceMemo> => {
+
+  return customFetch<VoiceMemo>(getCreateVoiceMemoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createVoiceMemoBody)
+  }
+);}
+
+
+
+
+export const getCreateVoiceMemoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVoiceMemo>>, TError,{data: BodyType<CreateVoiceMemoBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVoiceMemo>>, TError,{data: BodyType<CreateVoiceMemoBody>}, TContext> => {
+
+const mutationKey = ['createVoiceMemo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVoiceMemo>>, {data: BodyType<CreateVoiceMemoBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVoiceMemo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVoiceMemoMutationResult = NonNullable<Awaited<ReturnType<typeof createVoiceMemo>>>
+    export type CreateVoiceMemoMutationBody = BodyType<CreateVoiceMemoBody>
+    export type CreateVoiceMemoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Save a recorded voice memo
+ */
+export const useCreateVoiceMemo = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVoiceMemo>>, TError,{data: BodyType<CreateVoiceMemoBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVoiceMemo>>,
+        TError,
+        {data: BodyType<CreateVoiceMemoBody>},
+        TContext
+      > => {
+      return useMutation(getCreateVoiceMemoMutationOptions(options));
+    }
+
+export const getUpdateVoiceMemoUrl = (id: number,) => {
+
+
+
+
+  return `/api/voice-memos/${id}`
+}
+
+/**
+ * @summary Rename a voice memo
+ */
+export const updateVoiceMemo = async (id: number,
+    updateVoiceMemoBody: UpdateVoiceMemoBody, options?: RequestInit): Promise<VoiceMemo> => {
+
+  return customFetch<VoiceMemo>(getUpdateVoiceMemoUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateVoiceMemoBody)
+  }
+);}
+
+
+
+
+export const getUpdateVoiceMemoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVoiceMemo>>, TError,{id: number;data: BodyType<UpdateVoiceMemoBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVoiceMemo>>, TError,{id: number;data: BodyType<UpdateVoiceMemoBody>}, TContext> => {
+
+const mutationKey = ['updateVoiceMemo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVoiceMemo>>, {id: number;data: BodyType<UpdateVoiceMemoBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateVoiceMemo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVoiceMemoMutationResult = NonNullable<Awaited<ReturnType<typeof updateVoiceMemo>>>
+    export type UpdateVoiceMemoMutationBody = BodyType<UpdateVoiceMemoBody>
+    export type UpdateVoiceMemoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Rename a voice memo
+ */
+export const useUpdateVoiceMemo = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVoiceMemo>>, TError,{id: number;data: BodyType<UpdateVoiceMemoBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVoiceMemo>>,
+        TError,
+        {id: number;data: BodyType<UpdateVoiceMemoBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateVoiceMemoMutationOptions(options));
+    }
+
+export const getDeleteVoiceMemoUrl = (id: number,) => {
+
+
+
+
+  return `/api/voice-memos/${id}`
+}
+
+/**
+ * @summary Delete a voice memo (and its stored audio)
+ */
+export const deleteVoiceMemo = async (id: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteVoiceMemoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVoiceMemoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVoiceMemo>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVoiceMemo>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteVoiceMemo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVoiceMemo>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteVoiceMemo(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVoiceMemoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVoiceMemo>>>
+
+    export type DeleteVoiceMemoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Delete a voice memo (and its stored audio)
+ */
+export const useDeleteVoiceMemo = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVoiceMemo>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVoiceMemo>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVoiceMemoMutationOptions(options));
     }
 
