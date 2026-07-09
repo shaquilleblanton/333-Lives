@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   useGetVoiceMemos,
-  useCreateVoiceMemo,
   useUpdateVoiceMemo,
   useDeleteVoiceMemo,
   getGetVoiceMemosQueryKey,
   type VoiceMemo,
 } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Mic,
@@ -24,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useRecorder } from "@/contexts/recorder-context";
 
 function formatClock(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
@@ -36,50 +35,24 @@ function formatRecordedAt(iso: string) {
   return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 }
 
-function pickMimeType(): { mimeType: string; ext: string } {
-  if (typeof MediaRecorder !== "undefined") {
-    if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-      return { mimeType: "audio/webm;codecs=opus", ext: "webm" };
-    }
-    if (MediaRecorder.isTypeSupported("audio/webm")) {
-      return { mimeType: "audio/webm", ext: "webm" };
-    }
-    if (MediaRecorder.isTypeSupported("audio/mp4")) {
-      return { mimeType: "audio/mp4", ext: "m4a" };
-    }
-  }
-  return { mimeType: "", ext: "webm" };
-}
-
 export default function Memos() {
   const { data: memos, isLoading } = useGetVoiceMemos();
-  const createMemo = useCreateVoiceMemo();
   const updateMemo = useUpdateVoiceMemo();
   const deleteMemo = useDeleteVoiceMemo();
-  const { uploadFile } = useUpload();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
+  const { isRecording, isSaving, elapsed, startRecording, stopRecording } =
+    useRecorder();
 
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const elapsedRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -89,91 +62,6 @@ export default function Memos() {
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getGetVoiceMemosQueryKey() });
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      const { mimeType } = pickMimeType();
-      const recorder = new MediaRecorder(
-        stream,
-        mimeType ? { mimeType } : undefined,
-      );
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      elapsedRef.current = 0;
-      setElapsed(0);
-      setIsRecording(true);
-      timerRef.current = setInterval(() => {
-        elapsedRef.current += 1;
-        setElapsed(elapsedRef.current);
-      }, 1000);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Microphone unavailable",
-        description: "Please allow microphone access to record memos.",
-      });
-    }
-  };
-
-  const stopRecording = () => {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder) return;
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    const duration = elapsedRef.current;
-    setIsRecording(false);
-    setIsSaving(true);
-
-    recorder.onstop = async () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-      mediaRecorderRef.current = null;
-      try {
-        const { ext } = pickMimeType();
-        const blob = new Blob(chunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-        chunksRef.current = [];
-        if (blob.size === 0) throw new Error("empty recording");
-        const file = new File([blob], `memo-${Date.now()}.${ext}`, {
-          type: blob.type,
-        });
-        const res = await uploadFile(file);
-        if (!res?.objectPath) throw new Error("upload failed");
-        await new Promise<void>((resolve, reject) => {
-          createMemo.mutate(
-            { data: { objectPath: res.objectPath, durationSeconds: duration } },
-            {
-              onSuccess: () => {
-                invalidate();
-                toast({ title: "Memo saved", description: "Your recording is stored privately." });
-                resolve();
-              },
-              onError: () => reject(new Error("save failed")),
-            },
-          );
-        });
-      } catch {
-        toast({
-          variant: "destructive",
-          title: "Couldn't save memo",
-          description: "The recording wasn't saved. Please try again.",
-        });
-      } finally {
-        setIsSaving(false);
-        setElapsed(0);
-      }
-    };
-    recorder.stop();
-  };
 
   const togglePlay = (memo: VoiceMemo) => {
     if (playingId === memo.id) {
@@ -277,6 +165,9 @@ export default function Memos() {
               <p className="text-2xl font-serif text-foreground tabular-nums">{formatClock(elapsed)}</p>
               <p className="text-sm text-muted-foreground font-subheading uppercase tracking-wider">
                 Recording — tap to stop &amp; save
+              </p>
+              <p className="text-xs text-muted-foreground/70">
+                Keeps recording while you browse other pages.
               </p>
             </>
           ) : isSaving ? (
