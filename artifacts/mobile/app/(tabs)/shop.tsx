@@ -71,7 +71,14 @@ export default function ShopScreen() {
       { data: { variantId, quantity } },
       {
         onSuccess: async ({ checkoutUrl }) => {
-          await WebBrowser.openBrowserAsync(checkoutUrl);
+          try {
+            await WebBrowser.openBrowserAsync(checkoutUrl);
+          } catch {
+            Alert.alert(
+              "Couldn't open checkout",
+              "The checkout page couldn't be opened on this device. Please try again.",
+            );
+          }
         },
         onError: () => {
           Alert.alert(

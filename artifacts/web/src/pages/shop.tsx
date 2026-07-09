@@ -53,13 +53,22 @@ export default function Shop() {
 
   const handleCheckout = () => {
     if (!variantId) return;
+    // Open the window synchronously (within the click's user activation) so
+    // popup blockers don't kill it; navigate it once the checkout URL arrives.
+    const checkoutWindow = window.open("about:blank", "_blank");
     createCheckout.mutate(
       { data: { variantId, quantity } },
       {
         onSuccess: ({ checkoutUrl }) => {
-          window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+          if (checkoutWindow && !checkoutWindow.closed) {
+            checkoutWindow.location.href = checkoutUrl;
+          } else {
+            // Popup was blocked — fall back to navigating this tab.
+            window.location.assign(checkoutUrl);
+          }
         },
         onError: () => {
+          checkoutWindow?.close();
           toast({
             variant: "destructive",
             title: "Checkout didn't start",
