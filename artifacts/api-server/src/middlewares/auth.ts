@@ -48,10 +48,11 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
   if (linked.length > 0) return linked[0].id;
 
   const clerkUser = await clerkClient.users.getUser(clerkUserId);
-  const email =
+  const email = (
     clerkUser.primaryEmailAddress?.emailAddress ??
     clerkUser.emailAddresses[0]?.emailAddress ??
-    `${clerkUserId}@users.noreply`;
+    `${clerkUserId}@users.noreply`
+  ).toLowerCase();
   const name =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     email.split("@")[0];
@@ -66,7 +67,7 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
   if (byEmail.length > 0 && byEmail[0].clerkId === null) {
     const updated = await db
       .update(usersTable)
-      .set({ clerkId: clerkUserId })
+      .set({ clerkId: clerkUserId, name })
       .where(eq(usersTable.id, byEmail[0].id))
       .returning({ id: usersTable.id });
     if (updated.length > 0) return updated[0].id;
