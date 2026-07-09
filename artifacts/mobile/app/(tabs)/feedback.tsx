@@ -13,6 +13,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -36,6 +37,12 @@ const TYPE_OPTIONS: Array<{ value: FeedbackType; label: string; icon: keyof type
   { value: "bug", label: "Bug", icon: "alert-circle" },
 ];
 
+const APP_AREAS = [
+  "Today", "Streak", "Memos", "Shop", "Tasks", "Future", "Vault", "Growth",
+  "Gratitude", "People", "Legacy Letters", "Workouts", "Community",
+  "Calendar", "Profile", "Other",
+];
+
 const STATUS_LABELS: Record<FeedbackStatus, string> = {
   new: "New",
   planned: "Planned",
@@ -53,18 +60,27 @@ export default function FeedbackScreen() {
   const [type, setType] = useState<FeedbackType>("feature");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
+  const [appArea, setAppArea] = useState("");
 
   const canSubmit =
     title.trim().length > 0 && details.trim().length > 0 && !createFeedback.isPending;
 
   const submit = () => {
     createFeedback.mutate(
-      { data: { type, title: title.trim(), details: details.trim() } },
+      {
+        data: {
+          type,
+          title: title.trim(),
+          details: details.trim(),
+          ...(appArea ? { appArea } : {}),
+        },
+      },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMyFeedbackQueryKey() });
           setTitle("");
           setDetails("");
+          setAppArea("");
           Alert.alert("Thank you", "Your feedback is in the queue for the next monthly review.");
         },
         onError: () => Alert.alert("Couldn't submit", "Please try again."),
@@ -159,6 +175,42 @@ export default function FeedbackScreen() {
             { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background },
           ]}
         />
+        <View>
+          <Text style={[styles.areaLabel, { color: colors.mutedForeground }]}>
+            WHERE IN THE APP? (OPTIONAL)
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {APP_AREAS.map((area) => {
+              const active = appArea === area;
+              return (
+                <Pressable
+                  key={area}
+                  onPress={() => setAppArea(active ? "" : area)}
+                  style={[
+                    styles.areaChip,
+                    {
+                      borderColor: active ? colors.primary + "80" : colors.border,
+                      backgroundColor: active ? colors.primary + "1A" : "transparent",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.areaChipText,
+                      { color: active ? colors.primary : colors.mutedForeground },
+                    ]}
+                  >
+                    {area}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
         <Pressable
           onPress={submit}
           disabled={!canSubmit}
@@ -242,6 +294,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   textarea: { minHeight: 90, textAlignVertical: "top" },
+  areaLabel: { fontFamily: fonts.subSemibold, fontSize: 10, letterSpacing: 1, marginBottom: 8 },
+  areaChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  areaChipText: { fontFamily: fonts.sub, fontSize: 12 },
   submitBtn: {
     borderRadius: 12,
     paddingVertical: 12,

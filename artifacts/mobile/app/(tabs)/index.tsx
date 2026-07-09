@@ -30,6 +30,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CompletionRing } from "@/components/CompletionRing";
+import { FeedbackNudgeBanner } from "@/components/FeedbackNudgeBanner";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
@@ -220,6 +221,7 @@ export default function TodayScreen() {
   }
 
   const Header = (
+    <>
     <View style={styles.header}>
       <View style={{ flex: 1 }}>
         <Text style={[styles.greeting, { color: colors.foreground }]}>
@@ -248,6 +250,8 @@ export default function TodayScreen() {
       )}
       <SignOutButton />
     </View>
+    <FeedbackNudgeBanner />
+    </>
   );
 
   const contentTopPad = insets.top + WEB_TOP_INSET + 12;
