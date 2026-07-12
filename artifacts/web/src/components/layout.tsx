@@ -104,9 +104,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-6 gap-8">
-        <div className="flex items-center gap-3 px-2">
+        <div className="flex items-center justify-center px-2">
           <Logo333 size="sm" />
-          <span className="font-serif text-xl tracking-wide text-foreground">333 Lives</span>
         </div>
         
         <nav className="flex-1 flex flex-col gap-2">

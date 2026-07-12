@@ -3,7 +3,7 @@ interface LogoProps {
   className?: string;
 }
 
-const DIMS = { sm: 28, md: 36, lg: 80 };
+const DIMS = { sm: 44, md: 56, lg: 96 };
 
 export function Logo333({ size = "md", className = "" }: LogoProps) {
   const d = DIMS[size];
