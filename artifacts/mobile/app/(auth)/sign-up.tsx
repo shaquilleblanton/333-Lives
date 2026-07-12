@@ -5,6 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -99,7 +100,11 @@ export default function SignUpScreen() {
           { paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40 },
         ]}
       >
-        <Text style={[styles.brand, { color: colors.primary }]}>333 Lives</Text>
+        <Image
+          source={require("@/assets/logo-mark.png")}
+          style={styles.logoImg}
+          resizeMode="contain"
+        />
         <Text style={[styles.title, { color: colors.foreground }]}>Check your email</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
           We sent a verification code to {emailAddress}
@@ -156,7 +161,11 @@ export default function SignUpScreen() {
         { paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40 },
       ]}
     >
-      <Text style={[styles.brand, { color: colors.primary }]}>333 Lives</Text>
+      <Image
+        source={require("@/assets/logo-mark.png")}
+        style={styles.logoImg}
+        resizeMode="contain"
+      />
       <Text style={[styles.title, { color: colors.foreground }]}>Begin your legacy</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         Create your 333 Lives account
@@ -259,6 +268,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 28, maxWidth: 460, width: "100%", alignSelf: "center" },
   brand: { fontFamily: fonts.serifBold, fontSize: 18, letterSpacing: 1, marginBottom: 20 },
+  logoImg: { width: 120, height: 120, alignSelf: "center", marginBottom: 12 },
   title: { fontFamily: fonts.serifBold, fontSize: 32, marginBottom: 6 },
   subtitle: { fontFamily: fonts.sub, fontSize: 15, marginBottom: 28 },
   ssoButton: {

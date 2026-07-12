@@ -5,6 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -94,7 +95,11 @@ export default function SignInScreen() {
         { paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40 },
       ]}
     >
-      <Text style={[styles.brand, { color: colors.primary }]}>333 Lives</Text>
+      <Image
+        source={require("@/assets/logo-mark.png")}
+        style={styles.logoImg}
+        resizeMode="contain"
+      />
       <Text style={[styles.title, { color: colors.foreground }]}>Welcome back</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         Sign in to continue your 333 journey
@@ -192,6 +197,7 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 28, maxWidth: 460, width: "100%", alignSelf: "center" },
   brand: { fontFamily: fonts.serifBold, fontSize: 18, letterSpacing: 1, marginBottom: 20 },
+  logoImg: { width: 120, height: 120, alignSelf: "center", marginBottom: 12 },
   title: { fontFamily: fonts.serifBold, fontSize: 32, marginBottom: 6 },
   subtitle: { fontFamily: fonts.sub, fontSize: 15, marginBottom: 28 },
   ssoButton: {
