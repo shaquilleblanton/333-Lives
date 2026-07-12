@@ -2,14 +2,14 @@
  * Semantic design tokens for the 333 Lives mobile app.
  *
  * Synced from the sibling web artifact's index.css (charcoal theme) so both
- * artifacts share one visual identity: warm deep charcoal, copper-gold accent,
+ * artifacts share one visual identity: warm deep charcoal, logo gold accent,
  * ivory text, sage + clay secondaries.
  */
 
 const palette = {
   // Legacy aliases (kept for backward compatibility)
   text: "#F7F4EF",
-  tint: "#BB734A",
+  tint: "#C9A439",
 
   // Core surfaces
   background: "#191919", // 240 5% 10% — lifted charcoal
@@ -20,7 +20,7 @@ const palette = {
   cardForeground: "#F7F4EF",
 
   // Primary action color (buttons, active states)
-  primary: "#BB734A", // Copper
+  primary: "#C9A439", // Logo gold — matches the 333 LIVES mark
   primaryForeground: "#191919",
 
   // Secondary — sage

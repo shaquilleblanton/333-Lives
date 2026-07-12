@@ -53,7 +53,7 @@
 }
 
 /* ─── THEME: Charcoal (default) ─────────────────────────── */
-/* Warm deep charcoal with copper gold — the original, slightly lifted */
+/* Warm deep charcoal with logo gold accent */
 :root, [data-theme="charcoal"] {
   color-scheme: dark;
   --button-outline: rgba(255,255,255, .10);
@@ -71,15 +71,15 @@
   --sidebar: 240 5% 11%;
   --sidebar-foreground: 40 27% 95%;
   --sidebar-border: 240 5% 18%;
-  --sidebar-primary: 23 44% 51%;
+  --sidebar-primary: 42 62% 51%;
   --sidebar-primary-foreground: 240 5% 10%;
   --sidebar-accent: 240 5% 18%;
   --sidebar-accent-foreground: 40 27% 95%;
-  --sidebar-ring: 23 44% 51%;
+  --sidebar-ring: 42 62% 51%;
   --popover: 240 5% 13%;
   --popover-foreground: 40 27% 95%;
   --popover-border: 240 5% 18%;
-  --primary: 22 44% 51%;          /* Copper #BB734A */
+  --primary: 42 62% 51%;          /* Logo gold #C9A339 */
   --primary-foreground: 240 5% 10%;
   --secondary: 91 19% 56%;        /* Sage #8FA67A */
   --secondary-foreground: 240 5% 10%;
@@ -90,8 +90,8 @@
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 40 27% 95%;
   --input: 240 5% 18%;
-  --ring: 22 44% 51%;
-  --chart-1: 22 44% 51%;
+  --ring: 42 62% 51%;
+  --chart-1: 42 62% 51%;
   --chart-2: 91 19% 56%;
   --chart-3: 45 41% 64%;
   --chart-4: 280 65% 60%;
@@ -120,7 +120,7 @@
 }
 
 /* ─── THEME: Midnight ────────────────────────────────────── */
-/* Softer lifted dark — dark gray not black, same copper warmth */
+/* Softer lifted dark — dark gray not black, same logo gold warmth */
 [data-theme="midnight"] {
   color-scheme: dark;
   --button-outline: rgba(255,255,255, .12);
@@ -138,15 +138,15 @@
   --sidebar: 240 4% 17%;
   --sidebar-foreground: 40 27% 95%;
   --sidebar-border: 240 4% 22%;
-  --sidebar-primary: 23 44% 55%;
+  --sidebar-primary: 42 62% 54%;
   --sidebar-primary-foreground: 240 4% 16%;
   --sidebar-accent: 240 4% 24%;
   --sidebar-accent-foreground: 40 27% 95%;
-  --sidebar-ring: 23 44% 55%;
+  --sidebar-ring: 42 62% 54%;
   --popover: 240 4% 20%;
   --popover-foreground: 40 27% 95%;
   --popover-border: 240 4% 26%;
-  --primary: 22 44% 55%;
+  --primary: 42 62% 54%;
   --primary-foreground: 240 4% 16%;
   --secondary: 91 19% 56%;
   --secondary-foreground: 240 4% 16%;
@@ -157,8 +157,8 @@
   --destructive: 0 62.8% 35%;
   --destructive-foreground: 40 27% 95%;
   --input: 240 4% 24%;
-  --ring: 22 44% 55%;
-  --chart-1: 22 44% 55%;
+  --ring: 42 62% 54%;
+  --chart-1: 42 62% 54%;
   --chart-2: 91 19% 56%;
   --chart-3: 45 41% 67%;
   --chart-4: 280 65% 60%;
