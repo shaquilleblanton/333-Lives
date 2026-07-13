@@ -15,6 +15,9 @@ export const communityCalendarTable = pgTable("community_calendar", {
   endDate: date("end_date"),
   startTime: text("start_time"),
   endTime: text("end_time"),
+  windowType: text("window_type", {
+    enum: ["open", "locked", "scheduled", "private"],
+  }).notNull().default("scheduled"),
   isOpenDay: boolean("is_open_day").notNull().default(false),
   status: text("status", { enum: ["open", "confirmed", "pending", "declined"] }).notNull().default("open"),
   requestedBy: text("requested_by"),

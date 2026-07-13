@@ -179,6 +179,16 @@ export const CalendarEventType = {
   routine: 'routine',
 } as const;
 
+export type CalendarEventWindowType = typeof CalendarEventWindowType[keyof typeof CalendarEventWindowType];
+
+
+export const CalendarEventWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export interface CalendarEvent {
   id: number;
   title: string;
@@ -188,6 +198,7 @@ export interface CalendarEvent {
   endTime?: string | null;
   isRecurring: boolean;
   recurringPattern?: string | null;
+  windowType: CalendarEventWindowType;
   color?: string | null;
   createdAt: string;
 }
@@ -201,6 +212,16 @@ export const CreateEventBodyType = {
   routine: 'routine',
 } as const;
 
+export type CreateEventBodyWindowType = typeof CreateEventBodyWindowType[keyof typeof CreateEventBodyWindowType];
+
+
+export const CreateEventBodyWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export interface CreateEventBody {
   title: string;
   description?: string;
@@ -209,6 +230,7 @@ export interface CreateEventBody {
   endTime?: string;
   isRecurring?: boolean;
   recurringPattern?: string;
+  windowType?: CreateEventBodyWindowType;
   color?: string;
 }
 
@@ -221,6 +243,16 @@ export const UpdateEventBodyType = {
   routine: 'routine',
 } as const;
 
+export type UpdateEventBodyWindowType = typeof UpdateEventBodyWindowType[keyof typeof UpdateEventBodyWindowType];
+
+
+export const UpdateEventBodyWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export interface UpdateEventBody {
   title?: string;
   description?: string;
@@ -229,6 +261,7 @@ export interface UpdateEventBody {
   endTime?: string;
   isRecurring?: boolean;
   recurringPattern?: string;
+  windowType?: UpdateEventBodyWindowType;
   color?: string;
 }
 
@@ -791,6 +824,16 @@ export const CommunityEventCategory = {
   other: 'other',
 } as const;
 
+export type CommunityEventWindowType = typeof CommunityEventWindowType[keyof typeof CommunityEventWindowType];
+
+
+export const CommunityEventWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export type CommunityEventStatus = typeof CommunityEventStatus[keyof typeof CommunityEventStatus];
 
 
@@ -811,6 +854,7 @@ export interface CommunityEvent {
   endDate?: string | null;
   startTime?: string | null;
   endTime?: string | null;
+  windowType: CommunityEventWindowType;
   isOpenDay: boolean;
   status: CommunityEventStatus;
   requestedBy?: string | null;
@@ -835,6 +879,16 @@ export const CreateCommunityEventBodyCategory = {
   other: 'other',
 } as const;
 
+export type CreateCommunityEventBodyWindowType = typeof CreateCommunityEventBodyWindowType[keyof typeof CreateCommunityEventBodyWindowType];
+
+
+export const CreateCommunityEventBodyWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export type CreateCommunityEventBodyStatus = typeof CreateCommunityEventBodyStatus[keyof typeof CreateCommunityEventBodyStatus];
 
 
@@ -853,6 +907,7 @@ export interface CreateCommunityEventBody {
   endDate?: string;
   startTime?: string;
   endTime?: string;
+  windowType?: CreateCommunityEventBodyWindowType;
   isOpenDay?: boolean;
   status?: CreateCommunityEventBodyStatus;
   requestedBy?: string;
@@ -875,6 +930,16 @@ export const UpdateCommunityEventBodyCategory = {
   other: 'other',
 } as const;
 
+export type UpdateCommunityEventBodyWindowType = typeof UpdateCommunityEventBodyWindowType[keyof typeof UpdateCommunityEventBodyWindowType];
+
+
+export const UpdateCommunityEventBodyWindowType = {
+  open: 'open',
+  locked: 'locked',
+  scheduled: 'scheduled',
+  private: 'private',
+} as const;
+
 export type UpdateCommunityEventBodyStatus = typeof UpdateCommunityEventBodyStatus[keyof typeof UpdateCommunityEventBodyStatus];
 
 
@@ -893,6 +958,7 @@ export interface UpdateCommunityEventBody {
   endDate?: string;
   startTime?: string;
   endTime?: string;
+  windowType?: UpdateCommunityEventBodyWindowType;
   isOpenDay?: boolean;
   status?: UpdateCommunityEventBodyStatus;
   requestedBy?: string;

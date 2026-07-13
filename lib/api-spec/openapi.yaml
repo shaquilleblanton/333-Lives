@@ -3016,13 +3016,16 @@ components:
         recurringPattern:
           type: string
           nullable: true
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         color:
           type: string
           nullable: true
         createdAt:
           type: string
           format: date-time
-      required: [id, title, type, startTime, isRecurring, createdAt]
+      required: [id, title, type, startTime, isRecurring, windowType, createdAt]
 
     CreateEventBody:
       type: object
@@ -3044,6 +3047,9 @@ components:
           type: boolean
         recurringPattern:
           type: string
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         color:
           type: string
       required: [title, type, startTime]
@@ -3068,6 +3074,9 @@ components:
           type: boolean
         recurringPattern:
           type: string
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         color:
           type: string
 
@@ -3775,6 +3784,9 @@ components:
         endTime:
           type: string
           nullable: true
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         isOpenDay:
           type: boolean
         status:
@@ -3794,7 +3806,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-      required: [id, userId, title, category, startDate, isOpenDay, status, isPublic, createdAt, updatedAt]
+      required: [id, userId, title, category, startDate, windowType, isOpenDay, status, isPublic, createdAt, updatedAt]
 
     CreateCommunityEventBody:
       type: object
@@ -3816,6 +3828,9 @@ components:
           type: string
         endTime:
           type: string
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         isOpenDay:
           type: boolean
         status:
@@ -3849,6 +3864,9 @@ components:
           type: string
         endTime:
           type: string
+        windowType:
+          type: string
+          enum: [open, locked, scheduled, private]
         isOpenDay:
           type: boolean
         status:

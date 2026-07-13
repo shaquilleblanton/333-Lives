@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGetEvents, useCreateEvent, getGetEventsQueryKey } from "@workspace/api-client-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Plus, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Loader2, Unlock, Lock, CalendarCheck, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 type EventType = "event" | "medication" | "routine";
+type WindowType = "open" | "locked" | "scheduled" | "private";
+
+const WINDOW_TYPE_META: Record<WindowType, {
+  label: string;
+  icon: React.ElementType;
+  dotColor: string;
+  ringColor: string;
+  description: string;
+}> = {
+  open:      { label: "Open",      icon: Unlock,       dotColor: "bg-emerald-400",         ringColor: "border-emerald-400/50 bg-emerald-400/10 text-emerald-400", description: "Available — come through" },
+  scheduled: { label: "Scheduled", icon: CalendarCheck, dotColor: "bg-primary/70",          ringColor: "border-primary/50 bg-primary/10 text-primary",             description: "Already committed" },
+  locked:    { label: "Locked",    icon: Lock,          dotColor: "bg-amber-400",           ringColor: "border-amber-400/50 bg-amber-400/10 text-amber-400",        description: "Do not disturb" },
+  private:   { label: "Private",   icon: EyeOff,        dotColor: "bg-muted-foreground/40", ringColor: "border-border bg-muted/30 text-muted-foreground",            description: "Hidden from circle" },
+};
+
+const getEventColor = (type: string) => {
+  switch (type) {
+    case "medication": return "bg-secondary/80 text-secondary-foreground border-secondary/20";
+    case "routine":    return "bg-muted/50 text-foreground border-border/50";
+    default:           return "bg-primary/80 text-primary-foreground border-primary/20";
+  }
+};
 
 export default function Calendar() {
   const { data: events, isLoading } = useGetEvents();
@@ -22,14 +44,6 @@ export default function Calendar() {
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case "medication": return "bg-secondary text-secondary-foreground border-secondary/20";
-      case "routine": return "bg-muted/50 text-foreground border-border/50";
-      default: return "bg-primary text-primary-foreground border-primary/20";
-    }
-  };
 
   const upcoming = [...(events ?? [])]
     .filter((e) => new Date(e.startTime) >= new Date(today.setHours(0, 0, 0, 0)))
@@ -84,11 +98,16 @@ export default function Calendar() {
                     </div>
 
                     <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <div key={event.id} className={cn("text-[10px] px-1.5 py-0.5 rounded border truncate", getEventColor(event.type))}>
-                          {event.title}
-                        </div>
-                      ))}
+                      {dayEvents.slice(0, 3).map((event) => {
+                        const wt = (event.windowType ?? "scheduled") as WindowType;
+                        const wtMeta = WINDOW_TYPE_META[wt] ?? WINDOW_TYPE_META.scheduled;
+                        return (
+                          <div key={event.id} className={cn("text-[10px] px-1.5 py-0.5 rounded border truncate flex items-center gap-1", getEventColor(event.type))}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", wtMeta.dotColor)} />
+                            {event.title}
+                          </div>
+                        );
+                      })}
                       {dayEvents.length > 3 && (
                         <div className="text-[10px] text-muted-foreground text-center">+{dayEvents.length - 3} more</div>
                       )}
@@ -96,6 +115,16 @@ export default function Calendar() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-border/30">
+              {(Object.entries(WINDOW_TYPE_META) as [WindowType, typeof WINDOW_TYPE_META[WindowType]][]).map(([wt, meta]) => (
+                <span key={wt} className="flex items-center gap-1.5 text-xs text-muted-foreground font-subheading">
+                  <span className={cn("w-2 h-2 rounded-full", meta.dotColor)} />
+                  {meta.label}
+                </span>
+              ))}
             </div>
           </div>
 
@@ -106,26 +135,34 @@ export default function Calendar() {
             </h2>
 
             <div className="space-y-4">
-              {upcoming.map((event) => (
-                <div key={event.id} className="p-4 bg-card/40 border border-border/50 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={cn("w-2 h-2 rounded-full",
-                      event.type === "medication" ? "bg-secondary" :
-                      event.type === "routine" ? "bg-muted-foreground" : "bg-primary"
-                    )} />
-                    <h3 className="font-medium text-foreground">{event.title}</h3>
+              {upcoming.map((event) => {
+                const wt = (event.windowType ?? "scheduled") as WindowType;
+                const wtMeta = WINDOW_TYPE_META[wt] ?? WINDOW_TYPE_META.scheduled;
+                const WtIcon = wtMeta.icon;
+                return (
+                  <div key={event.id} className="p-4 bg-card/40 border border-border/50 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={cn("w-2 h-2 rounded-full",
+                        event.type === "medication" ? "bg-secondary" :
+                        event.type === "routine" ? "bg-muted-foreground" : "bg-primary"
+                      )} />
+                      <h3 className="font-medium text-foreground flex-1">{event.title}</h3>
+                      <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border font-subheading", wtMeta.ringColor)}>
+                        <WtIcon className="w-2.5 h-2.5" />{wtMeta.label}
+                      </span>
+                    </div>
+                    <div className="space-y-1 pl-4 border-l border-border/50 ml-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
+                        {format(new Date(event.startTime), "MMM d, h:mm a")}
+                      </p>
+                      {event.description && (
+                        <p className="text-xs text-muted-foreground/80 line-clamp-1">{event.description}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-1 pl-4 border-l border-border/50 ml-1">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      {format(new Date(event.startTime), "MMM d, h:mm a")}
-                    </p>
-                    {event.description && (
-                      <p className="text-xs text-muted-foreground/80 line-clamp-1">{event.description}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {upcoming.length === 0 && (
                 <p className="text-sm text-muted-foreground italic text-center py-8">No upcoming events scheduled.</p>
@@ -145,6 +182,7 @@ function EventFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<EventType>("event");
+  const [windowType, setWindowType] = useState<WindowType>("scheduled");
   const [startTime, setStartTime] = useState("");
   const [description, setDescription] = useState("");
 
@@ -152,11 +190,11 @@ function EventFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
     e.preventDefault();
     if (!title.trim() || !startTime) return;
     createEvent.mutate(
-      { data: { title: title.trim(), type, startTime: new Date(startTime).toISOString(), description: description.trim() || undefined } },
+      { data: { title: title.trim(), type, windowType, startTime: new Date(startTime).toISOString(), description: description.trim() || undefined } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
-          setTitle(""); setType("event"); setStartTime(""); setDescription("");
+          setTitle(""); setType("event"); setWindowType("scheduled"); setStartTime(""); setDescription("");
           onOpenChange(false);
         },
         onError: () => toast({ variant: "destructive", title: "Couldn't create event", description: "Please check your details and try again." }),
@@ -175,6 +213,35 @@ function EventFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <label className="text-sm font-subheading text-muted-foreground">Title</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-card border-border" placeholder="Dentist appointment…" required />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Availability</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.entries(WINDOW_TYPE_META) as [WindowType, typeof WINDOW_TYPE_META[WindowType]][]).map(([wt, meta]) => {
+                const Icon = meta.icon;
+                return (
+                  <button
+                    key={wt}
+                    type="button"
+                    onClick={() => setWindowType(wt)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-subheading transition-all text-left",
+                      windowType === wt
+                        ? cn("border-2", meta.ringColor)
+                        : "bg-card border-border text-muted-foreground hover:border-primary/30"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <div>
+                      <p className="font-medium">{meta.label}</p>
+                      <p className="text-[10px] opacity-70">{meta.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-subheading text-muted-foreground">Type</label>
@@ -192,10 +259,12 @@ function EventFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
               <Input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="bg-card border-border" required />
             </div>
           </div>
+
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Description <span className="opacity-60">(optional)</span></label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-card border-border min-h-[80px] resize-none" placeholder="Any details worth remembering…" />
           </div>
+
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={!title.trim() || !startTime || createEvent.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">

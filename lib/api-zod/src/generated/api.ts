@@ -346,6 +346,7 @@ export const GetEventsResponseItem = zod.object({
   "endTime": zod.coerce.date().nullish(),
   "isRecurring": zod.boolean(),
   "recurringPattern": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -363,6 +364,7 @@ export const CreateEventBody = zod.object({
   "endTime": zod.coerce.date().optional(),
   "isRecurring": zod.boolean().optional(),
   "recurringPattern": zod.string().optional(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']).optional(),
   "color": zod.string().optional()
 })
 
@@ -375,6 +377,7 @@ export const CreateEventResponse = zod.object({
   "endTime": zod.coerce.date().nullish(),
   "isRecurring": zod.boolean(),
   "recurringPattern": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -395,6 +398,7 @@ export const UpdateEventBody = zod.object({
   "endTime": zod.coerce.date().optional(),
   "isRecurring": zod.boolean().optional(),
   "recurringPattern": zod.string().optional(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']).optional(),
   "color": zod.string().optional()
 })
 
@@ -407,6 +411,7 @@ export const UpdateEventResponse = zod.object({
   "endTime": zod.coerce.date().nullish(),
   "isRecurring": zod.boolean(),
   "recurringPattern": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
@@ -1248,6 +1253,7 @@ export const GetCommunityEventsResponseItem = zod.object({
   "endDate": zod.coerce.date().nullish(),
   "startTime": zod.string().nullish(),
   "endTime": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "isOpenDay": zod.boolean(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
   "requestedBy": zod.string().nullish(),
@@ -1270,6 +1276,7 @@ export const CreateCommunityEventBody = zod.object({
   "endDate": zod.coerce.date().optional(),
   "startTime": zod.string().optional(),
   "endTime": zod.string().optional(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']).optional(),
   "isOpenDay": zod.boolean().optional(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']).optional(),
   "requestedBy": zod.string().optional(),
@@ -1287,6 +1294,7 @@ export const CreateCommunityEventResponse = zod.object({
   "endDate": zod.coerce.date().nullish(),
   "startTime": zod.string().nullish(),
   "endTime": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "isOpenDay": zod.boolean(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
   "requestedBy": zod.string().nullish(),
@@ -1314,6 +1322,7 @@ export const GetCommunityEventResponse = zod.object({
   "endDate": zod.coerce.date().nullish(),
   "startTime": zod.string().nullish(),
   "endTime": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "isOpenDay": zod.boolean(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
   "requestedBy": zod.string().nullish(),
@@ -1339,6 +1348,7 @@ export const UpdateCommunityEventBody = zod.object({
   "endDate": zod.coerce.date().optional(),
   "startTime": zod.string().optional(),
   "endTime": zod.string().optional(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']).optional(),
   "isOpenDay": zod.boolean().optional(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']).optional(),
   "requestedBy": zod.string().optional(),
@@ -1355,6 +1365,7 @@ export const UpdateCommunityEventResponse = zod.object({
   "endDate": zod.coerce.date().nullish(),
   "startTime": zod.string().nullish(),
   "endTime": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "isOpenDay": zod.boolean(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
   "requestedBy": zod.string().nullish(),
@@ -1398,6 +1409,7 @@ export const RespondToCommunityEventResponse = zod.object({
   "endDate": zod.coerce.date().nullish(),
   "startTime": zod.string().nullish(),
   "endTime": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "isOpenDay": zod.boolean(),
   "status": zod.enum(['open', 'confirmed', 'pending', 'declined']),
   "requestedBy": zod.string().nullish(),
@@ -1459,6 +1471,7 @@ export const GetDashboardResponse = zod.object({
   "endTime": zod.coerce.date().nullish(),
   "isRecurring": zod.boolean(),
   "recurringPattern": zod.string().nullish(),
+  "windowType": zod.enum(['open', 'locked', 'scheduled', 'private']),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })),

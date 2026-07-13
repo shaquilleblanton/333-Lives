@@ -13,6 +13,9 @@ export const eventsTable = pgTable("events", {
   endTime: timestamp("end_time"),
   isRecurring: boolean("is_recurring").notNull().default(false),
   recurringPattern: text("recurring_pattern"),
+  windowType: text("window_type", {
+    enum: ["open", "locked", "scheduled", "private"],
+  }).notNull().default("scheduled"),
   color: text("color"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
