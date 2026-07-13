@@ -32,6 +32,28 @@ import { useColors } from "@/hooks/useColors";
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
+type WindowType = "open" | "locked" | "scheduled" | "private";
+
+const WINDOW_TYPES: WindowType[] = ["open", "locked", "scheduled", "private"];
+const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
+  open: "Open",
+  locked: "Locked",
+  scheduled: "Scheduled",
+  private: "Private",
+};
+const WINDOW_TYPE_ICONS: Record<WindowType, keyof typeof Feather.glyphMap> = {
+  open: "unlock",
+  locked: "lock",
+  scheduled: "calendar",
+  private: "eye-off",
+};
+const WINDOW_TYPE_DESC: Record<WindowType, string> = {
+  open: "Available — come through",
+  locked: "Do not disturb",
+  scheduled: "Already committed",
+  private: "Hidden from circle",
+};
+
 const CATEGORIES = ["graduation", "cookout", "reunion", "sporting_event", "birthday", "wedding", "open_day", "request", "other"] as const;
 type EventCategory = typeof CATEGORIES[number];
 
@@ -59,6 +81,18 @@ const CATEGORY_LABELS: Record<EventCategory, string> = {
   other: "Event",
 };
 
+function WindowTypePill({ wt, colors }: { wt: WindowType; colors: any }) {
+  const icon = WINDOW_TYPE_ICONS[wt];
+  const label = WINDOW_TYPE_LABELS[wt];
+  const color = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: color + "20", borderColor: color + "50", borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 4 }]}>
+      <Feather name={icon} size={10} color={color} />
+      <Text style={[styles.statusText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
 function EventCard({ event, onRespond, onEdit, onDelete }: {
   event: CommunityEvent;
   onRespond: (rsvp: string) => void;
@@ -66,59 +100,65 @@ function EventCard({ event, onRespond, onEdit, onDelete }: {
   onDelete: () => void;
 }) {
   const colors = useColors();
-  const icon = CATEGORY_ICONS[(event.category as EventCategory)] ?? "calendar";
-  const label = CATEGORY_LABELS[(event.category as EventCategory)] ?? "Event";
+  const wt = (event.windowType ?? (event.isOpenDay ? "open" : "scheduled")) as WindowType;
+  const isLocked = wt === "locked";
 
+  const icon = isLocked ? "lock" : CATEGORY_ICONS[(event.category as EventCategory)] ?? "calendar";
+  const label = isLocked ? "Blocked Time" : CATEGORY_LABELS[(event.category as EventCategory)] ?? "Event";
   const startDate = new Date(event.startDate + "T12:00:00");
   const dateStr = startDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const dotColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
 
   return (
-    <View style={[styles.eventCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.eventCard, { backgroundColor: colors.card, borderColor: isLocked ? "#fbbf24" + "30" : colors.border }]}>
       <View style={styles.eventHeader}>
-        <View style={[styles.eventIcon, { backgroundColor: colors.primary + "1A" }]}>
-          <Feather name={icon} size={20} color={colors.primary} />
+        <View style={{ width: 6, alignSelf: "stretch", borderRadius: 3, backgroundColor: dotColor, marginRight: 4 }} />
+        <View style={[styles.eventIconBox, { backgroundColor: (isLocked ? "#fbbf24" : colors.primary) + "1A" }]}>
+          <Feather name={icon as keyof typeof Feather.glyphMap} size={18} color={isLocked ? "#fbbf24" : colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.eventTitle, { color: colors.foreground }]}>{event.title}</Text>
+          <Text style={[styles.eventTitle, { color: isLocked ? colors.mutedForeground : colors.foreground }]}>
+            {isLocked ? "Busy" : event.title}
+          </Text>
           <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>{label} · {dateStr}</Text>
-          {event.requestedBy ? <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>By: {event.requestedBy}</Text> : null}
+          {!isLocked && event.requestedBy ? <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>By: {event.requestedBy}</Text> : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View style={[styles.statusBadge, { backgroundColor: colors.muted + "40" }]}>
-            <Text style={[styles.statusText, { color: colors.mutedForeground }]}>{event.status}</Text>
-          </View>
-          <Pressable onPress={onEdit} hitSlop={8}>
-            <Feather name="edit-2" size={14} color={colors.mutedForeground} />
-          </Pressable>
-          <Pressable onPress={onDelete} hitSlop={8}>
-            <Feather name="trash-2" size={14} color="#f87171" />
-          </Pressable>
+          <WindowTypePill wt={wt} colors={colors} />
+          {!isLocked && (
+            <>
+              <Pressable onPress={onEdit} hitSlop={8}><Feather name="edit-2" size={14} color={colors.mutedForeground} /></Pressable>
+              <Pressable onPress={onDelete} hitSlop={8}><Feather name="trash-2" size={14} color="#f87171" /></Pressable>
+            </>
+          )}
+          {isLocked && <Pressable onPress={onDelete} hitSlop={8}><Feather name="trash-2" size={14} color="#f87171" /></Pressable>}
         </View>
       </View>
 
-      {event.description ? (
+      {!isLocked && event.description ? (
         <Text style={[styles.eventDesc, { color: colors.mutedForeground }]} numberOfLines={3}>{event.description}</Text>
       ) : null}
 
-      {/* RSVP buttons */}
-      <View style={styles.rsvpRow}>
-        {(["confirmed", "pending", "declined"] as const).map(rsvp => (
-          <Pressable
-            key={rsvp}
-            onPress={() => onRespond(rsvp)}
-            style={[styles.rsvpBtn, {
-              borderColor: rsvp === "confirmed" ? colors.primary + "60" : rsvp === "declined" ? "#f87171" + "60" : colors.border,
-              backgroundColor: colors.muted + "30",
-            }]}
-          >
-            <Text style={[styles.rsvpText, {
-              color: rsvp === "confirmed" ? colors.primary : rsvp === "declined" ? "#f87171" : colors.mutedForeground,
-            }]}>
-              {rsvp === "confirmed" ? "✓ Confirm" : rsvp === "pending" ? "? Maybe" : "✗ Decline"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {!isLocked && (
+        <View style={styles.rsvpRow}>
+          {(["confirmed", "pending", "declined"] as const).map(rsvp => (
+            <Pressable
+              key={rsvp}
+              onPress={() => onRespond(rsvp)}
+              style={[styles.rsvpBtn, {
+                borderColor: rsvp === "confirmed" ? colors.primary + "60" : rsvp === "declined" ? "#f87171" + "60" : colors.border,
+                backgroundColor: colors.muted + "30",
+              }]}
+            >
+              <Text style={[styles.rsvpText, {
+                color: rsvp === "confirmed" ? colors.primary : rsvp === "declined" ? "#f87171" : colors.mutedForeground,
+              }]}>
+                {rsvp === "confirmed" ? "✓ Confirm" : rsvp === "pending" ? "? Maybe" : "✗ Decline"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -135,7 +175,7 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<EventCategory>("other");
   const [startDate, setStartDate] = useState("");
-  const [isOpenDay, setIsOpenDay] = useState(false);
+  const [windowType, setWindowType] = useState<WindowType>("scheduled");
 
   React.useEffect(() => {
     if (visible && initialData) {
@@ -143,20 +183,29 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
       setDescription(initialData.description ?? "");
       setCategory((initialData.category as EventCategory) ?? "other");
       setStartDate(initialData.startDate ?? "");
-      setIsOpenDay(initialData.isOpenDay ?? false);
+      setWindowType((initialData.windowType ?? (initialData.isOpenDay ? "open" : "scheduled")) as WindowType);
     } else if (visible && !initialData) {
-      setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setIsOpenDay(false);
+      setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setWindowType("scheduled");
     }
   }, [visible, initialData]);
 
-  function reset() { setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setIsOpenDay(false); }
+  function reset() { setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setWindowType("scheduled"); }
 
   function submit() {
     if (!title.trim() || !startDate.trim()) return;
     const dateObj = new Date(startDate + "T12:00:00");
     if (isNaN(dateObj.getTime())) { Alert.alert("Invalid date", "Use YYYY-MM-DD format."); return; }
-    const cat: EventCategory = isOpenDay ? "open_day" : category;
-    onSave({ title: title.trim(), description: description.trim() || undefined, category: cat, startDate: dateObj.toISOString().split("T")[0], endDate: dateObj.toISOString().split("T")[0], status: "open", isPublic: true, isOpenDay });
+    onSave({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      category,
+      startDate: dateObj.toISOString().split("T")[0],
+      endDate: dateObj.toISOString().split("T")[0],
+      status: "open",
+      windowType,
+      isOpenDay: windowType === "open",
+      isPublic: windowType !== "private",
+    });
     reset();
   }
 
@@ -170,23 +219,32 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
           <TextInput value={startDate} onChangeText={setStartDate} placeholder="Date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground + "99"}
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <TextInput value={description} onChangeText={setDescription} placeholder="Details (optional)" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={4} textAlignVertical="top"
-            style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          {/* Open Day toggle */}
-          <Pressable
-            onPress={() => setIsOpenDay(v => !v)}
-            style={[styles.openDayToggle, { borderColor: isOpenDay ? colors.primary : colors.border, backgroundColor: isOpenDay ? colors.primary + "1A" : "transparent" }]}
-          >
-            <Feather name="unlock" size={15} color={isOpenDay ? colors.primary : colors.mutedForeground} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.pillText, { color: isOpenDay ? colors.primary : colors.foreground }]}>Open Day</Text>
-              <Text style={[styles.rsvpText, { color: colors.mutedForeground }]}>Anyone in the community can see this event</Text>
-            </View>
-            <View style={[styles.checkBox, { borderColor: isOpenDay ? colors.primary : colors.border, backgroundColor: isOpenDay ? colors.primary : "transparent" }]}>
-              {isOpenDay ? <Feather name="check" size={11} color="#000" /> : null}
-            </View>
-          </Pressable>
-          {!isOpenDay ? (
+
+          {/* Window type selector */}
+          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Availability</Text>
+          <View style={[styles.pills, { marginBottom: 8 }]}>
+            {WINDOW_TYPES.map(wt => {
+              const icon = WINDOW_TYPE_ICONS[wt];
+              const accentColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
+              const isSelected = windowType === wt;
+              return (
+                <Pressable
+                  key={wt}
+                  onPress={() => setWindowType(wt)}
+                  style={[styles.pill, {
+                    borderColor: isSelected ? accentColor : colors.border,
+                    backgroundColor: isSelected ? accentColor + "1A" : "transparent",
+                    flexDirection: "row", alignItems: "center", gap: 5,
+                  }]}
+                >
+                  <Feather name={icon} size={12} color={isSelected ? accentColor : colors.mutedForeground} />
+                  <Text style={[styles.pillText, { color: isSelected ? accentColor : colors.mutedForeground }]}>{WINDOW_TYPE_LABELS[wt]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {windowType !== "locked" && windowType !== "open" ? (
             <>
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
               <View style={styles.pills}>
@@ -199,9 +257,13 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
               </View>
             </>
           ) : null}
+
+          <TextInput value={description} onChangeText={setDescription} placeholder="Details (optional)" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={3} textAlignVertical="top"
+            style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+
           <Pressable onPress={submit} disabled={!title.trim() || !startDate.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !startDate.trim() || isSaving ? 0.5 : 1 }]}>
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Create Event</Text>}
+            {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{initialData ? "Save" : "Create Event"}</Text>}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -209,9 +271,9 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
   );
 }
 
-const FILTERS = ["all", "open_day", "request"] as const;
+const FILTERS = ["all", "open", "locked", "scheduled", "request"] as const;
 type EventFilter = typeof FILTERS[number];
-const FILTER_LABELS: Record<EventFilter, string> = { all: "All Events", open_day: "Open Day", request: "Requests" };
+const FILTER_LABELS: Record<EventFilter, string> = { all: "All", open: "Open", locked: "Locked", scheduled: "Scheduled", request: "Requests" };
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -226,7 +288,7 @@ export default function CommunityScreen() {
   const [editingEvent, setEditingEvent] = useState<CommunityEvent | null>(null);
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
 
-  function invalidate() { qc.invalidateQueries({ queryKey: getGetCommunityEventsQueryKey() }); }
+  function invalidate() { qc.invalidateQueries({ queryKey: ["/community"], exact: false }); }
 
   async function handleCreate(data: any) {
     try {
@@ -267,8 +329,9 @@ export default function CommunityScreen() {
 
   const allSorted = [...(events ?? [])].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   const sorted = activeFilter === "all" ? allSorted
-    : activeFilter === "open_day" ? allSorted.filter(e => e.isOpenDay)
-    : allSorted.filter(e => e.category === "request");
+    : activeFilter === "request" ? allSorted.filter(e => e.category === "request")
+    : allSorted.filter(e => (e.windowType ?? (e.isOpenDay ? "open" : "scheduled")) === activeFilter);
+
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
@@ -294,7 +357,6 @@ export default function CommunityScreen() {
                 <Feather name="plus" size={20} color={colors.primaryForeground} />
               </Pressable>
             </View>
-            {/* Filter pills */}
             <View style={[styles.pills, { marginBottom: 12 }]}>
               {FILTERS.map(f => (
                 <Pressable key={f} onPress={() => setActiveFilter(f)}
@@ -310,7 +372,7 @@ export default function CommunityScreen() {
             <View style={styles.empty}>
               <Feather name="users" size={40} color={colors.mutedForeground + "50"} />
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No events yet</Text>
-              <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Create a gathering or family event.</Text>
+              <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Create a gathering or mark an open day.</Text>
             </View>
           )
         }
@@ -341,19 +403,17 @@ const styles = StyleSheet.create({
   pageTitle: { fontFamily: fonts.serifBold, fontSize: 28 },
   pageSub: { fontFamily: fonts.sub, fontSize: 13, marginTop: 2 },
   addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  eventCard: { borderRadius: 16, borderWidth: 1, padding: 16 },
-  eventHeader: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 8 },
-  eventIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  eventTitle: { fontFamily: fonts.serif, fontSize: 16 },
-  eventMeta: { fontFamily: fonts.sub, fontSize: 12, marginTop: 3 },
-  eventDesc: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, marginBottom: 12 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  eventCard: { borderRadius: 16, borderWidth: 1, padding: 14 },
+  eventHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
+  eventIconBox: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  eventTitle: { fontFamily: fonts.serif, fontSize: 15 },
+  eventMeta: { fontFamily: fonts.sub, fontSize: 12, marginTop: 2 },
+  eventDesc: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, marginBottom: 10 },
+  statusBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
   statusText: { fontFamily: fonts.sub, fontSize: 10, textTransform: "capitalize" },
-  rsvpRow: { flexDirection: "row", gap: 8 },
+  rsvpRow: { flexDirection: "row", gap: 8, marginTop: 4 },
   rsvpBtn: { flex: 1, borderRadius: 10, borderWidth: 1, paddingVertical: 8, alignItems: "center" },
   rsvpText: { fontFamily: fonts.sub, fontSize: 11 },
-  openDayToggle: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12, borderWidth: 1, padding: 12 },
-  checkBox: { width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 20 },
   emptySub: { fontFamily: fonts.sub, fontSize: 14, textAlign: "center" },
@@ -361,7 +421,7 @@ const styles = StyleSheet.create({
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, padding: 24, paddingBottom: 40, gap: 12 },
   sheetTitle: { fontFamily: fonts.serif, fontSize: 22, marginBottom: 4 },
   input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontFamily: fonts.body, fontSize: 14 },
-  textArea: { minHeight: 100, textAlignVertical: "top" },
+  textArea: { minHeight: 80, textAlignVertical: "top" },
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },

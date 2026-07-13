@@ -32,12 +32,37 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 const WEEKDAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
 type EventType = "event" | "medication" | "routine";
+type WindowType = "open" | "locked" | "scheduled" | "private";
+
 const EVENT_TYPES: EventType[] = ["event", "medication", "routine"];
 const TYPE_COLORS: Record<EventType, string> = {
   event: "#C9A439",
   medication: "#38bdf8",
   routine: "#9ca3af",
 };
+
+const WINDOW_TYPES: WindowType[] = ["open", "locked", "scheduled", "private"];
+const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
+  open: "Open",
+  locked: "Locked",
+  scheduled: "Scheduled",
+  private: "Private",
+};
+const WINDOW_TYPE_ICONS: Record<WindowType, keyof typeof Feather.glyphMap> = {
+  open: "unlock",
+  locked: "lock",
+  scheduled: "calendar",
+  private: "eye-off",
+};
+
+function getWindowTypeColor(wt: WindowType): string {
+  switch (wt) {
+    case "open":      return "#34d399";
+    case "locked":    return "#fbbf24";
+    case "private":   return "#6b7280";
+    default:          return "#C9A439";
+  }
+}
 
 function CalendarGrid({ year, month, events, onDaySelect, selectedDay }: {
   year: number;
@@ -57,26 +82,26 @@ function CalendarGrid({ year, month, events, onDaySelect, selectedDay }: {
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  function hasEvent(d: number) {
+  function dayEvents(d: number) {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return events.some(e => e.startTime?.startsWith(dateStr));
+    return events.filter(e => e.startTime?.startsWith(dateStr));
   }
 
   return (
     <View>
-      {/* Day headers */}
       <View style={grid.weekRow}>
         {WEEKDAYS.map(d => (
           <Text key={d} style={[grid.weekLabel, { color: colors.mutedForeground }]}>{d}</Text>
         ))}
       </View>
-      {/* Day cells */}
       <View style={grid.daysGrid}>
         {cells.map((d, i) => {
           if (!d) return <View key={i} style={grid.cell} />;
           const isToday = d === todayDate;
           const isSelected = d === selectedDay;
-          const dot = hasEvent(d);
+          const evs = dayEvents(d);
+          const wtColors = evs.map(e => getWindowTypeColor((e.windowType ?? "scheduled") as WindowType));
+          const uniqueColors = [...new Set(wtColors)].slice(0, 3);
           return (
             <Pressable
               key={i}
@@ -92,7 +117,13 @@ function CalendarGrid({ year, month, events, onDaySelect, selectedDay }: {
                 isToday && { fontFamily: fonts.serifBold },
                 isSelected && { color: colors.primary },
               ]}>{d}</Text>
-              {dot ? <View style={[grid.dot, { backgroundColor: colors.primary }]} /> : null}
+              {uniqueColors.length > 0 ? (
+                <View style={{ flexDirection: "row", gap: 2, marginTop: 1 }}>
+                  {uniqueColors.map((c, ci) => (
+                    <View key={ci} style={[grid.dot, { backgroundColor: c }]} />
+                  ))}
+                </View>
+              ) : null}
             </Pressable>
           );
         })}
@@ -111,9 +142,13 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [type, setType] = useState<EventType>("event");
+  const [windowType, setWindowType] = useState<WindowType>("scheduled");
   const [description, setDescription] = useState("");
 
-  function reset() { setTitle(""); setDate(new Date().toISOString().split("T")[0]); setType("event"); setDescription(""); }
+  function reset() {
+    setTitle(""); setDate(new Date().toISOString().split("T")[0]);
+    setType("event"); setWindowType("scheduled"); setDescription("");
+  }
 
   function submit() {
     if (!title.trim() || !date.trim()) return;
@@ -122,10 +157,10 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
     onSave({
       title: title.trim(),
       type,
+      windowType,
       startTime: dateObj.toISOString(),
       endTime: new Date(dateObj.getTime() + 60 * 60 * 1000).toISOString(),
       description: description.trim() || undefined,
-      isAllDay: false,
     });
     reset();
   }
@@ -140,6 +175,8 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
           <TextInput value={date} onChangeText={setDate} placeholder="Date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground + "99"}
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+
+          {/* Event type */}
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Type</Text>
           <View style={styles.pills}>
             {EVENT_TYPES.map(t => (
@@ -149,6 +186,34 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
               </Pressable>
             ))}
           </View>
+
+          {/* Window type */}
+          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Availability</Text>
+          <View style={styles.pills}>
+            {WINDOW_TYPES.map(wt => {
+              const accentColor = getWindowTypeColor(wt);
+              const icon = WINDOW_TYPE_ICONS[wt];
+              const isSelected = windowType === wt;
+              return (
+                <Pressable
+                  key={wt}
+                  onPress={() => setWindowType(wt)}
+                  style={[styles.pill, {
+                    borderColor: isSelected ? accentColor : colors.border,
+                    backgroundColor: isSelected ? accentColor + "1A" : "transparent",
+                    flexDirection: "row", alignItems: "center", gap: 4,
+                  }]}
+                >
+                  <Feather name={icon} size={11} color={isSelected ? accentColor : colors.mutedForeground} />
+                  <Text style={[styles.pillText, { color: isSelected ? accentColor : colors.mutedForeground }]}>{WINDOW_TYPE_LABELS[wt]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <TextInput value={description} onChangeText={setDescription} placeholder="Details (optional)" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={3} textAlignVertical="top"
+            style={[styles.input, { minHeight: 70, textAlignVertical: "top", backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+
           <Pressable onPress={submit} disabled={!title.trim() || !date.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !date.trim() || isSaving ? 0.5 : 1 }]}>
             {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Event</Text>}
@@ -193,7 +258,6 @@ export default function CalendarScreen() {
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
-  // Events for the selected day or all upcoming
   const selectedDateStr = selectedDay
     ? `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`
     : null;
@@ -212,7 +276,6 @@ export default function CalendarScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
       >
-        {/* Header */}
         <View style={styles.pageHeader}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
             <Feather name="arrow-left" size={22} color={colors.foreground} />
@@ -226,9 +289,7 @@ export default function CalendarScreen() {
           </Pressable>
         </View>
 
-        {/* Calendar */}
         <View style={[styles.calCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {/* Month nav */}
           <View style={styles.monthNav}>
             <Pressable onPress={prevMonth} hitSlop={8}>
               <Feather name="chevron-left" size={20} color={colors.foreground} />
@@ -243,21 +304,28 @@ export default function CalendarScreen() {
           {isLoading ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 30 }} /> : (
             <CalendarGrid year={viewYear} month={viewMonth} events={events ?? []} onDaySelect={setSelectedDay} selectedDay={selectedDay} />
           )}
+
+          {/* Legend */}
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border + "40" }}>
+            {WINDOW_TYPES.map(wt => (
+              <View key={wt} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: getWindowTypeColor(wt) }} />
+                <Text style={{ fontFamily: fonts.sub, fontSize: 10, color: colors.mutedForeground }}>{WINDOW_TYPE_LABELS[wt]}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Events list */}
         <View style={{ marginTop: 24 }}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
             {selectedDay ? `${MONTHS[viewMonth]} ${selectedDay}` : "UPCOMING"}
           </Text>
 
-          {selectedDay && dayEvents.length === 0 ? (
+          {dayEvents.length === 0 ? (
             <View style={styles.emptyDay}>
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Nothing scheduled. Tap + to add an event.</Text>
-            </View>
-          ) : dayEvents.length === 0 ? (
-            <View style={styles.emptyDay}>
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No upcoming events. Tap + to schedule something.</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                {selectedDay ? "Nothing scheduled. Tap + to add an event." : "No upcoming events. Tap + to schedule something."}
+              </Text>
             </View>
           ) : (
             <View style={{ gap: 10 }}>
@@ -265,17 +333,26 @@ export default function CalendarScreen() {
                 const startTime = new Date(e.startTime);
                 const timeStr = startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
                 const typeColor = TYPE_COLORS[(e.type as EventType)] ?? colors.primary;
+                const wt = (e.windowType ?? "scheduled") as WindowType;
+                const wtColor = getWindowTypeColor(wt);
+                const WtIcon = WINDOW_TYPE_ICONS[wt];
                 return (
                   <View key={e.id} style={[styles.eventRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <View style={[styles.eventDot, { backgroundColor: typeColor }]} />
+                    <View style={[styles.eventDot, { backgroundColor: wtColor }]} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.eventTitle, { color: colors.foreground }]}>{e.title}</Text>
                       <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>
                         {startTime.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {timeStr}
                       </Text>
                     </View>
-                    <View style={[styles.typeBadge, { backgroundColor: typeColor + "1A", borderColor: typeColor + "40" }]}>
-                      <Text style={[styles.typeText, { color: typeColor }]}>{e.type}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View style={[styles.typeBadge, { backgroundColor: typeColor + "1A", borderColor: typeColor + "40" }]}>
+                        <Text style={[styles.typeText, { color: typeColor }]}>{e.type}</Text>
+                      </View>
+                      <View style={[styles.typeBadge, { backgroundColor: wtColor + "1A", borderColor: wtColor + "40", flexDirection: "row", alignItems: "center", gap: 3 }]}>
+                        <Feather name={WtIcon} size={9} color={wtColor} />
+                        <Text style={[styles.typeText, { color: wtColor }]}>{WINDOW_TYPE_LABELS[wt]}</Text>
+                      </View>
                     </View>
                   </View>
                 );
@@ -296,7 +373,7 @@ const grid = StyleSheet.create({
   daysGrid: { flexDirection: "row", flexWrap: "wrap" },
   cell: { width: "14.2857%", aspectRatio: 1, alignItems: "center", justifyContent: "center" },
   dayNum: { fontFamily: "Inter_400Regular", fontSize: 13 },
-  dot: { width: 4, height: 4, borderRadius: 2, marginTop: 2 },
+  dot: { width: 4, height: 4, borderRadius: 2 },
 });
 
 const styles = StyleSheet.create({
@@ -315,7 +392,7 @@ const styles = StyleSheet.create({
   eventDot: { width: 10, height: 10, borderRadius: 5 },
   eventTitle: { fontFamily: fonts.bodyMedium, fontSize: 14 },
   eventMeta: { fontFamily: fonts.sub, fontSize: 12, marginTop: 2 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
+  typeBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999, borderWidth: 1 },
   typeText: { fontFamily: fonts.sub, fontSize: 10, textTransform: "capitalize" },
   overlay: { flex: 1 },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, padding: 24, paddingBottom: 40, gap: 12 },
