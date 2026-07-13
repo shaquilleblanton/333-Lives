@@ -35,6 +35,7 @@ import { FeedbackNudgeBanner } from "@/components/FeedbackNudgeBanner";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { router } from "expo-router";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -256,6 +257,8 @@ export default function TodayScreen() {
     </>
   );
 
+  const isDecember = new Date().getMonth() === 11;
+
   const upcomingEvents = reminders?.upcomingEvents ?? [];
   const overdueConnections = reminders?.overdueConnections ?? [];
   const hasReminders = upcomingEvents.length > 0 || overdueConnections.length > 0;
@@ -401,6 +404,22 @@ export default function TodayScreen() {
     >
       {Header}
       {ComingUpStrip}
+      {isDecember && (
+        <Pressable
+          onPress={() => router.push("/review" as any)}
+          style={({ pressed }) => [
+            styles.reviewBanner,
+            { backgroundColor: colors.primary + "15", borderColor: colors.primary + "35", opacity: pressed ? 0.8 : 1 },
+          ]}
+        >
+          <Feather name="calendar" size={16} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.reviewBannerTitle, { color: colors.primary }]}>Year in Review</Text>
+            <Text style={[styles.reviewBannerSub, { color: colors.mutedForeground }]}>Your {new Date().getFullYear()}, wrapped.</Text>
+          </View>
+          <Feather name="arrow-right" size={14} color={colors.primary} />
+        </Pressable>
+      )}
       <View
         style={[
           styles.card,
@@ -619,6 +638,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   iconBtn: { width: 34, height: 34, alignItems: "center", justifyContent: "center" },
+  reviewBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+  },
+  reviewBannerTitle: { fontSize: 13, fontFamily: fonts.subSemibold },
+  reviewBannerSub: { fontSize: 12, fontFamily: fonts.body },
   doneNote: {
     flexDirection: "row",
     alignItems: "center",

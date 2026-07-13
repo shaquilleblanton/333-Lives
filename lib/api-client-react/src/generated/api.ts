@@ -22,6 +22,7 @@ import type {
 import type {
   AdminFeedbackItem,
   Affirmation,
+  AnnualReview,
   CalendarEvent,
   CollectionItem,
   CommunityEvent,
@@ -9407,4 +9408,81 @@ export const useDeleteCollectionItem = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteCollectionItemMutationOptions(options));
     }
+
+export const getGetAnnualReviewUrl = (year: number,) => {
+
+
+
+
+  return `/api/review/${year}`
+}
+
+/**
+ * @summary Get annual review stats for a given year
+ */
+export const getAnnualReview = async (year: number, options?: RequestInit): Promise<AnnualReview> => {
+
+  return customFetch<AnnualReview>(getGetAnnualReviewUrl(year),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAnnualReviewQueryKey = (year: number,) => {
+    return [
+    `/api/review/${year}`
+    ] as const;
+    }
+
+
+export const getGetAnnualReviewQueryOptions = <TData = Awaited<ReturnType<typeof getAnnualReview>>, TError = ErrorType<unknown>>(year: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnnualReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAnnualReviewQueryKey(year);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnnualReview>>> = ({ signal }) => getAnnualReview(year, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: year !== null && year !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnnualReview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAnnualReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getAnnualReview>>>
+export type GetAnnualReviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get annual review stats for a given year
+ */
+
+export function useGetAnnualReview<TData = Awaited<ReturnType<typeof getAnnualReview>>, TError = ErrorType<unknown>>(
+ year: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnnualReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAnnualReviewQueryOptions(year,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

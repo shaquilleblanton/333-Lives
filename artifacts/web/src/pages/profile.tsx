@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useGetMe, useUpdateMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import { User as UserIcon, Shield, Activity, Award, Target, Save, Camera, Loader2, LogOut } from "lucide-react";
+import { User as UserIcon, Shield, Activity, Award, Target, Save, Camera, Loader2, LogOut, Sparkles } from "lucide-react";
 import { useClerk } from "@clerk/react";
 import { basePath } from "@/lib/clerk";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 function avatarSrc(path: string) {
   return `/api/storage${path}`;
@@ -18,6 +19,7 @@ function avatarSrc(path: string) {
 export default function Profile() {
   const { data: user, isLoading } = useGetMe();
   const { signOut } = useClerk();
+  const [, setLocation] = useLocation();
   const updateMe = useUpdateMe();
   const { uploadFile } = useUpload();
   const queryClient = useQueryClient();
@@ -196,6 +198,25 @@ export default function Profile() {
               <p className="text-sm text-muted-foreground font-subheading uppercase tracking-wider mt-1">Active Goals</p>
             </div>
           </div>
+
+          <button
+            onClick={() => setLocation("/review")}
+            className="w-full group bg-gradient-to-r from-primary/10 to-secondary/5 border border-primary/25 hover:border-primary/50 rounded-2xl p-6 text-left transition-all duration-200 hover:from-primary/15 hover:to-secondary/10"
+          >
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-subheading uppercase tracking-widest text-primary">Year in Review</p>
+                </div>
+                <p className="text-xl font-serif text-foreground">Your {new Date().getFullYear()}, wrapped.</p>
+                <p className="text-sm text-muted-foreground">Days active, streaks, growth, your people — all in one place.</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center group-hover:bg-primary/20 transition-colors ml-4 shrink-0">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+          </button>
         </div>
       </div>
     </div>

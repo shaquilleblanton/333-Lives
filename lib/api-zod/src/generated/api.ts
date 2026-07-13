@@ -2959,3 +2959,42 @@ export const DeleteCollectionItemResponse = zod.object({
 })
 
 
+/**
+ * @summary Get annual review stats for a given year
+ */
+export const GetAnnualReviewParams = zod.object({
+  "year": zod.coerce.number()
+})
+
+export const GetAnnualReviewResponse = zod.object({
+  "year": zod.number(),
+  "numbers": zod.object({
+  "daysActive": zod.number(),
+  "intentionsCompleted": zod.number(),
+  "longestStreak": zod.number(),
+  "gratitudeEntries": zod.number(),
+  "habitCheckins": zod.number(),
+  "goalsCompleted": zod.number()
+}),
+  "story": zod.object({
+  "lifeEventsAdded": zod.number(),
+  "lettersWritten": zod.number(),
+  "futureMessagesSet": zod.number(),
+  "vaultItemsAdded": zod.number()
+}),
+  "people": zod.object({
+  "totalMoments": zod.number(),
+  "topPeople": zod.array(zod.object({
+  "personId": zod.number(),
+  "name": zod.string(),
+  "momentCount": zod.number()
+}))
+}),
+  "growth": zod.object({
+  "journalEntries": zod.number(),
+  "moodBreakdown": zod.record(zod.string(), zod.number())
+}),
+  "topWord": zod.string().nullable()
+})
+
+

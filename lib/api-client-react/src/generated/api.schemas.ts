@@ -1767,6 +1767,49 @@ export interface ReorderItemsBody {
   orderedIds: number[];
 }
 
+export interface AnnualReviewTopPerson {
+  personId: number;
+  name: string;
+  momentCount: number;
+}
+
+export type AnnualReviewNumbers = {
+  daysActive: number;
+  intentionsCompleted: number;
+  longestStreak: number;
+  gratitudeEntries: number;
+  habitCheckins: number;
+  goalsCompleted: number;
+};
+
+export type AnnualReviewStory = {
+  lifeEventsAdded: number;
+  lettersWritten: number;
+  futureMessagesSet: number;
+  vaultItemsAdded: number;
+};
+
+export type AnnualReviewPeople = {
+  totalMoments: number;
+  topPeople: AnnualReviewTopPerson[];
+};
+
+export type AnnualReviewGrowthMoodBreakdown = {[key: string]: number};
+
+export type AnnualReviewGrowth = {
+  journalEntries: number;
+  moodBreakdown: AnnualReviewGrowthMoodBreakdown;
+};
+
+export interface AnnualReview {
+  year: number;
+  numbers: AnnualReviewNumbers;
+  story: AnnualReviewStory;
+  people: AnnualReviewPeople;
+  growth: AnnualReviewGrowth;
+  topWord: string | null;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

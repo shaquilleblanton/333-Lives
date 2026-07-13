@@ -2757,6 +2757,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /review/{year}:
+    get:
+      tags: [review]
+      operationId: getAnnualReview
+      summary: Get annual review stats for a given year
+      parameters:
+        - in: path
+          name: year
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Annual review data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnualReview"
+
 components:
   schemas:
     HealthStatus:
@@ -4784,3 +4803,72 @@ components:
           items:
             type: integer
       required: [orderedIds]
+
+    AnnualReviewTopPerson:
+      type: object
+      required: [personId, name, momentCount]
+      properties:
+        personId:
+          type: integer
+        name:
+          type: string
+        momentCount:
+          type: integer
+
+    AnnualReview:
+      type: object
+      required: [year, numbers, story, people, growth, topWord]
+      properties:
+        year:
+          type: integer
+        numbers:
+          type: object
+          required: [daysActive, intentionsCompleted, longestStreak, gratitudeEntries, habitCheckins, goalsCompleted]
+          properties:
+            daysActive:
+              type: integer
+            intentionsCompleted:
+              type: integer
+            longestStreak:
+              type: integer
+            gratitudeEntries:
+              type: integer
+            habitCheckins:
+              type: integer
+            goalsCompleted:
+              type: integer
+        story:
+          type: object
+          required: [lifeEventsAdded, lettersWritten, futureMessagesSet, vaultItemsAdded]
+          properties:
+            lifeEventsAdded:
+              type: integer
+            lettersWritten:
+              type: integer
+            futureMessagesSet:
+              type: integer
+            vaultItemsAdded:
+              type: integer
+        people:
+          type: object
+          required: [totalMoments, topPeople]
+          properties:
+            totalMoments:
+              type: integer
+            topPeople:
+              type: array
+              items:
+                $ref: "#/components/schemas/AnnualReviewTopPerson"
+        growth:
+          type: object
+          required: [journalEntries, moodBreakdown]
+          properties:
+            journalEntries:
+              type: integer
+            moodBreakdown:
+              type: object
+              additionalProperties:
+                type: integer
+        topWord:
+          type: string
+          nullable: true

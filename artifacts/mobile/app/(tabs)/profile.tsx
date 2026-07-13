@@ -243,6 +243,15 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      <Section title="HIGHLIGHTS">
+        <MenuItem
+          icon="calendar"
+          label="Year in Review"
+          sub="Your year, wrapped"
+          onPress={() => router.push("/review" as any)}
+        />
+      </Section>
+
       <Section title="ACCOUNT">
         <MenuItem
           icon="message-square"
