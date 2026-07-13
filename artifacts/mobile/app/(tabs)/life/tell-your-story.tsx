@@ -34,6 +34,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle } from "react-native-svg";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -179,9 +180,14 @@ export default function TellYourStoryScreen() {
 
   const saveText = async () => {
     if (!modal) return;
+    const text = draftText.trim() || null;
+    const hasAudio = !!modal.currentAnswer?.audioUrl;
+    if (!text && !hasAudio) {
+      setModal(null);
+      return;
+    }
     setIsSavingText(true);
     try {
-      const text = draftText.trim() || null;
       await upsert.mutateAsync({
         chapterId: modal.chapterId,
         promptId: modal.promptId,
@@ -300,16 +306,15 @@ export default function TellYourStoryScreen() {
             <Text style={[styles.chapterSub, { color: colors.mutedForeground }]}>{chapter.subtitle}</Text>
           </View>
           <View style={styles.chapterMeta}>
-            <View>
-              <svg width="36" height="36" style={{ transform: [{ rotate: "-90deg" }] as any }}>
-                <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" stroke={colors.border} />
-                <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" stroke={colors.primary}
-                  strokeDasharray={`${circumference}`}
-                  strokeDashoffset={`${circumference * (1 - answered / chapter.prompts.length)}`}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </View>
+            <Svg width={36} height={36} style={{ transform: [{ rotate: "-90deg" }] }}>
+              <Circle cx={18} cy={18} r={14} fill="none" strokeWidth={3} stroke={colors.border} />
+              <Circle
+                cx={18} cy={18} r={14} fill="none" strokeWidth={3} stroke={colors.primary}
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference * (1 - answered / chapter.prompts.length)}
+                strokeLinecap="round"
+              />
+            </Svg>
             <Text style={[styles.chapterCount, { color: colors.mutedForeground }]}>
               {answered}/{chapter.prompts.length}
             </Text>
