@@ -74,7 +74,9 @@ async function buildFeedResponse(
   });
 }
 
-// GET /pulse/feed — all non-expired posts, reverse-chron
+// GET /pulse/feed — all non-expired posts from all family members, reverse-chron.
+// 333 Lives is a closed private family app: every authenticated user IS the circle.
+// No per-circle filtering is needed — all users share the same private feed.
 router.get("/pulse/feed", async (req, res) => {
   const now = new Date();
   const posts = await db
@@ -112,12 +114,14 @@ router.post("/pulse/posts", async (req, res) => {
     return res.status(400).json({ error: "mediaUrl is required for photo/voice posts" });
   }
 
-  // ACL-bind the media object so only the owner can read it
+  // ACL-bind the media object. Set visibility to "public" so all authenticated
+  // family members can view it via /storage/objects/* (that route requires auth,
+  // so "public" here means any signed-in user — not the open internet).
   if (mediaUrl) {
     try {
       await objectStorage.trySetObjectEntityAclPolicy(mediaUrl, {
         owner: String(getUserId(req)),
-        visibility: "private",
+        visibility: "public",
       });
     } catch (err) {
       req.log.error({ err }, "Pulse post media ACL set failed");
