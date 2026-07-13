@@ -1492,6 +1492,214 @@ export const DeleteRelationshipMomentResponse = zod.object({
 
 
 /**
+ * @summary List all family members
+ */
+export const GetFamilyMembersResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']),
+  "birthDate": zod.coerce.date().nullish(),
+  "deathDate": zod.coerce.date().nullish(),
+  "birthplace": zod.string().nullish(),
+  "affiliation": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetFamilyMembersResponse = zod.array(GetFamilyMembersResponseItem)
+
+
+/**
+ * @summary Add a family member
+ */
+export const CreateFamilyMemberBody = zod.object({
+  "name": zod.string(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']).optional(),
+  "birthDate": zod.coerce.date().optional(),
+  "deathDate": zod.coerce.date().optional(),
+  "birthplace": zod.string().optional(),
+  "affiliation": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const CreateFamilyMemberResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']),
+  "birthDate": zod.coerce.date().nullish(),
+  "deathDate": zod.coerce.date().nullish(),
+  "birthplace": zod.string().nullish(),
+  "affiliation": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a family member by ID
+ */
+export const GetFamilyMemberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetFamilyMemberResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']),
+  "birthDate": zod.coerce.date().nullish(),
+  "deathDate": zod.coerce.date().nullish(),
+  "birthplace": zod.string().nullish(),
+  "affiliation": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a family member
+ */
+export const UpdateFamilyMemberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFamilyMemberBody = zod.object({
+  "name": zod.string().optional(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']).optional(),
+  "birthDate": zod.coerce.date().optional(),
+  "deathDate": zod.coerce.date().optional(),
+  "birthplace": zod.string().optional(),
+  "affiliation": zod.string().optional(),
+  "photoUrl": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateFamilyMemberResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "relation": zod.enum(['parent', 'child', 'sibling', 'grandparent', 'grandchild', 'aunt_uncle', 'cousin', 'ancestor', 'chosen_family', 'other']),
+  "birthDate": zod.coerce.date().nullish(),
+  "deathDate": zod.coerce.date().nullish(),
+  "birthplace": zod.string().nullish(),
+  "affiliation": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a family member
+ */
+export const DeleteFamilyMemberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteFamilyMemberResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Get all moments for a family member
+ */
+export const GetFamilyMemberMomentsParams = zod.object({
+  "memberId": zod.coerce.number()
+})
+
+export const GetFamilyMemberMomentsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "memberId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetFamilyMemberMomentsResponse = zod.array(GetFamilyMemberMomentsResponseItem)
+
+
+/**
+ * @summary Add a moment for a family member
+ */
+export const CreateFamilyMemberMomentParams = zod.object({
+  "memberId": zod.coerce.number()
+})
+
+export const CreateFamilyMemberMomentBody = zod.object({
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional()
+})
+
+export const CreateFamilyMemberMomentResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "memberId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a moment
+ */
+export const UpdateFamilyMemberMomentParams = zod.object({
+  "memberId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const UpdateFamilyMemberMomentBody = zod.object({
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().optional()
+})
+
+export const UpdateFamilyMemberMomentResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "memberId": zod.number(),
+  "date": zod.coerce.date(),
+  "type": zod.enum(['conversation', 'promise', 'milestone', 'memory', 'birthday', 'loss', 'gratitude', 'other']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a moment
+ */
+export const DeleteFamilyMemberMomentParams = zod.object({
+  "memberId": zod.coerce.number(),
+  "id": zod.coerce.number()
+})
+
+export const DeleteFamilyMemberMomentResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
  * @summary Get all legacy letters
  */
 export const GetLegacyLettersQueryParams = zod.object({

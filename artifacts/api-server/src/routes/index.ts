@@ -22,6 +22,7 @@ import tasksRouter from "./tasks";
 import shopRouter from "./shop";
 import voiceMemosRouter from "./voice-memos";
 import feedbackRouter from "./feedback";
+import familyMembersRouter from "./family-members";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(workoutsRouter);
 router.use(tasksRouter);
 router.use(voiceMemosRouter);
 router.use(feedbackRouter);
+router.use(familyMembersRouter);
 
 export default router;

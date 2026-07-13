@@ -17,7 +17,8 @@ import {
   Mic,
   MessageSquare,
   MoreHorizontal,
-  X
+  X,
+  GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/memos", label: "Voice Memos", icon: Mic },
   { href: "/shop", label: "Shop", icon: ShoppingBag },
+  { href: "/family-tree", label: "Family Tree", icon: GitBranch },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },

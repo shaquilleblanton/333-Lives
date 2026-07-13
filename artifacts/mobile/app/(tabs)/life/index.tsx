@@ -18,15 +18,16 @@ type FeatureItem = {
 };
 
 const FEATURES: FeatureItem[] = [
-  { key: "tasks",    label: "Tasks",           sub: "What needs doing",         icon: "check-square", route: "life/tasks",          accent: "primary" },
-  { key: "gratitude",label: "Gratitude",        sub: "Count your blessings",     icon: "heart",        route: "life/gratitude",       accent: "rose" },
-  { key: "people",   label: "My Circle",        sub: "People who shaped you",    icon: "users",        route: "life/people",          accent: "secondary" },
-  { key: "growth",   label: "Growth Hub",       sub: "Habits, goals & journal",  icon: "trending-up",  route: "life/growth",          accent: "accent" },
-  { key: "legacy",   label: "Legacy Letters",   sub: "Words that outlive today", icon: "mail",         route: "life/legacy-letters",  accent: "amber" },
-  { key: "future",   label: "Future Messages",  sub: "Sealed in time",           icon: "lock",         route: "life/future",          accent: "violet" },
-  { key: "vault",    label: "Secure Vault",     sub: "Your private sanctuary",   icon: "shield",       route: "life/vault",           accent: "emerald" },
-  { key: "community",label: "Community",        sub: "Events & gatherings",      icon: "globe",        route: "life/community",       accent: "sky" },
-  { key: "calendar", label: "Schedule",         sub: "Your time, arranged",      icon: "calendar",     route: "life/calendar",        accent: "primary" },
+  { key: "tasks",      label: "Tasks",           sub: "What needs doing",         icon: "check-square", route: "life/tasks",          accent: "primary" },
+  { key: "gratitude",  label: "Gratitude",        sub: "Count your blessings",     icon: "heart",        route: "life/gratitude",       accent: "rose" },
+  { key: "people",     label: "My Circle",        sub: "People who shaped you",    icon: "users",        route: "life/people",          accent: "secondary" },
+  { key: "growth",     label: "Growth Hub",       sub: "Habits, goals & journal",  icon: "trending-up",  route: "life/growth",          accent: "accent" },
+  { key: "legacy",     label: "Legacy Letters",   sub: "Words that outlive today", icon: "mail",         route: "life/legacy-letters",  accent: "amber" },
+  { key: "future",     label: "Future Messages",  sub: "Sealed in time",           icon: "lock",         route: "life/future",          accent: "violet" },
+  { key: "vault",      label: "Secure Vault",     sub: "Your private sanctuary",   icon: "shield",       route: "life/vault",           accent: "emerald" },
+  { key: "community",  label: "Community",        sub: "Events & gatherings",      icon: "globe",        route: "life/community",       accent: "sky" },
+  { key: "calendar",   label: "Schedule",         sub: "Your time, arranged",      icon: "calendar",     route: "life/calendar",        accent: "primary" },
+  { key: "familyTree", label: "Family Tree",      sub: "Your lineage & ancestors", icon: "git-branch",   route: "life/family-tree",     accent: "amber" },
 ];
 
 const ACCENT_MAP = {
@@ -119,19 +120,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardLabel: {
-    fontFamily: fonts.serif,
-    fontSize: 16,
+    fontFamily: fonts.serifBold,
+    fontSize: 15,
+    lineHeight: 20,
     marginBottom: 4,
   },
   cardSub: {
     fontFamily: fonts.sub,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
     flex: 1,
   },
   arrowWrap: {
-    position: "absolute",
-    top: 14,
-    right: 14,
+    alignSelf: "flex-end",
+    marginTop: 8,
   },
 });

@@ -43,6 +43,8 @@ tags:
     description: Voice memos — one-tap private audio recordings
   - name: feedback
     description: Feedback hub — suggestions and bug reports, with owner-only triage
+  - name: family-tree
+    description: Family Tree — blood relatives, chosen family, and ancestors with lineage documentation
 
 paths:
   /storage/uploads/request-url:
@@ -1488,6 +1490,199 @@ paths:
                 properties:
                   success:
                     type: boolean
+
+  /family-members:
+    get:
+      operationId: getFamilyMembers
+      tags: [family-tree]
+      summary: List all family members
+      responses:
+        "200":
+          description: List of family members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FamilyMember"
+    post:
+      operationId: createFamilyMember
+      tags: [family-tree]
+      summary: Add a family member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFamilyMemberBody"
+      responses:
+        "201":
+          description: Created family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+
+  /family-members/{id}:
+    get:
+      operationId: getFamilyMember
+      tags: [family-tree]
+      summary: Get a family member by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateFamilyMember
+      tags: [family-tree]
+      summary: Update a family member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFamilyMemberBody"
+      responses:
+        "200":
+          description: Updated family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+    delete:
+      operationId: deleteFamilyMember
+      tags: [family-tree]
+      summary: Delete a family member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /family-members/{memberId}/moments:
+    get:
+      operationId: getFamilyMemberMoments
+      tags: [family-tree]
+      summary: Get all moments for a family member
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of moments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FamilyMemberMoment"
+    post:
+      operationId: createFamilyMemberMoment
+      tags: [family-tree]
+      summary: Add a moment for a family member
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFamilyMemberMomentBody"
+      responses:
+        "201":
+          description: Moment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMemberMoment"
+
+  /family-members/{memberId}/moments/{id}:
+    put:
+      operationId: updateFamilyMemberMoment
+      tags: [family-tree]
+      summary: Update a moment
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFamilyMemberMomentBody"
+      responses:
+        "200":
+          description: Moment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMemberMoment"
+    delete:
+      operationId: deleteFamilyMemberMoment
+      tags: [family-tree]
+      summary: Delete a moment
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
   /legacy-letters:
     get:
@@ -3555,3 +3750,133 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+
+    FamilyMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        relation:
+          type: string
+          enum: [parent, child, sibling, grandparent, grandchild, aunt_uncle, cousin, ancestor, chosen_family, other]
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        deathDate:
+          type: string
+          format: date
+          nullable: true
+        birthplace:
+          type: string
+          nullable: true
+        affiliation:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, name, relation, createdAt, updatedAt]
+
+    CreateFamilyMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        relation:
+          type: string
+          enum: [parent, child, sibling, grandparent, grandchild, aunt_uncle, cousin, ancestor, chosen_family, other]
+        birthDate:
+          type: string
+          format: date
+        deathDate:
+          type: string
+          format: date
+        birthplace:
+          type: string
+        affiliation:
+          type: string
+        photoUrl:
+          type: string
+        notes:
+          type: string
+      required: [name]
+
+    UpdateFamilyMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        relation:
+          type: string
+          enum: [parent, child, sibling, grandparent, grandchild, aunt_uncle, cousin, ancestor, chosen_family, other]
+        birthDate:
+          type: string
+          format: date
+        deathDate:
+          type: string
+          format: date
+        birthplace:
+          type: string
+        affiliation:
+          type: string
+        photoUrl:
+          type: string
+        notes:
+          type: string
+
+    FamilyMemberMoment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        memberId:
+          type: integer
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [conversation, promise, milestone, memory, birthday, loss, gratitude, other]
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, memberId, date, type, title, createdAt, updatedAt]
+
+    CreateFamilyMemberMomentBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [conversation, promise, milestone, memory, birthday, loss, gratitude, other]
+        title:
+          type: string
+        description:
+          type: string
+      required: [date, type, title]

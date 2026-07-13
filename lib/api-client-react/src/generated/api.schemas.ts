@@ -1302,6 +1302,138 @@ export interface UpdateVoiceMemoBody {
   title: string;
 }
 
+export type FamilyMemberRelation = typeof FamilyMemberRelation[keyof typeof FamilyMemberRelation];
+
+
+export const FamilyMemberRelation = {
+  parent: 'parent',
+  child: 'child',
+  sibling: 'sibling',
+  grandparent: 'grandparent',
+  grandchild: 'grandchild',
+  aunt_uncle: 'aunt_uncle',
+  cousin: 'cousin',
+  ancestor: 'ancestor',
+  chosen_family: 'chosen_family',
+  other: 'other',
+} as const;
+
+export interface FamilyMember {
+  id: number;
+  userId: number;
+  name: string;
+  relation: FamilyMemberRelation;
+  birthDate?: string | null;
+  deathDate?: string | null;
+  birthplace?: string | null;
+  affiliation?: string | null;
+  photoUrl?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateFamilyMemberBodyRelation = typeof CreateFamilyMemberBodyRelation[keyof typeof CreateFamilyMemberBodyRelation];
+
+
+export const CreateFamilyMemberBodyRelation = {
+  parent: 'parent',
+  child: 'child',
+  sibling: 'sibling',
+  grandparent: 'grandparent',
+  grandchild: 'grandchild',
+  aunt_uncle: 'aunt_uncle',
+  cousin: 'cousin',
+  ancestor: 'ancestor',
+  chosen_family: 'chosen_family',
+  other: 'other',
+} as const;
+
+export interface CreateFamilyMemberBody {
+  name: string;
+  relation?: CreateFamilyMemberBodyRelation;
+  birthDate?: string;
+  deathDate?: string;
+  birthplace?: string;
+  affiliation?: string;
+  photoUrl?: string;
+  notes?: string;
+}
+
+export type UpdateFamilyMemberBodyRelation = typeof UpdateFamilyMemberBodyRelation[keyof typeof UpdateFamilyMemberBodyRelation];
+
+
+export const UpdateFamilyMemberBodyRelation = {
+  parent: 'parent',
+  child: 'child',
+  sibling: 'sibling',
+  grandparent: 'grandparent',
+  grandchild: 'grandchild',
+  aunt_uncle: 'aunt_uncle',
+  cousin: 'cousin',
+  ancestor: 'ancestor',
+  chosen_family: 'chosen_family',
+  other: 'other',
+} as const;
+
+export interface UpdateFamilyMemberBody {
+  name?: string;
+  relation?: UpdateFamilyMemberBodyRelation;
+  birthDate?: string;
+  deathDate?: string;
+  birthplace?: string;
+  affiliation?: string;
+  photoUrl?: string;
+  notes?: string;
+}
+
+export type FamilyMemberMomentType = typeof FamilyMemberMomentType[keyof typeof FamilyMemberMomentType];
+
+
+export const FamilyMemberMomentType = {
+  conversation: 'conversation',
+  promise: 'promise',
+  milestone: 'milestone',
+  memory: 'memory',
+  birthday: 'birthday',
+  loss: 'loss',
+  gratitude: 'gratitude',
+  other: 'other',
+} as const;
+
+export interface FamilyMemberMoment {
+  id: number;
+  userId: number;
+  memberId: number;
+  date: string;
+  type: FamilyMemberMomentType;
+  title: string;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateFamilyMemberMomentBodyType = typeof CreateFamilyMemberMomentBodyType[keyof typeof CreateFamilyMemberMomentBodyType];
+
+
+export const CreateFamilyMemberMomentBodyType = {
+  conversation: 'conversation',
+  promise: 'promise',
+  milestone: 'milestone',
+  memory: 'memory',
+  birthday: 'birthday',
+  loss: 'loss',
+  gratitude: 'gratitude',
+  other: 'other',
+} as const;
+
+export interface CreateFamilyMemberMomentBody {
+  date: string;
+  type: CreateFamilyMemberMomentBodyType;
+  title: string;
+  description?: string;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };
