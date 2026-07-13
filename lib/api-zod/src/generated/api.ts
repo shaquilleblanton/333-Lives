@@ -1056,6 +1056,10 @@ export const GetPeopleResponseItem = zod.object({
   "anniversary": zod.coerce.date().nullish(),
   "anniversaryLabel": zod.string().nullish(),
   "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).nullish().describe('Arbitrary annual reminder dates per person.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -1075,7 +1079,11 @@ export const CreatePersonBody = zod.object({
   "note": zod.string().optional(),
   "anniversary": zod.coerce.date().optional(),
   "anniversaryLabel": zod.string().optional(),
-  "reconnectDays": zod.number().optional().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.')
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).optional().describe('Arbitrary annual reminder dates per person.')
 })
 
 export const CreatePersonResponse = zod.object({
@@ -1091,6 +1099,10 @@ export const CreatePersonResponse = zod.object({
   "anniversary": zod.coerce.date().nullish(),
   "anniversaryLabel": zod.string().nullish(),
   "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).nullish().describe('Arbitrary annual reminder dates per person.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -1103,10 +1115,10 @@ export const GetPeopleRemindersResponse = zod.object({
   "upcomingEvents": zod.array(zod.object({
   "personId": zod.number(),
   "personName": zod.string(),
-  "type": zod.enum(['birthday', 'anniversary']),
+  "type": zod.enum(['birthday', 'anniversary', 'custom']),
   "label": zod.string(),
   "daysUntil": zod.number(),
-  "date": zod.coerce.date()
+  "date": zod.string()
 })),
   "overdueConnections": zod.array(zod.object({
   "personId": zod.number(),
@@ -1138,6 +1150,10 @@ export const GetPersonResponse = zod.object({
   "anniversary": zod.coerce.date().nullish(),
   "anniversaryLabel": zod.string().nullish(),
   "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).nullish().describe('Arbitrary annual reminder dates per person.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -1160,7 +1176,11 @@ export const UpdatePersonBody = zod.object({
   "note": zod.string().optional(),
   "anniversary": zod.coerce.date().optional(),
   "anniversaryLabel": zod.string().optional(),
-  "reconnectDays": zod.number().optional().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.')
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).optional().describe('Arbitrary annual reminder dates per person.')
 })
 
 export const UpdatePersonResponse = zod.object({
@@ -1176,6 +1196,10 @@ export const UpdatePersonResponse = zod.object({
   "anniversary": zod.coerce.date().nullish(),
   "anniversaryLabel": zod.string().nullish(),
   "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
+  "customReminders": zod.array(zod.object({
+  "date": zod.string().describe('MM-DD format — month-day, year-agnostic annual reminder'),
+  "label": zod.string().describe('User-defined label, e.g. \'Sobriety Date\' or \'First Meeting\'')
+})).nullish().describe('Arbitrary annual reminder dates per person.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })

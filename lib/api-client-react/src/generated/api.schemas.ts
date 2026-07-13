@@ -656,6 +656,13 @@ export const PersonRelationship = {
   other: 'other',
 } as const;
 
+export interface CustomReminder {
+  /** MM-DD format — month-day, year-agnostic annual reminder */
+  date: string;
+  /** User-defined label, e.g. 'Sobriety Date' or 'First Meeting' */
+  label: string;
+}
+
 export interface Person {
   id: number;
   userId: number;
@@ -670,6 +677,8 @@ export interface Person {
   anniversaryLabel?: string | null;
   /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
   reconnectDays?: number | null;
+  /** Arbitrary annual reminder dates per person. */
+  customReminders?: CustomReminder[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -697,7 +706,9 @@ export interface CreatePersonBody {
   anniversary?: string;
   anniversaryLabel?: string;
   /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
-  reconnectDays?: number;
+  reconnectDays?: number | null;
+  /** Arbitrary annual reminder dates per person. */
+  customReminders?: CustomReminder[];
 }
 
 export type UpdatePersonBodyRelationship = typeof UpdatePersonBodyRelationship[keyof typeof UpdatePersonBodyRelationship];
@@ -723,7 +734,9 @@ export interface UpdatePersonBody {
   anniversary?: string;
   anniversaryLabel?: string;
   /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
-  reconnectDays?: number;
+  reconnectDays?: number | null;
+  /** Arbitrary annual reminder dates per person. */
+  customReminders?: CustomReminder[];
 }
 
 export type UpcomingEventType = typeof UpcomingEventType[keyof typeof UpcomingEventType];
@@ -732,6 +745,7 @@ export type UpcomingEventType = typeof UpcomingEventType[keyof typeof UpcomingEv
 export const UpcomingEventType = {
   birthday: 'birthday',
   anniversary: 'anniversary',
+  custom: 'custom',
 } as const;
 
 export interface UpcomingEvent {

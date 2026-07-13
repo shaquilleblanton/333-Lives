@@ -62,6 +62,31 @@ function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
+/**
+ * Format a birthday string (YYYY-MM-DD or 1900-MM-DD sentinel) for display.
+ * If the year is 1900 (meaning "year unknown"), renders only Month Day.
+ */
+function formatBirthday(birthday: string): string {
+  const parts = birthday.split("T")[0].split("-");
+  const year = Number(parts[0]);
+  const month = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+  const d = new Date(year, month, day);
+  if (year === 1900) {
+    return format(d, "MMMM do");
+  }
+  return format(d, "MMMM do, yyyy");
+}
+
+/**
+ * Parse a stored birthday (YYYY-MM-DD or 1900-MM-DD) into { mmdd, year } form fields.
+ */
+function parseBirthday(b?: string | null): { mmdd: string; year: string } {
+  if (!b) return { mmdd: "", year: "" };
+  const p = b.split("T")[0].split("-");
+  return { mmdd: `${p[1]}-${p[2]}`, year: p[0] === "1900" ? "" : p[0] };
+}
+
 export default function People() {
   const [, setLocation] = useLocation();
   const { data: people, isLoading } = useGetPeople();
@@ -328,7 +353,7 @@ function PersonDetail({ person, onEdit, onMessage, onClose }: {
               {person.birthday && (
                 <p className="text-muted-foreground font-subheading text-xs mt-0.5 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  Born {format(parseISO(person.birthday), "MMMM do, yyyy")}
+                  Born {formatBirthday(person.birthday)}
                 </p>
               )}
             </div>
@@ -567,40 +592,56 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
   const createPerson = useCreatePerson();
   const updatePerson = useUpdatePerson();
 
+  const bd = parseBirthday(person?.birthday);
+
   const [formData, setFormData] = useState({
     name: person?.name || "",
     relationship: (person?.relationship as RelationshipFilter) || "other",
     bio: person?.bio || "",
-    birthday: person?.birthday ? person.birthday.split("T")[0] : "",
+    birthdayMMDD: bd.mmdd,
+    birthdayYear: bd.year,
     lostDate: person?.lostDate ? person.lostDate.split("T")[0] : "",
     note: person?.note || "",
     anniversary: person?.anniversary ? person.anniversary.split("T")[0] : "",
     anniversaryLabel: person?.anniversaryLabel || "",
-    reconnectDays: person?.reconnectDays?.toString() || "",
+    // "none" is the sentinel for "no reminder" (avoids Radix Select empty-value bug)
+    reconnectDays: person?.reconnectDays?.toString() || "none",
+    customReminders: (person?.customReminders ?? []) as Array<{ date: string; label: string }>,
   });
+
+  const set = (patch: Partial<typeof formData>) => setFormData(f => ({ ...f, ...patch }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) return;
+
+    const birthday = formData.birthdayMMDD
+      ? `${formData.birthdayYear || "1900"}-${formData.birthdayMMDD}`
+      : undefined;
+
     const payload = {
-      ...formData,
+      name: formData.name,
       relationship: formData.relationship as Exclude<RelationshipFilter, "all" | "overdue">,
-      birthday: formData.birthday || undefined,
+      bio: formData.bio || undefined,
+      birthday,
       lostDate: formData.lostDate || undefined,
+      note: formData.note || undefined,
       anniversary: formData.anniversary || undefined,
       anniversaryLabel: formData.anniversaryLabel || undefined,
-      reconnectDays: formData.reconnectDays ? Number(formData.reconnectDays) : undefined,
+      // "none" → null to explicitly clear the reconnect reminder in the DB
+      reconnectDays: formData.reconnectDays !== "none" ? Number(formData.reconnectDays) : null,
+      customReminders: formData.customReminders.filter(cr => cr.date && cr.label),
     };
+
+    const onSuccess = () => {
+      queryClient.invalidateQueries({ queryKey: getGetPeopleQueryKey() });
+      onOpenChange(false);
+    };
+
     if (person) {
-      updatePerson.mutate(
-        { id: person.id, data: payload },
-        { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetPeopleQueryKey() }); onOpenChange(false); } }
-      );
+      updatePerson.mutate({ id: person.id, data: payload }, { onSuccess });
     } else {
-      createPerson.mutate(
-        { data: payload },
-        { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetPeopleQueryKey() }); onOpenChange(false); } }
-      );
+      createPerson.mutate({ data: payload }, { onSuccess });
     }
   };
 
@@ -608,18 +649,21 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-background border-border">
+      <DialogContent className="sm:max-w-[520px] bg-background border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">{person ? "Update Details" : "Add to My Circle"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          {/* Name */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Name</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="bg-card border-border" required />
+            <Input value={formData.name} onChange={e => set({ name: e.target.value })} className="bg-card border-border" required />
           </div>
+
+          {/* Relationship */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Relationship</label>
-            <Select value={formData.relationship} onValueChange={(v: RelationshipFilter) => setFormData({ ...formData, relationship: v })}>
+            <Select value={formData.relationship} onValueChange={(v: RelationshipFilter) => set({ relationship: v })}>
               <SelectTrigger className="bg-card border-border capitalize">
                 <SelectValue placeholder="Select relationship" />
               </SelectTrigger>
@@ -633,42 +677,130 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
               </SelectContent>
             </Select>
           </div>
+
+          {/* Short Bio */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Short Bio</label>
-            <Input value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} maxLength={100} className="bg-card border-border" placeholder="e.g. My father who passed when I was 14." />
+            <Input value={formData.bio} onChange={e => set({ bio: e.target.value })} maxLength={100} className="bg-card border-border" placeholder="e.g. My father who passed when I was 14." />
           </div>
+
+          {/* Birthday — month/day required, year optional */}
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
+              <Cake className="w-3.5 h-3.5" /> Birthday
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Input
+                  placeholder="MM-DD"
+                  value={formData.birthdayMMDD}
+                  onChange={e => set({ birthdayMMDD: e.target.value })}
+                  className="bg-card border-border"
+                  maxLength={5}
+                />
+                <span className="text-xs text-muted-foreground/60 mt-0.5 block font-subheading">Month-Day</span>
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  min="1900"
+                  max="2099"
+                  placeholder="e.g. 1985"
+                  value={formData.birthdayYear}
+                  onChange={e => set({ birthdayYear: e.target.value })}
+                  className="bg-card border-border"
+                />
+                <span className="text-xs text-muted-foreground/60 mt-0.5 block font-subheading">Year (optional)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Date of Passing */}
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground">Date of Passing</label>
+            <Input type="date" value={formData.lostDate} onChange={e => set({ lostDate: e.target.value })} className="bg-card border-border block" />
+          </div>
+
+          {/* Anniversary */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-subheading text-muted-foreground">Birthday</label>
-              <Input type="date" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} className="bg-card border-border block" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-subheading text-muted-foreground">Date of Passing</label>
-              <Input type="date" value={formData.lostDate} onChange={e => setFormData({ ...formData, lostDate: e.target.value })} className="bg-card border-border block" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
-                <Cake className="w-3.5 h-3.5" /> Anniversary Date
-              </label>
-              <Input type="date" value={formData.anniversary} onChange={e => setFormData({ ...formData, anniversary: e.target.value })} className="bg-card border-border block" />
+              <label className="text-sm font-subheading text-muted-foreground">Anniversary Date</label>
+              <Input type="date" value={formData.anniversary} onChange={e => set({ anniversary: e.target.value })} className="bg-card border-border block" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-subheading text-muted-foreground">Anniversary Label</label>
-              <Input value={formData.anniversaryLabel} onChange={e => setFormData({ ...formData, anniversaryLabel: e.target.value })} className="bg-card border-border" placeholder="e.g. Wedding Anniversary" />
+              <Input value={formData.anniversaryLabel} onChange={e => set({ anniversaryLabel: e.target.value })} className="bg-card border-border" placeholder="e.g. Wedding Anniversary" />
             </div>
           </div>
+
+          {/* Custom reminder dates */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Custom Reminder Dates
+              </label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs h-7 px-2"
+                onClick={() => set({ customReminders: [...formData.customReminders, { date: "", label: "" }] })}
+              >
+                + Add
+              </Button>
+            </div>
+            {formData.customReminders.length === 0 && (
+              <p className="text-xs text-muted-foreground/50 font-subheading">
+                e.g. Sobriety Date (03-15), First Meeting (07-22)
+              </p>
+            )}
+            {formData.customReminders.map((cr, i) => (
+              <div key={i} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-center">
+                <Input
+                  placeholder="MM-DD"
+                  value={cr.date}
+                  maxLength={5}
+                  onChange={e => {
+                    const u = [...formData.customReminders];
+                    u[i] = { ...u[i], date: e.target.value };
+                    set({ customReminders: u });
+                  }}
+                  className="bg-card border-border"
+                />
+                <Input
+                  placeholder="Label"
+                  value={cr.label}
+                  onChange={e => {
+                    const u = [...formData.customReminders];
+                    u[i] = { ...u[i], label: e.target.value };
+                    set({ customReminders: u });
+                  }}
+                  className="bg-card border-border"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => set({ customReminders: formData.customReminders.filter((_, idx) => idx !== i) })}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* Reconnect reminder */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" /> Reconnect Reminder
             </label>
-            <Select value={formData.reconnectDays} onValueChange={v => setFormData({ ...formData, reconnectDays: v })}>
+            <Select value={formData.reconnectDays} onValueChange={v => set({ reconnectDays: v })}>
               <SelectTrigger className="bg-card border-border">
-                <SelectValue placeholder="No reminder" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No reminder</SelectItem>
+                <SelectItem value="none">No reminder</SelectItem>
                 <SelectItem value="30">Every 30 days</SelectItem>
                 <SelectItem value="60">Every 60 days</SelectItem>
                 <SelectItem value="90">Every 90 days</SelectItem>
@@ -676,10 +808,13 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
               </SelectContent>
             </Select>
           </div>
+
+          {/* Private Notes */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Private Notes</label>
-            <Textarea value={formData.note} onChange={e => setFormData({ ...formData, note: e.target.value })} className="bg-card border-border min-h-[80px] resize-none" placeholder="Memories, quirks, what they meant to you..." />
+            <Textarea value={formData.note} onChange={e => set({ note: e.target.value })} className="bg-card border-border min-h-[80px] resize-none" placeholder="Memories, quirks, what they meant to you..." />
           </div>
+
           <div className="flex justify-end pt-2 gap-3">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={!formData.name || isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">

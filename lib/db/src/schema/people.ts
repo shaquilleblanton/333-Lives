@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, date, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, date, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -12,6 +12,11 @@ export const peopleTable = pgTable("people", {
   }).notNull().default("other"),
   bio: text("bio"),
   photoUrl: text("photo_url"),
+  /**
+   * Birthday in YYYY-MM-DD format.
+   * Year 1900 is a sentinel meaning "year unknown" — only month and day are
+   * meaningful. The daysUntilAnnual helper ignores the year.
+   */
   birthday: date("birthday"),
   lostDate: date("lost_date"),
   note: text("note"),
@@ -24,6 +29,12 @@ export const peopleTable = pgTable("people", {
    * null = no reminder. Options: 30 / 60 / 90 / 180.
    */
   reconnectDays: integer("reconnect_days"),
+  /**
+   * Arbitrary custom reminder dates with labels, e.g. "Sobriety Date (03-15)".
+   * Stored as JSON array of {date: "MM-DD", label: string}.
+   * Year-agnostic: each date is treated as an annual recurring reminder.
+   */
+  customReminders: jsonb("custom_reminders").$type<Array<{ date: string; label: string }>>(),
   /**
    * linkedUserId — links this People entry to an actual app user account.
    * When set alongside isCircle=true, that user appears in the Pulse feed circle.

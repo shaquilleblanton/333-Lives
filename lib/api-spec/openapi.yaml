@@ -3358,6 +3358,12 @@ components:
           type: integer
           nullable: true
           description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
+        customReminders:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/CustomReminder"
+          description: Arbitrary annual reminder dates per person.
         createdAt:
           type: string
           format: date-time
@@ -3393,7 +3399,13 @@ components:
           type: string
         reconnectDays:
           type: integer
+          nullable: true
           description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
+        customReminders:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomReminder"
+          description: Arbitrary annual reminder dates per person.
       required: [name]
 
     UpdatePersonBody:
@@ -3423,7 +3435,13 @@ components:
           type: string
         reconnectDays:
           type: integer
+          nullable: true
           description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
+        customReminders:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomReminder"
+          description: Arbitrary annual reminder dates per person.
 
     PeopleReminders:
       type: object
@@ -3447,15 +3465,25 @@ components:
           type: string
         type:
           type: string
-          enum: [birthday, anniversary]
+          enum: [birthday, anniversary, custom]
         label:
           type: string
         daysUntil:
           type: integer
         date:
           type: string
-          format: date
       required: [personId, personName, type, label, daysUntil, date]
+
+    CustomReminder:
+      type: object
+      properties:
+        date:
+          type: string
+          description: "MM-DD format — month-day, year-agnostic annual reminder"
+        label:
+          type: string
+          description: "User-defined label, e.g. 'Sobriety Date' or 'First Meeting'"
+      required: [date, label]
 
     OverdueConnection:
       type: object

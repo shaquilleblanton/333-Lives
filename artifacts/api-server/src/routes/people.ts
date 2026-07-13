@@ -10,12 +10,16 @@ const router = Router();
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
- * Days until the next occurrence of an annual date (birthday/anniversary).
- * Compares month + day only (year-agnostic). Returns 0 if today, negative if
- * already passed this year and >365 hasn't been computed (we check next year).
+ * Days until the next occurrence of an annual date. Handles both:
+ *   - "YYYY-MM-DD" full date (uses only MM-DD portion; year 1900 = year unknown)
+ *   - "MM-DD" short form (custom reminders)
+ * Returns 0 if today, positive for future occurrences.
  */
 function daysUntilAnnual(dateStr: string, today: Date): number {
-  const [, m, d] = dateStr.split("-").map(Number);
+  const parts = dateStr.split("-");
+  // Support both "MM-DD" and "YYYY-MM-DD"
+  const m = parts.length === 2 ? Number(parts[0]) : Number(parts[1]);
+  const d = parts.length === 2 ? Number(parts[1]) : Number(parts[2]);
   const y = today.getFullYear();
   const thisYear = new Date(y, m - 1, d);
   const diff = Math.round((thisYear.getTime() - today.getTime()) / 86_400_000);
@@ -31,8 +35,8 @@ router.get("/people", async (req, res) => {
   return res.json(rows.sort((a, b) => a.name.localeCompare(b.name)));
 });
 
-// GET /people/reminders — upcoming birthdays/anniversaries (next 7 days) and
-// overdue connections (no logged moment within reconnectDays threshold).
+// GET /people/reminders — upcoming birthdays/anniversaries/custom dates (next 7
+// days) and overdue connections (no logged moment within reconnectDays threshold).
 // NOTE: must be registered BEFORE /people/:id to avoid "reminders" matching :id.
 router.get("/people/reminders", async (req, res) => {
   const userId = getUserId(req);
@@ -48,7 +52,7 @@ router.get("/people/reminders", async (req, res) => {
   const upcomingEvents: {
     personId: number;
     personName: string;
-    type: "birthday" | "anniversary";
+    type: "birthday" | "anniversary" | "custom";
     label: string;
     daysUntil: number;
     date: string;
@@ -81,6 +85,23 @@ router.get("/people/reminders", async (req, res) => {
         });
       }
     }
+    // Custom reminder dates — stored as [{date: "MM-DD", label: string}]
+    if (Array.isArray(person.customReminders)) {
+      for (const cr of person.customReminders) {
+        if (!cr.date || !cr.label) continue;
+        const daysUntil = daysUntilAnnual(cr.date, today);
+        if (daysUntil >= 0 && daysUntil <= 7) {
+          upcomingEvents.push({
+            personId: person.id,
+            personName: person.name,
+            type: "custom",
+            label: `${person.name}: ${cr.label}`,
+            daysUntil,
+            date: cr.date,
+          });
+        }
+      }
+    }
   }
   upcomingEvents.sort((a, b) => a.daysUntil - b.daysUntil);
 
@@ -93,8 +114,9 @@ router.get("/people/reminders", async (req, res) => {
     lastMomentDate: string | null;
   }[] = [];
 
+  // People who passed away cannot be "overdue" for a reconnect.
   const peopleWithReconnect = allPeople.filter(
-    (p) => p.reconnectDays !== null && p.reconnectDays !== undefined,
+    (p) => p.reconnectDays !== null && p.reconnectDays !== undefined && !p.lostDate,
   );
 
   if (peopleWithReconnect.length > 0) {
@@ -155,7 +177,6 @@ router.post("/people", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
 
   // Strip circle-linking fields on create — IDOR risk if non-owners could set these.
-  // Only the app owner may set linkedUserId/isCircle via PATCH /:id/circle-link.
   const { linkedUserId: _l, isCircle: _c, ...safeData } = parsed.data;
 
   const inserted = await db.insert(peopleTable).values(safeData).returning();
