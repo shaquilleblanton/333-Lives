@@ -2419,3 +2419,57 @@ export const DeleteVoiceMemoResponse = zod.object({
 })
 
 
+/**
+ * @summary Get all story answers for the current user
+ */
+export const GetStoryAnswersResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "chapterId": zod.string(),
+  "promptId": zod.string(),
+  "textAnswer": zod.string().nullish(),
+  "audioUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetStoryAnswersResponse = zod.array(GetStoryAnswersResponseItem)
+
+
+/**
+ * @summary Create or update a story answer for a prompt
+ */
+export const UpsertStoryAnswerParams = zod.object({
+  "chapterId": zod.coerce.string(),
+  "promptId": zod.coerce.string()
+})
+
+export const UpsertStoryAnswerBody = zod.object({
+  "textAnswer": zod.string().nullish(),
+  "audioUrl": zod.string().nullish()
+})
+
+export const UpsertStoryAnswerResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "chapterId": zod.string(),
+  "promptId": zod.string(),
+  "textAnswer": zod.string().nullish(),
+  "audioUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a story answer for a prompt
+ */
+export const DeleteStoryAnswerParams = zod.object({
+  "chapterId": zod.coerce.string(),
+  "promptId": zod.coerce.string()
+})
+
+export const DeleteStoryAnswerResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

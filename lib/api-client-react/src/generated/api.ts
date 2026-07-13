@@ -79,6 +79,7 @@ import type {
   RespondToCommunityEventBody,
   ShopCheckout,
   ShopProduct,
+  StoryAnswer,
   SuccessResponse,
   Task,
   UnlockMessageBody,
@@ -103,6 +104,7 @@ import type {
   UpdateWorkoutBody,
   UploadUrlRequest,
   UploadUrlResponse,
+  UpsertStoryAnswerBody,
   User,
   VaultItem,
   VoiceMemo,
@@ -7716,5 +7718,227 @@ export const useDeleteVoiceMemo = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDeleteVoiceMemoMutationOptions(options));
+    }
+
+export const getGetStoryAnswersUrl = () => {
+
+
+
+
+  return `/api/story-answers`
+}
+
+/**
+ * @summary Get all story answers for the current user
+ */
+export const getStoryAnswers = async ( options?: RequestInit): Promise<StoryAnswer[]> => {
+
+  return customFetch<StoryAnswer[]>(getGetStoryAnswersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStoryAnswersQueryKey = () => {
+    return [
+    `/api/story-answers`
+    ] as const;
+    }
+
+
+export const getGetStoryAnswersQueryOptions = <TData = Awaited<ReturnType<typeof getStoryAnswers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStoryAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStoryAnswersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStoryAnswers>>> = ({ signal }) => getStoryAnswers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStoryAnswers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStoryAnswersQueryResult = NonNullable<Awaited<ReturnType<typeof getStoryAnswers>>>
+export type GetStoryAnswersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all story answers for the current user
+ */
+
+export function useGetStoryAnswers<TData = Awaited<ReturnType<typeof getStoryAnswers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStoryAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStoryAnswersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpsertStoryAnswerUrl = (chapterId: string,
+    promptId: string,) => {
+
+
+
+
+  return `/api/story-answers/${chapterId}/${promptId}`
+}
+
+/**
+ * @summary Create or update a story answer for a prompt
+ */
+export const upsertStoryAnswer = async (chapterId: string,
+    promptId: string,
+    upsertStoryAnswerBody: UpsertStoryAnswerBody, options?: RequestInit): Promise<StoryAnswer> => {
+
+  return customFetch<StoryAnswer>(getUpsertStoryAnswerUrl(chapterId,promptId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(upsertStoryAnswerBody)
+  }
+);}
+
+
+
+
+export const getUpsertStoryAnswerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertStoryAnswer>>, TError,{chapterId: string;promptId: string;data: BodyType<UpsertStoryAnswerBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertStoryAnswer>>, TError,{chapterId: string;promptId: string;data: BodyType<UpsertStoryAnswerBody>}, TContext> => {
+
+const mutationKey = ['upsertStoryAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertStoryAnswer>>, {chapterId: string;promptId: string;data: BodyType<UpsertStoryAnswerBody>}> = (props) => {
+          const {chapterId,promptId,data} = props ?? {};
+
+          return  upsertStoryAnswer(chapterId,promptId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertStoryAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof upsertStoryAnswer>>>
+    export type UpsertStoryAnswerMutationBody = BodyType<UpsertStoryAnswerBody>
+    export type UpsertStoryAnswerMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create or update a story answer for a prompt
+ */
+export const useUpsertStoryAnswer = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertStoryAnswer>>, TError,{chapterId: string;promptId: string;data: BodyType<UpsertStoryAnswerBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertStoryAnswer>>,
+        TError,
+        {chapterId: string;promptId: string;data: BodyType<UpsertStoryAnswerBody>},
+        TContext
+      > => {
+      return useMutation(getUpsertStoryAnswerMutationOptions(options));
+    }
+
+export const getDeleteStoryAnswerUrl = (chapterId: string,
+    promptId: string,) => {
+
+
+
+
+  return `/api/story-answers/${chapterId}/${promptId}`
+}
+
+/**
+ * @summary Delete a story answer for a prompt
+ */
+export const deleteStoryAnswer = async (chapterId: string,
+    promptId: string, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteStoryAnswerUrl(chapterId,promptId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteStoryAnswerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStoryAnswer>>, TError,{chapterId: string;promptId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStoryAnswer>>, TError,{chapterId: string;promptId: string}, TContext> => {
+
+const mutationKey = ['deleteStoryAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStoryAnswer>>, {chapterId: string;promptId: string}> = (props) => {
+          const {chapterId,promptId} = props ?? {};
+
+          return  deleteStoryAnswer(chapterId,promptId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStoryAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStoryAnswer>>>
+
+    export type DeleteStoryAnswerMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a story answer for a prompt
+ */
+export const useDeleteStoryAnswer = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStoryAnswer>>, TError,{chapterId: string;promptId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStoryAnswer>>,
+        TError,
+        {chapterId: string;promptId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteStoryAnswerMutationOptions(options));
     }
 

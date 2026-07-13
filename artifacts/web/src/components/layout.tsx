@@ -18,7 +18,8 @@ import {
   MessageSquare,
   MoreHorizontal,
   X,
-  GitBranch
+  GitBranch,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { href: "/memos", label: "Voice Memos", icon: Mic },
   { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/family-tree", label: "Family Tree", icon: GitBranch },
+  { href: "/story", label: "Tell Your Story", icon: BookOpen },
   { href: "/community", label: "Community", icon: Calendar },
   { href: "/calendar", label: "My Calendar", icon: CalendarDays },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },

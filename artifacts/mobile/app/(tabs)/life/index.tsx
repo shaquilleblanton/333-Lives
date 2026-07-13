@@ -28,6 +28,7 @@ const FEATURES: FeatureItem[] = [
   { key: "community",  label: "Community",        sub: "Events & gatherings",      icon: "globe",        route: "life/community",       accent: "sky" },
   { key: "calendar",   label: "Schedule",         sub: "Your time, arranged",      icon: "calendar",     route: "life/calendar",        accent: "primary" },
   { key: "familyTree", label: "Family Tree",      sub: "Your lineage & ancestors", icon: "git-branch",   route: "life/family-tree",     accent: "amber" },
+  { key: "myStory",   label: "Tell Your Story", sub: "A living autobiography",   icon: "book-open",    route: "life/tell-your-story", accent: "violet" },
 ];
 
 const ACCENT_MAP = {

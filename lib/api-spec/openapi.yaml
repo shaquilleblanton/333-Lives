@@ -45,6 +45,8 @@ tags:
     description: Feedback hub — suggestions and bug reports, with owner-only triage
   - name: family-tree
     description: Family Tree — blood relatives, chosen family, and ancestors with lineage documentation
+  - name: story
+    description: Tell Your Story — chapter-based guided oral history with text and voice answers
 
 paths:
   /storage/uploads/request-url:
@@ -2292,6 +2294,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /story-answers:
+    get:
+      tags: [story]
+      operationId: getStoryAnswers
+      summary: Get all story answers for the current user
+      responses:
+        "200":
+          description: List of story answers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoryAnswer"
+
+  /story-answers/{chapterId}/{promptId}:
+    put:
+      tags: [story]
+      operationId: upsertStoryAnswer
+      summary: Create or update a story answer for a prompt
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: promptId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertStoryAnswerBody"
+      responses:
+        "200":
+          description: The saved answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoryAnswer"
+    delete:
+      tags: [story]
+      operationId: deleteStoryAnswer
+      summary: Delete a story answer for a prompt
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: promptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -3880,3 +3949,38 @@ components:
         description:
           type: string
       required: [date, type, title]
+
+    StoryAnswer:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        chapterId:
+          type: string
+        promptId:
+          type: string
+        textAnswer:
+          type: string
+          nullable: true
+        audioUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, chapterId, promptId, createdAt, updatedAt]
+
+    UpsertStoryAnswerBody:
+      type: object
+      properties:
+        textAnswer:
+          type: string
+          nullable: true
+        audioUrl:
+          type: string
+          nullable: true

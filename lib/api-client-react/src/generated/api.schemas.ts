@@ -1434,6 +1434,22 @@ export interface CreateFamilyMemberMomentBody {
   description?: string;
 }
 
+export interface StoryAnswer {
+  id: number;
+  userId: number;
+  chapterId: string;
+  promptId: string;
+  textAnswer?: string | null;
+  audioUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertStoryAnswerBody {
+  textAnswer?: string | null;
+  audioUrl?: string | null;
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

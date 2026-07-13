@@ -35,6 +35,7 @@ import Shop from "@/pages/shop";
 import Memos from "@/pages/memos";
 import Feedback from "@/pages/feedback";
 import FamilyTree from "@/pages/family-tree";
+import TellYourStory from "@/pages/tell-your-story";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const APP_ROUTES: Array<{ path: string; component: React.ComponentType }> = [
   { path: "/memos", component: Memos },
   { path: "/feedback", component: Feedback },
   { path: "/family-tree", component: FamilyTree },
+  { path: "/story", component: TellYourStory },
 ];
 
 // Signed-in users land straight in the app; signed-out visitors get the

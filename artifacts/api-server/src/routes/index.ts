@@ -23,6 +23,7 @@ import shopRouter from "./shop";
 import voiceMemosRouter from "./voice-memos";
 import feedbackRouter from "./feedback";
 import familyMembersRouter from "./family-members";
+import storyAnswersRouter from "./story-answers";
 
 const router: IRouter = Router();
 
@@ -54,5 +55,6 @@ router.use(tasksRouter);
 router.use(voiceMemosRouter);
 router.use(feedbackRouter);
 router.use(familyMembersRouter);
+router.use(storyAnswersRouter);
 
 export default router;
