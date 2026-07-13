@@ -20,7 +20,12 @@ router.get("/people/:id", async (req, res) => {
 router.post("/people", async (req, res) => {
   const parsed = insertPersonSchema.safeParse({ ...req.body, userId: getUserId(req) });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
-  const inserted = await db.insert(peopleTable).values(parsed.data).returning();
+
+  // Strip circle-linking fields on create — same IDOR risk as PUT.
+  // Only the app owner may set linkedUserId/isCircle via PATCH /:id/circle-link.
+  const { linkedUserId: _l, isCircle: _c, ...safeData } = parsed.data;
+
+  const inserted = await db.insert(peopleTable).values(safeData).returning();
   return res.status(201).json(inserted[0]);
 });
 

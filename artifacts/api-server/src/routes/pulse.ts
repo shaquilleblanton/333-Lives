@@ -4,6 +4,10 @@ import { db } from "@workspace/db";
 import {
   pulsePostsTable,
   pulseReactionsTable,
+  // pulseCircleMembersTable is defined in schema but not used for runtime circle
+  // resolution — circles are driven exclusively by people.linkedUserId/isCircle.
+  // The table is retained for potential future features (e.g. cross-user explicit
+  // invitations) and can be removed in a follow-up cleanup task.
   insertPulsePostSchema,
   usersTable,
   peopleTable,
