@@ -18,9 +18,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "sun.max", selected: "sun.max.fill" }} />
         <Label>Today</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="streak">
-        <Icon sf={{ default: "flame", selected: "flame.fill" }} />
-        <Label>Streak</Label>
+      <NativeTabs.Trigger name="life">
+        <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
+        <Label>Life</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memos">
         <Icon sf={{ default: "mic", selected: "mic.fill" }} />
@@ -30,9 +30,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "bag", selected: "bag.fill" }} />
         <Label>Shop</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="feedback">
-        <Icon sf={{ default: "bubble.left", selected: "bubble.left.fill" }} />
-        <Label>Feedback</Label>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -90,14 +90,14 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="streak"
+        name="life"
         options={{
-          title: "Streak",
+          title: "Life",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="flame" tintColor={color} size={24} />
+              <SymbolView name="sparkles" tintColor={color} size={24} />
             ) : (
-              <Feather name="award" size={22} color={color} />
+              <Feather name="grid" size={22} color={color} />
             ),
         }}
       />
@@ -126,17 +126,20 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="feedback"
+        name="profile"
         options={{
-          title: "Feedback",
+          title: "Profile",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bubble.left" tintColor={color} size={24} />
+              <SymbolView name="person.circle" tintColor={color} size={24} />
             ) : (
-              <Feather name="message-square" size={22} color={color} />
+              <Feather name="user" size={22} color={color} />
             ),
         }}
       />
+      {/* Hidden tabs — still accessible via router.push */}
+      <Tabs.Screen name="streak"   options={{ href: null }} />
+      <Tabs.Screen name="feedback" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -144,9 +147,6 @@ function ClassicTabLayout() {
 export default function TabLayout() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
 
-  // Register the bearer-token getter before any child screen fires a query.
-  // Setting during render (not in an effect) avoids the race where children's
-  // mount effects run before the parent's.
   if (isSignedIn) {
     setAuthTokenGetter(() => getToken());
   }
