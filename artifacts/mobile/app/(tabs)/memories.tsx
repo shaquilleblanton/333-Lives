@@ -9,10 +9,13 @@ import {
   useDeleteMemoryCollection,
   useGetCollectionItems,
   useGetMemoryCollections,
+  useGetPeople,
+  useGetVaultItems,
   useUpdateCollectionItem,
   useUpdateMemoryCollection,
   type CollectionItem,
   type MemoryCollection,
+  type VaultItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -44,6 +47,25 @@ const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 function storageUrl(objectPath: string) {
   const base = process.env.EXPO_PUBLIC_API_URL ?? "";
   return `${base}/api/storage${objectPath}`;
+}
+
+async function uploadFileFromUri(uri: string, contentType: string): Promise<string | null> {
+  try {
+    const name = uri.split("/").pop() ?? "file";
+    const info = await FileSystem.getInfoAsync(uri);
+    const size = info.exists && "size" in info ? (info.size ?? 0) : 0;
+    const resp = await requestUploadUrl({ name, size, contentType });
+    const blob = await (await fetch(uri)).blob();
+    const putResp = await fetch(resp.uploadURL, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: blob,
+    });
+    if (!putResp.ok) return null;
+    return resp.objectPath;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Album grid ──────────────────────────────────────────────────────────────
@@ -94,7 +116,6 @@ export default function MemoriesScreen() {
 
   return (
     <View style={[s.container, { paddingTop: insets.top + WEB_TOP_INSET }]}>
-      {/* Header */}
       <View style={s.header}>
         <View>
           <Text style={s.title}>Memory Collections</Text>
@@ -184,6 +205,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
   const [uploading, setUploading] = useState(false);
   const [lightboxItem, setLightboxItem] = useState<CollectionItem | null>(null);
   const [captionEdit, setCaptionEdit] = useState<{ id: number; value: string } | null>(null);
+  const [vaultPickerOpen, setVaultPickerOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const sorted = [...(items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -198,57 +220,58 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
   const handleAddPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission needed", "Please allow access to your photo library to add photos.");
+      Alert.alert("Permission needed", "Please allow access to your photo library.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
-      allowsMultipleSelection: false,
       quality: 0.85,
     });
     if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
-    await uploadAsset(asset.uri, "photo");
+    await doUploadAndCreate(result.assets[0].uri, "photo");
   };
 
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission needed", "Please allow camera access to take photos.");
+      Alert.alert("Permission needed", "Please allow camera access.");
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.85 });
     if (result.canceled || !result.assets[0]) return;
-    await uploadAsset(result.assets[0].uri, "photo");
+    await doUploadAndCreate(result.assets[0].uri, "photo");
   };
 
-  const uploadAsset = async (uri: string, type: "photo" | "voice") => {
+  const doUploadAndCreate = async (uri: string, type: "photo" | "voice") => {
     setUploading(true);
-    try {
-      const name = uri.split("/").pop() ?? "photo.jpg";
-      const info = await FileSystem.getInfoAsync(uri);
-      const size = info.exists && "size" in info ? (info.size ?? 0) : 0;
-      const ext = name.split(".").pop()?.toLowerCase();
-      const contentType = ext === "png" ? "image/png" : ext === "gif" ? "image/gif" : "image/jpeg";
-
-      const uploadResp = await requestUploadUrl({ name, size, contentType });
-      await fetch(uploadResp.uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: await (await fetch(uri)).blob(),
-      });
-      createItem.mutate(
-        { id: collection.id, data: { mediaUrl: uploadResp.objectPath, type, sortOrder: sorted.length } },
-        {
-          onSuccess: invalidate,
-          onError: () => Alert.alert("Error", "Couldn't save photo. Please try again."),
-        }
-      );
-    } catch {
-      Alert.alert("Upload failed", "Couldn't upload that photo. Please try again.");
-    } finally {
+    const ext = uri.split(".").pop()?.toLowerCase();
+    const contentType = type === "voice" ? "audio/m4a"
+      : ext === "png" ? "image/png" : ext === "gif" ? "image/gif" : "image/jpeg";
+    const objectPath = await uploadFileFromUri(uri, contentType);
+    if (!objectPath) {
+      Alert.alert("Upload failed", "Couldn't upload. Please try again.");
       setUploading(false);
+      return;
     }
+    createItem.mutate(
+      { id: collection.id, data: { mediaUrl: objectPath, type, sortOrder: sorted.length } },
+      {
+        onSuccess: () => { invalidate(); setUploading(false); },
+        onError: () => { Alert.alert("Error", "Couldn't save photo."); setUploading(false); },
+      }
+    );
+  };
+
+  const handleAddFromVault = (vaultItem: VaultItem) => {
+    if (!vaultItem.fileUrl) return;
+    const type = vaultItem.category === "voice_note" ? "voice" : "photo";
+    createItem.mutate(
+      { id: collection.id, data: { mediaUrl: vaultItem.fileUrl, type, sortOrder: sorted.length } },
+      {
+        onSuccess: () => { invalidate(); setVaultPickerOpen(false); },
+        onError: () => Alert.alert("Error", "Couldn't add Vault item."),
+      }
+    );
   };
 
   const handleDeleteItem = (id: number) => {
@@ -274,7 +297,6 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
 
   return (
     <View style={[s.container, { paddingTop: insets.top + WEB_TOP_INSET }]}>
-      {/* Header */}
       <View style={s.header}>
         <Pressable onPress={onBack} hitSlop={8}>
           <Feather name="chevron-left" size={24} color={colors.foreground} />
@@ -282,13 +304,14 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
         <View style={{ flex: 1, marginHorizontal: 12 }}>
           <Text style={[s.title, { fontSize: 20 }]} numberOfLines={1}>{collection.name}</Text>
           {collection.isInMemory && (
-            <Text style={{ color: colors.primary, fontSize: 12, fontFamily: fonts.subheading }}>♥ In Memory</Text>
+            <Text style={{ color: colors.primary, fontSize: 12, fontFamily: fonts.body }}>♥ In Memory</Text>
           )}
         </View>
         <Pressable
-          onPress={() => Alert.alert("Add Photo", undefined, [
+          onPress={() => Alert.alert("Add to Album", undefined, [
             { text: "From Library", onPress: handleAddPhoto },
             { text: "Take Photo", onPress: handleTakePhoto },
+            { text: "From Vault", onPress: () => setVaultPickerOpen(true) },
             { text: "Cancel", style: "cancel" },
           ])}
           style={[s.addBtn, uploading && { opacity: 0.5 }]}
@@ -316,7 +339,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
             <View style={s.empty}>
               <Feather name="camera" size={48} color={colors.mutedForeground} style={{ opacity: 0.3, marginBottom: 12 }} />
               <Text style={[s.emptyTitle, { color: colors.foreground }]}>No photos yet</Text>
-              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>Tap + to add your first memory</Text>
+              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>Tap + to add from Library, Camera, or Vault</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -348,6 +371,14 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
         />
       )}
 
+      {/* Vault picker modal */}
+      <VaultPickerModal
+        visible={vaultPickerOpen}
+        onClose={() => setVaultPickerOpen(false)}
+        onSelect={handleAddFromVault}
+        isPending={createItem.isPending}
+      />
+
       {/* Lightbox */}
       <Modal visible={!!lightboxItem} transparent animationType="fade" onRequestClose={() => setLightboxItem(null)}>
         <View style={s.lightboxBg}>
@@ -363,7 +394,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
           ) : (
             <View style={s.lightboxVoice}>
               <Feather name="mic" size={48} color="#fff" />
-              <Text style={{ color: "#fff", marginTop: 8, fontFamily: fonts.subheading }}>Voice Note</Text>
+              <Text style={{ color: "#fff", marginTop: 8, fontFamily: fonts.body }}>Voice Note</Text>
             </View>
           )}
           {lightboxItem?.caption ? (
@@ -372,7 +403,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
         </View>
       </Modal>
 
-      {/* Caption edit modal */}
+      {/* Caption edit */}
       <Modal visible={!!captionEdit} transparent animationType="slide" onRequestClose={() => setCaptionEdit(null)}>
         <View style={s.captionModalBg}>
           <View style={[s.captionModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -388,16 +419,89 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
             />
             <View style={s.captionModalBtns}>
               <Pressable style={[s.captionBtn, { borderColor: colors.border }]} onPress={() => setCaptionEdit(null)}>
-                <Text style={{ color: colors.mutedForeground, fontFamily: fonts.subheading }}>Cancel</Text>
+                <Text style={{ color: colors.mutedForeground, fontFamily: fonts.body }}>Cancel</Text>
               </Pressable>
               <Pressable style={[s.captionBtn, { backgroundColor: colors.primary }]} onPress={handleSaveCaption}>
-                <Text style={{ color: colors.primaryForeground, fontFamily: fonts.subheading }}>Save</Text>
+                <Text style={{ color: colors.primaryForeground, fontFamily: fonts.body }}>Save</Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
     </View>
+  );
+}
+
+// ─── Vault picker modal ───────────────────────────────────────────────────────
+
+function VaultPickerModal({
+  visible,
+  onClose,
+  onSelect,
+  isPending,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (item: VaultItem) => void;
+  isPending: boolean;
+}) {
+  const colors = useColors();
+  const { data: vaultItems, isLoading } = useGetVaultItems();
+
+  const mediaItems = (vaultItems ?? []).filter(
+    v => v.fileUrl && (v.category === "photo" || v.category === "voice_note" || v.category === "document")
+  );
+
+  const s = makeStyles(colors);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={s.captionModalBg}>
+        <View style={[s.vaultModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <Text style={[s.captionModalTitle, { color: colors.foreground }]}>Add from Vault</Text>
+            <Pressable onPress={onClose}><Feather name="x" size={20} color={colors.mutedForeground} /></Pressable>
+          </View>
+          {isLoading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : mediaItems.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 32 }}>
+              <Feather name="lock" size={36} color={colors.mutedForeground} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <Text style={{ color: colors.mutedForeground, fontFamily: fonts.body, textAlign: "center" }}>
+                No photos or files in your Vault yet.
+              </Text>
+            </View>
+          ) : (
+            <ScrollView>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {mediaItems.map(item => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => !isPending && onSelect(item)}
+                    style={[s.vaultThumb, { backgroundColor: colors.background, borderColor: colors.border }]}
+                  >
+                    {item.category === "photo" ? (
+                      <Image source={{ uri: storageUrl(item.fileUrl!) }} style={{ width: "100%", aspectRatio: 1 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8 }}>
+                        <Feather
+                          name={item.category === "voice_note" ? "mic" : "file-text"}
+                          size={22}
+                          color={colors.primary}
+                        />
+                        <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.body, marginTop: 4, textAlign: "center" }} numberOfLines={2}>
+                          {item.name}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -416,22 +520,56 @@ function CollectionFormModal({
   const queryClient = useQueryClient();
   const create = useCreateMemoryCollection();
   const update = useUpdateMemoryCollection();
+  const { data: people } = useGetPeople();
 
   const [name, setName] = useState(editTarget?.name ?? "");
   const [description, setDescription] = useState(editTarget?.description ?? "");
   const [isInMemory, setIsInMemory] = useState(editTarget?.isInMemory ?? false);
+  const [coverUrl, setCoverUrl] = useState(editTarget?.coverUrl ?? "");
+  const [coverPreview, setCoverPreview] = useState(editTarget?.coverUrl ? storageUrl(editTarget.coverUrl) : "");
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [personId, setPersonId] = useState<number | null>(editTarget?.personId ?? null);
+  const [personPickerOpen, setPersonPickerOpen] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
       setName(editTarget?.name ?? "");
       setDescription(editTarget?.description ?? "");
       setIsInMemory(editTarget?.isInMemory ?? false);
+      setCoverUrl(editTarget?.coverUrl ?? "");
+      setCoverPreview(editTarget?.coverUrl ? storageUrl(editTarget.coverUrl) : "");
+      setPersonId(editTarget?.personId ?? null);
     }
   }, [visible, editTarget]);
 
+  const handlePickCover = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Please allow photo library access.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
+    if (result.canceled || !result.assets[0]) return;
+    const uri = result.assets[0].uri;
+    const ext = uri.split(".").pop()?.toLowerCase();
+    const contentType = ext === "png" ? "image/png" : "image/jpeg";
+    setCoverPreview(uri);
+    setCoverUploading(true);
+    const path = await uploadFileFromUri(uri, contentType);
+    setCoverUploading(false);
+    if (path) setCoverUrl(path);
+    else Alert.alert("Upload failed", "Couldn't upload cover photo.");
+  };
+
   const handleSubmit = () => {
     if (!name.trim()) return;
-    const data = { name: name.trim(), description: description.trim() || undefined, isInMemory };
+    const data = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      coverUrl: coverUrl || undefined,
+      isInMemory,
+      personId: personId ?? null,
+    };
     const onSuccess = () => {
       queryClient.invalidateQueries({ queryKey: getGetMemoryCollectionsQueryKey() });
       onClose();
@@ -444,59 +582,111 @@ function CollectionFormModal({
   };
 
   const isPending = create.isPending || update.isPending;
+  const selectedPerson = people?.find(p => p.id === personId);
   const s = makeStyles(colors);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.captionModalBg}>
-        <View style={[s.captionModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[s.captionModalTitle, { color: colors.foreground }]}>
-            {editTarget ? "Edit Album" : "New Album"}
-          </Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Album name…"
-            placeholderTextColor={colors.mutedForeground}
-            style={[s.captionInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-          />
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Short description (optional)"
-            placeholderTextColor={colors.mutedForeground}
-            style={[s.captionInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background, marginTop: 8 }]}
-          />
-          <Pressable
-            style={[s.inMemoryRow, { borderColor: colors.border }]}
-            onPress={() => setIsInMemory(v => !v)}
-          >
-            <Text style={{ color: colors.foreground, fontFamily: fonts.subheading, flex: 1 }}>
-              ♥  Mark as "In Memory"
+        <ScrollView>
+          <View style={[s.captionModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[s.captionModalTitle, { color: colors.foreground }]}>
+              {editTarget ? "Edit Album" : "New Album"}
             </Text>
-            <View style={[s.toggle, { backgroundColor: isInMemory ? colors.primary : colors.muted }]}>
-              <View style={[s.toggleThumb, { transform: [{ translateX: isInMemory ? 20 : 2 }] }]} />
-            </View>
-          </Pressable>
-          <View style={s.captionModalBtns}>
-            <Pressable style={[s.captionBtn, { borderColor: colors.border }]} onPress={onClose}>
-              <Text style={{ color: colors.mutedForeground, fontFamily: fonts.subheading }}>Cancel</Text>
-            </Pressable>
+
+            {/* Cover photo */}
             <Pressable
-              style={[s.captionBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isPending ? 0.5 : 1 }]}
-              onPress={handleSubmit}
-              disabled={!name.trim() || isPending}
+              onPress={handlePickCover}
+              style={[s.coverPicker, { backgroundColor: colors.background, borderColor: colors.border }]}
             >
-              {isPending ? (
-                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              {coverPreview ? (
+                <Image source={{ uri: coverPreview }} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : (
-                <Text style={{ color: colors.primaryForeground, fontFamily: fonts.subheading }}>
-                  {editTarget ? "Save" : "Create"}
-                </Text>
+                <View style={{ alignItems: "center", gap: 6 }}>
+                  <Feather name="image" size={28} color={colors.mutedForeground} />
+                  <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.body }}>
+                    Tap to add cover photo
+                  </Text>
+                </View>
+              )}
+              {coverUploading && (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" }]}>
+                  <ActivityIndicator color="#fff" />
+                </View>
               )}
             </Pressable>
+
+            {/* Name */}
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Album name…"
+              placeholderTextColor={colors.mutedForeground}
+              style={[s.captionInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+            />
+
+            {/* Description */}
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Short description (optional)"
+              placeholderTextColor={colors.mutedForeground}
+              style={[s.captionInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background, marginTop: 8 }]}
+            />
+
+            {/* Person link */}
+            <Pressable
+              style={[s.personRow, { borderColor: colors.border, backgroundColor: colors.background }]}
+              onPress={() => {
+                if (!people?.length) return;
+                const options = [
+                  { text: "No linked person", onPress: () => setPersonId(null) },
+                  ...(people ?? []).map(p => ({ text: p.name, onPress: () => setPersonId(p.id) })),
+                  { text: "Cancel" },
+                ];
+                Alert.alert("Link to Person", undefined, options as any);
+              }}
+            >
+              <Feather name="users" size={14} color={colors.mutedForeground} />
+              <Text style={{ color: personId ? colors.foreground : colors.mutedForeground, fontFamily: fonts.body, flex: 1, marginLeft: 8 }}>
+                {selectedPerson ? selectedPerson.name : "Link to a person (optional)"}
+              </Text>
+              <Feather name="chevron-down" size={14} color={colors.mutedForeground} />
+            </Pressable>
+
+            {/* In Memory */}
+            <Pressable
+              style={[s.inMemoryRow, { borderColor: colors.border }]}
+              onPress={() => setIsInMemory(v => !v)}
+            >
+              <Text style={{ color: colors.foreground, fontFamily: fonts.body, flex: 1 }}>
+                ♥  Mark as "In Memory"
+              </Text>
+              <View style={[s.toggle, { backgroundColor: isInMemory ? colors.primary : colors.muted }]}>
+                <View style={[s.toggleThumb, { transform: [{ translateX: isInMemory ? 20 : 2 }] }]} />
+              </View>
+            </Pressable>
+
+            <View style={s.captionModalBtns}>
+              <Pressable style={[s.captionBtn, { borderColor: colors.border }]} onPress={onClose}>
+                <Text style={{ color: colors.mutedForeground, fontFamily: fonts.body }}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[s.captionBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isPending ? 0.5 : 1 }]}
+                onPress={handleSubmit}
+                disabled={!name.trim() || isPending}
+              >
+                {isPending ? (
+                  <ActivityIndicator size="small" color={colors.primaryForeground} />
+                ) : (
+                  <Text style={{ color: colors.primaryForeground, fontFamily: fonts.body }}>
+                    {editTarget ? "Save" : "Create"}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -517,7 +707,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       borderBottomColor: colors.border,
     },
     title: { fontSize: 26, fontFamily: fonts.serif, color: colors.foreground },
-    subtitle: { fontSize: 13, fontFamily: fonts.subheading, color: colors.mutedForeground, marginTop: 2 },
+    subtitle: { fontSize: 13, fontFamily: fonts.body, color: colors.mutedForeground, marginTop: 2 },
     addBtn: {
       width: 36,
       height: 36,
@@ -529,7 +719,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     center: { flex: 1, alignItems: "center", justifyContent: "center" },
     empty: { alignItems: "center", justifyContent: "center", paddingTop: 80, paddingHorizontal: 32 },
     emptyTitle: { fontSize: 20, fontFamily: fonts.serif, marginBottom: 6 },
-    emptyText: { fontSize: 14, fontFamily: fonts.subheading, textAlign: "center" },
+    emptyText: { fontSize: 14, fontFamily: fonts.body, textAlign: "center" },
     card: {
       flex: 1,
       borderRadius: 16,
@@ -554,10 +744,10 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       paddingVertical: 3,
       borderRadius: 12,
     },
-    inMemoryText: { fontSize: 10, fontFamily: fonts.subheading },
+    inMemoryText: { fontSize: 10, fontFamily: fonts.body },
     cardBody: { padding: 10 },
     cardTitle: { fontSize: 15, fontFamily: fonts.serif },
-    cardDesc: { fontSize: 12, fontFamily: fonts.subheading, marginTop: 2 },
+    cardDesc: { fontSize: 12, fontFamily: fonts.body, marginTop: 2 },
     photoCell: {
       flex: 1,
       aspectRatio: 1,
@@ -579,7 +769,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       backgroundColor: "rgba(0,0,0,0.55)",
       padding: 4,
     },
-    captionText: { color: "#fff", fontSize: 10, fontFamily: fonts.subheading },
+    captionText: { color: "#fff", fontSize: 10, fontFamily: fonts.body },
     lightboxBg: {
       flex: 1,
       backgroundColor: "rgba(0,0,0,0.95)",
@@ -595,7 +785,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       left: 20,
       right: 20,
       color: "rgba(255,255,255,0.8)",
-      fontFamily: fonts.subheading,
+      fontFamily: fonts.body,
       textAlign: "center",
       fontSize: 14,
     },
@@ -616,7 +806,7 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       borderRadius: 10,
       padding: 12,
       fontSize: 15,
-      fontFamily: fonts.subheading,
+      fontFamily: fonts.body,
       minHeight: 44,
     },
     captionModalBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
@@ -638,5 +828,37 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     },
     toggle: { width: 44, height: 24, borderRadius: 12, justifyContent: "center" },
     toggleThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: "#fff", position: "absolute" },
+    coverPicker: {
+      width: "100%",
+      height: 140,
+      borderRadius: 12,
+      borderWidth: 1,
+      marginBottom: 12,
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    personRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      borderWidth: 1,
+      borderRadius: 10,
+      marginTop: 8,
+    },
+    vaultModal: {
+      padding: 24,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      borderWidth: 1,
+      maxHeight: "70%",
+    },
+    vaultThumb: {
+      width: "30%",
+      aspectRatio: 1,
+      borderRadius: 10,
+      borderWidth: 1,
+      overflow: "hidden",
+    },
   });
 }

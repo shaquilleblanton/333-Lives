@@ -27,7 +27,7 @@ function NativeTabLayout() {
         <Label>Pulse</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memories">
-        <Icon sf={{ default: "photo.on.rectangle", selected: "photo.on.rectangle.fill" }} />
+        <Icon sf={{ default: "photo.on.rectangle", selected: "photo.fill.on.rectangle.fill" }} />
         <Label>Memories</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memos">

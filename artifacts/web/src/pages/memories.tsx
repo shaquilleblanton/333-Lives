@@ -11,8 +11,11 @@ import {
   useReorderCollectionItems,
   getGetMemoryCollectionsQueryKey,
   getGetCollectionItemsQueryKey,
+  useGetPeople,
+  useGetVaultItems,
   type MemoryCollection,
   type CollectionItem,
+  type VaultItem,
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,6 +32,10 @@ import {
   GripVertical,
   Upload,
   Image as ImageIcon,
+  Lock,
+  FileText,
+  Mic,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -37,6 +44,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -151,7 +159,6 @@ function AlbumCard({
       onClick={onClick}
       className="group relative rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm overflow-hidden text-left transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
-      {/* Cover */}
       <div className="relative h-40 bg-muted/30 overflow-hidden">
         {collection.coverUrl ? (
           <img
@@ -184,8 +191,6 @@ function AlbumCard({
           </button>
         </div>
       </div>
-
-      {/* Info */}
       <div className="p-4">
         <h3 className="font-serif text-lg text-foreground truncate">{collection.name}</h3>
         {collection.description && (
@@ -199,7 +204,7 @@ function AlbumCard({
   );
 }
 
-// ─── Album View (items grid + uploader + lightbox) ───────────────────────────
+// ─── Album View ──────────────────────────────────────────────────────────────
 
 function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBack: () => void }) {
   const queryClient = useQueryClient();
@@ -219,6 +224,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [editCaption, setEditCaption] = useState<{ id: number; value: string } | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [vaultPickerOpen, setVaultPickerOpen] = useState(false);
   const dragItemId = useRef<number | null>(null);
 
   const sorted = [...(items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -233,13 +239,25 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
     if (!result) return;
     const type = file.type.startsWith("audio/") ? "voice" : "photo";
     createItem.mutate(
-      {
-        id: collection.id,
-        data: { mediaUrl: result.objectPath, type, sortOrder: (items?.length ?? 0) },
-      },
+      { id: collection.id, data: { mediaUrl: result.objectPath, type, sortOrder: (items?.length ?? 0) } },
       {
         onSuccess: invalidate,
         onError: () => toast({ variant: "destructive", title: "Couldn't save item" }),
+      }
+    );
+  };
+
+  const handleAddVaultItem = (vaultItem: VaultItem) => {
+    if (!vaultItem.fileUrl) return;
+    const type = vaultItem.category === "voice_note" ? "voice" : "photo";
+    createItem.mutate(
+      {
+        id: collection.id,
+        data: { mediaUrl: vaultItem.fileUrl, type, sortOrder: (items?.length ?? 0) },
+      },
+      {
+        onSuccess: () => { invalidate(); setVaultPickerOpen(false); },
+        onError: () => toast({ variant: "destructive", title: "Couldn't add Vault item" }),
       }
     );
   };
@@ -263,7 +281,6 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
     setEditCaption(null);
   };
 
-  // HTML5 drag-to-reorder
   const handleDragStart = (id: number) => { dragItemId.current = id; };
   const handleDragOver = (e: React.DragEvent, id: number) => {
     e.preventDefault();
@@ -280,9 +297,8 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
     const reordered = [...sorted];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
-    const orderedIds = reordered.map(i => i.id);
     reorderItems.mutate(
-      { id: collection.id, data: { orderedIds } },
+      { id: collection.id, data: { orderedIds: reordered.map(i => i.id) } },
       { onSuccess: invalidate }
     );
   };
@@ -310,13 +326,14 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,audio/*"
-            className="hidden"
-            onChange={handleUpload}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*,audio/*" className="hidden" onChange={handleUpload} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setVaultPickerOpen(true)}
+          >
+            <Lock className="w-3.5 h-3.5 mr-1.5" /> From Vault
+          </Button>
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || createItem.isPending}
@@ -344,7 +361,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
         >
           <Upload className="w-12 h-12 text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground font-subheading">Click to add your first photo</p>
-          <p className="text-xs text-muted-foreground/50 font-subheading mt-1">Drag and drop between photos to reorder</p>
+          <p className="text-xs text-muted-foreground/50 font-subheading mt-1">Or use "From Vault" to add existing items · Drag to reorder</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -361,42 +378,26 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
                 dragOverId === item.id ? "ring-2 ring-primary scale-95" : "hover:ring-2 hover:ring-primary/40"
               )}
             >
-              <button
-                className="w-full h-full"
-                onClick={() => setLightboxIndex(idx)}
-              >
+              <button className="w-full h-full" onClick={() => setLightboxIndex(idx)}>
                 {item.type === "photo" ? (
-                  <img
-                    src={storageUrl(item.mediaUrl)}
-                    alt={item.caption ?? ""}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={storageUrl(item.mediaUrl)} alt={item.caption ?? ""} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted/50">
                     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.93V18H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-1.07A7 7 0 0 0 19 10Z" />
-                      </svg>
+                      <MicIcon />
                     </div>
                     <span className="text-xs text-muted-foreground font-subheading">Voice Note</span>
                   </div>
                 )}
               </button>
-
-              {/* Drag handle indicator */}
               <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-60 transition-opacity">
                 <GripVertical className="w-4 h-4 text-white drop-shadow" />
               </div>
-
-              {/* Caption overlay */}
               {item.caption && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-4">
                   <p className="text-white text-xs font-subheading line-clamp-2">{item.caption}</p>
                 </div>
               )}
-
-              {/* Hover actions */}
               <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={e => { e.stopPropagation(); setEditCaption({ id: item.id, value: item.caption ?? "" }); }}
@@ -416,13 +417,11 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
         </div>
       )}
 
-      {/* Caption edit modal */}
+      {/* Caption edit */}
       {editCaption && (
         <Dialog open onOpenChange={() => setEditCaption(null)}>
           <DialogContent className="sm:max-w-sm bg-background border-border">
-            <DialogHeader>
-              <DialogTitle className="font-serif text-xl">Edit Caption</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle className="font-serif text-xl">Edit Caption</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <Textarea
                 value={editCaption.value}
@@ -434,19 +433,22 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
               <div className="flex justify-end gap-3">
                 <Button variant="ghost" onClick={() => setEditCaption(null)}>Cancel</Button>
                 <Button
-                  onClick={() => {
-                    const item = sorted.find(i => i.id === editCaption.id);
-                    if (item) handleSaveCaption(item);
-                  }}
+                  onClick={() => { const item = sorted.find(i => i.id === editCaption.id); if (item) handleSaveCaption(item); }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Save
-                </Button>
+                >Save</Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Vault picker */}
+      <VaultPickerDialog
+        open={vaultPickerOpen}
+        onOpenChange={setVaultPickerOpen}
+        onSelect={handleAddVaultItem}
+        isPending={createItem.isPending}
+      />
 
       {/* Lightbox */}
       {lightboxItem !== null && lightboxIndex !== null && (
@@ -454,13 +456,9 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightboxIndex(null)}
         >
-          <button
-            className="absolute top-4 right-4 text-white/60 hover:text-white p-2"
-            onClick={() => setLightboxIndex(null)}
-          >
+          <button className="absolute top-4 right-4 text-white/60 hover:text-white p-2" onClick={() => setLightboxIndex(null)}>
             <X className="w-6 h-6" />
           </button>
-
           {lightboxIndex > 0 && (
             <button
               className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-2"
@@ -477,35 +475,108 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
               <ChevronRight className="w-8 h-8" />
             </button>
           )}
-
           <div className="flex flex-col items-center gap-4 max-w-4xl max-h-screen p-8" onClick={e => e.stopPropagation()}>
             {lightboxItem.type === "photo" ? (
-              <img
-                src={storageUrl(lightboxItem.mediaUrl)}
-                alt={lightboxItem.caption ?? ""}
-                className="max-h-[75vh] max-w-full rounded-lg object-contain"
-              />
+              <img src={storageUrl(lightboxItem.mediaUrl)} alt={lightboxItem.caption ?? ""} className="max-h-[75vh] max-w-full rounded-lg object-contain" />
             ) : (
               <div className="bg-card rounded-2xl p-8 flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.93V18H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-1.07A7 7 0 0 0 19 10Z" />
-                  </svg>
-                </div>
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center"><MicIcon size={32} /></div>
                 <audio controls src={storageUrl(lightboxItem.mediaUrl)} className="w-72" />
               </div>
             )}
             {lightboxItem.caption && (
               <p className="text-white/80 text-sm font-subheading text-center max-w-lg">{lightboxItem.caption}</p>
             )}
-            <p className="text-white/40 text-xs font-subheading">
-              {lightboxIndex + 1} / {sorted.length}
-            </p>
+            <p className="text-white/40 text-xs font-subheading">{lightboxIndex + 1} / {sorted.length}</p>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Vault Picker Dialog ──────────────────────────────────────────────────────
+
+function VaultPickerDialog({
+  open,
+  onOpenChange,
+  onSelect,
+  isPending,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSelect: (item: VaultItem) => void;
+  isPending: boolean;
+}) {
+  const { data: vaultItems, isLoading } = useGetVaultItems();
+
+  const mediaItems = (vaultItems ?? []).filter(
+    v => v.fileUrl && (v.category === "photo" || v.category === "voice_note" || v.category === "document")
+  );
+
+  const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+    photo: <ImageIcon className="w-4 h-4" />,
+    voice_note: <Mic className="w-4 h-4" />,
+    document: <FileText className="w-4 h-4" />,
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[540px] bg-background border-border max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl flex items-center gap-2">
+            <Lock className="w-5 h-5 text-primary" /> Add from Vault
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground font-subheading pt-1">
+            Pull existing photos, voice notes, or documents from your Secure Vault into this album.
+          </p>
+        </DialogHeader>
+        <div className="pt-2">
+          {isLoading ? (
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="aspect-square rounded-xl bg-muted/30" />)}
+            </div>
+          ) : mediaItems.length === 0 ? (
+            <div className="text-center py-12">
+              <Lock className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground font-subheading text-sm">
+                No photos, voice notes, or documents in your Vault yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {mediaItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => onSelect(item)}
+                  disabled={isPending}
+                  className="group relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-card/30 hover:border-primary/60 hover:bg-primary/5 transition-all text-left"
+                >
+                  {item.category === "photo" ? (
+                    <img src={storageUrl(item.fileUrl!)} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        {CATEGORY_ICONS[item.category]}
+                      </div>
+                      <span className="text-xs font-subheading text-muted-foreground text-center line-clamp-2">{item.name}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                  </div>
+                  {item.category === "photo" && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1.5 pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-[10px] font-subheading line-clamp-1">{item.name}</p>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -525,17 +596,16 @@ function CollectionFormDialog({
   const createCollection = useCreateMemoryCollection();
   const updateCollection = useUpdateMemoryCollection();
   const { uploadFile, isUploading } = useUpload();
+  const { data: people } = useGetPeople();
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const [name, setName] = useState(editTarget?.name ?? "");
-  const [description, setDescription] = useState(editTarget?.description ?? "");
-  const [isInMemory, setIsInMemory] = useState(editTarget?.isInMemory ?? false);
-  const [coverUrl, setCoverUrl] = useState(editTarget?.coverUrl ?? "");
-  const [coverPreview, setCoverPreview] = useState(
-    editTarget?.coverUrl ? storageUrl(editTarget.coverUrl) : ""
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isInMemory, setIsInMemory] = useState(false);
+  const [coverUrl, setCoverUrl] = useState("");
+  const [coverPreview, setCoverPreview] = useState("");
+  const [personId, setPersonId] = useState<string>("none");
 
-  // Reset form when dialog opens / editTarget changes
   const handleOpenChange = useCallback((o: boolean) => {
     if (o) {
       setName(editTarget?.name ?? "");
@@ -543,6 +613,7 @@ function CollectionFormDialog({
       setIsInMemory(editTarget?.isInMemory ?? false);
       setCoverUrl(editTarget?.coverUrl ?? "");
       setCoverPreview(editTarget?.coverUrl ? storageUrl(editTarget.coverUrl) : "");
+      setPersonId(editTarget?.personId ? String(editTarget.personId) : "none");
     }
     onOpenChange(o);
   }, [editTarget, onOpenChange]);
@@ -551,8 +622,7 @@ function CollectionFormDialog({
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    const preview = URL.createObjectURL(file);
-    setCoverPreview(preview);
+    setCoverPreview(URL.createObjectURL(file));
     const result = await uploadFile(file);
     if (result) setCoverUrl(result.objectPath);
   };
@@ -565,6 +635,7 @@ function CollectionFormDialog({
       description: description.trim() || undefined,
       coverUrl: coverUrl || undefined,
       isInMemory,
+      personId: personId !== "none" ? Number(personId) : null,
     };
     const onSuccess = () => {
       queryClient.invalidateQueries({ queryKey: getGetMemoryCollectionsQueryKey() });
@@ -582,11 +653,9 @@ function CollectionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-background border-border">
+      <DialogContent className="sm:max-w-[480px] bg-background border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">
-            {editTarget ? "Edit Album" : "Create Album"}
-          </DialogTitle>
+          <DialogTitle className="font-serif text-2xl">{editTarget ? "Edit Album" : "Create Album"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           {/* Cover photo */}
@@ -626,6 +695,24 @@ function CollectionFormDialog({
             <Textarea value={description} onChange={e => setDescription(e.target.value)} className="bg-card border-border resize-none min-h-[70px]" placeholder="A few words about this collection…" />
           </div>
 
+          {/* Link to person */}
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" /> Link to Person (optional)
+            </label>
+            <Select value={personId} onValueChange={setPersonId}>
+              <SelectTrigger className="bg-card border-border">
+                <SelectValue placeholder="No linked person" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No linked person</SelectItem>
+                {(people ?? []).map(p => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* In Memory toggle */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-card/40 border border-border/50">
             <div>
@@ -647,5 +734,16 @@ function CollectionFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── Inline SVG helpers ───────────────────────────────────────────────────────
+
+function MicIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} fill="currentColor" viewBox="0 0 24 24" className="text-primary">
+      <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+      <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.93V18H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-1.07A7 7 0 0 0 19 10Z" />
+    </svg>
   );
 }

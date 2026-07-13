@@ -262,12 +262,12 @@ export default function TodayScreen() {
 
   const ComingUpStrip = hasReminders ? (
     <View style={[{ backgroundColor: colors.card, borderColor: colors.primary + "33", borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 12, gap: 6 }]}>
-      <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.subheading, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 2 }}>Coming Up</Text>
+      <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.body, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 2 }}>Coming Up</Text>
       {upcomingEvents.map((ev) => (
         <View key={`${ev.personId}-${ev.type}`} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 13 }}>{ev.type === "birthday" ? "🎂" : "🎉"}</Text>
           <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{ev.label}</Text>
-          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.subheading }}>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.body }}>
             {ev.daysUntil === 0 ? "Today!" : ev.daysUntil === 1 ? "Tomorrow" : `In ${ev.daysUntil}d`}
           </Text>
         </View>
@@ -276,7 +276,7 @@ export default function TodayScreen() {
         <View key={oc.personId} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 13 }}>💭</Text>
           <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{oc.personName}</Text>
-          <Text style={{ color: "#F87171", fontSize: 12, fontFamily: fonts.subheading }}>{oc.daysSinceLastMoment}d overdue</Text>
+          <Text style={{ color: "#F87171", fontSize: 12, fontFamily: fonts.body }}>{oc.daysSinceLastMoment}d overdue</Text>
         </View>
       ))}
     </View>
