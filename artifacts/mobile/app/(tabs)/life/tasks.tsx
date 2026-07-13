@@ -261,7 +261,7 @@ function GroupHeader({ label, count, accent }: { label: string; count: number; a
   );
 }
 
-const CATEGORIES_ALL = ["all", "personal", "work", "health", "finance", "relationships", "other"] as const;
+const CATEGORIES_ALL = ["all", "personal", "work", "health", "finance", "family", "other"] as const;
 type CategoryFilter = typeof CATEGORIES_ALL[number];
 
 export default function TasksScreen() {

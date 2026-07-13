@@ -1,20 +1,12 @@
-import { useColorScheme } from "react-native";
-
-import colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 /**
- * Returns the design tokens for the current color scheme.
+ * Returns the design tokens for the currently selected app theme.
  *
- * The returned object contains all color tokens for the active palette
- * plus scheme-independent values like `radius`.
- *
- * constants/colors.ts defines both `light` and `dark` keys (synced from the
- * web artifact's charcoal theme). This hook switches between them based on the
- * device's appearance setting; both keys are identical here since 333 Lives is
- * dark by design.
+ * Reads from ThemeContext (AsyncStorage-persisted, 6 themes mirroring the web
+ * ThemeProvider). Falls back to "charcoal" on first launch.
  */
 export function useColors() {
-  const scheme = useColorScheme();
-  const palette = scheme === "dark" ? colors.dark : colors.light;
-  return { ...palette, radius: colors.radius };
+  const { palette } = useTheme();
+  return palette;
 }

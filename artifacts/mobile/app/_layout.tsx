@@ -28,6 +28,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Expo bundles run outside the web proxy and need absolute URLs to reach the
 // shared API server. The domain is injected at build time.
@@ -72,6 +73,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ThemeProvider>
       <ErrorBoundary>
         <ClerkProvider
           tokenCache={tokenCache}
@@ -88,6 +90,7 @@ export default function RootLayout() {
           </ClerkLoaded>
         </ClerkProvider>
       </ErrorBoundary>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

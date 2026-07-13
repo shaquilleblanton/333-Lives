@@ -19,12 +19,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fonts } from "@/constants/fonts";
+import { THEMES, useTheme } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
@@ -139,15 +139,53 @@ function EditProfileModal({ visible, name: initName, bio: initBio, onClose, onSa
   );
 }
 
+function ThemePickerModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const colors = useColors();
+  const { theme, setTheme } = useTheme();
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <Pressable style={styles.overlay} onPress={onClose} />
+      <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Choose Theme</Text>
+        <View style={{ gap: 10 }}>
+          {THEMES.map(t => (
+            <Pressable
+              key={t.id}
+              onPress={() => { setTheme(t.id); onClose(); }}
+              style={[styles.themeRow, {
+                borderColor: theme === t.id ? colors.primary : colors.border,
+                backgroundColor: theme === t.id ? colors.primary + "10" : colors.background,
+              }]}
+            >
+              {/* Colour preview swatches */}
+              <View style={styles.themePreviews}>
+                {t.preview.map((c, i) => (
+                  <View key={i} style={[styles.themeSwatch, { backgroundColor: c, borderColor: colors.border }]} />
+                ))}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.themeLabel, { color: theme === t.id ? colors.primary : colors.foreground }]}>{t.label}</Text>
+                <Text style={[styles.themeDesc, { color: colors.mutedForeground }]}>{t.description}</Text>
+              </View>
+              {theme === t.id ? <Feather name="check" size={16} color={colors.primary} /> : null}
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ProfileScreen() {
   const colors = useColors();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
   const { signOut } = useClerk();
   const qc = useQueryClient();
   const { data: me, isLoading } = useGetMe();
   const updateMe = useUpdateMe();
   const [editOpen, setEditOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
@@ -221,8 +259,9 @@ export default function ProfileScreen() {
       </Section>
 
       <Section title="APP">
-        <MenuItem icon="moon" label="Appearance" sub="Follows your device setting"
-          rightLabel={scheme === "dark" ? "Dark" : scheme === "light" ? "Light" : "System"} />
+        <MenuItem icon="moon" label="Appearance" sub="Choose your theme"
+          rightLabel={THEMES.find(t => t.id === theme)?.label ?? "Charcoal"}
+          onPress={() => setThemeOpen(true)} />
         <MenuItem icon="info" label="Version" rightLabel="333 Lives" />
       </Section>
 
@@ -238,6 +277,7 @@ export default function ProfileScreen() {
         onSave={handleSave}
         isSaving={updateMe.isPending}
       />
+      <ThemePickerModal visible={themeOpen} onClose={() => setThemeOpen(false)} />
     </ScrollView>
   );
 }
@@ -267,4 +307,9 @@ const styles = StyleSheet.create({
   cancelBtnText: { fontFamily: fonts.sub, fontSize: 14 },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center" },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
+  themeRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, borderWidth: 1, padding: 12 },
+  themePreviews: { flexDirection: "row", gap: 3 },
+  themeSwatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1 },
+  themeLabel: { fontFamily: fonts.bodyMedium, fontSize: 14 },
+  themeDesc: { fontFamily: fonts.sub, fontSize: 11, marginTop: 2 },
 });
