@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetCommunityEvents,
   useCreateCommunityEvent,
-  useUpdateCommunityEvent,
   useDeleteCommunityEvent,
   useRespondToCommunityEvent,
   getGetCommunityEventsQueryKey,
@@ -13,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Calendar, Plus, Users, Star, Trophy, Utensils, Heart,
   PartyPopper, X, ChevronLeft, ChevronRight, CheckCircle2,
-  Clock, MapPin, Send, Unlock, Lock, CalendarCheck, EyeOff,
+  Clock, Send, Unlock, Lock, CalendarCheck, EyeOff, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,28 +27,28 @@ const WINDOW_TYPE_META: Record<WindowType, {
   dotColor: string;
   description: string;
 }> = {
-  open:      { label: "Open",      icon: Unlock,        color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30", dotColor: "bg-emerald-400",  description: "I'm available — come through" },
-  scheduled: { label: "Scheduled", icon: CalendarCheck,  color: "text-primary    bg-primary/10    border-primary/30",     dotColor: "bg-primary/70",  description: "Already committed to something" },
-  locked:    { label: "Locked",    icon: Lock,           color: "text-amber-400  bg-amber-400/10  border-amber-400/30",   dotColor: "bg-amber-400",   description: "Do not disturb" },
-  private:   { label: "Private",   icon: EyeOff,         color: "text-muted-foreground bg-muted/30 border-border",        dotColor: "bg-muted-foreground/40", description: "Hidden from circle" },
+  open:      { label: "Open",      icon: Unlock,       color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30", dotColor: "bg-emerald-400",         description: "I'm available — come through" },
+  scheduled: { label: "Scheduled", icon: CalendarCheck, color: "text-primary    bg-primary/10    border-primary/30",     dotColor: "bg-primary/70",          description: "Already committed to something" },
+  locked:    { label: "Locked",    icon: Lock,          color: "text-amber-400  bg-amber-400/10  border-amber-400/30",   dotColor: "bg-amber-400",           description: "Do not disturb" },
+  private:   { label: "Private",   icon: EyeOff,        color: "text-muted-foreground bg-muted/30 border-border",        dotColor: "bg-muted-foreground/40", description: "Hidden from circle" },
 };
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  graduation:     { label: "Graduation",    icon: Trophy,       color: "text-amber-400  bg-amber-400/10  border-amber-400/30" },
-  cookout:        { label: "Cookout",       icon: Utensils,     color: "text-orange-400 bg-orange-400/10 border-orange-400/30" },
-  reunion:        { label: "Reunion",       icon: Users,        color: "text-primary    bg-primary/10    border-primary/30" },
-  sporting_event: { label: "Sporting",      icon: Star,         color: "text-secondary  bg-secondary/10  border-secondary/30" },
-  birthday:       { label: "Birthday",      icon: PartyPopper,  color: "text-pink-400   bg-pink-400/10   border-pink-400/30" },
-  wedding:        { label: "Wedding",       icon: Heart,        color: "text-rose-400   bg-rose-400/10   border-rose-400/30" },
-  open_day:       { label: "Open Day",      icon: Unlock,       color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
-  request:        { label: "Request",       icon: Send,         color: "text-accent     bg-accent/10     border-accent/30" },
-  other:          { label: "Event",         icon: Calendar,     color: "text-muted-foreground bg-muted/30 border-border" },
+  graduation:     { label: "Graduation",  icon: Trophy,      color: "text-amber-400   bg-amber-400/10  border-amber-400/30" },
+  cookout:        { label: "Cookout",     icon: Utensils,    color: "text-orange-400  bg-orange-400/10 border-orange-400/30" },
+  reunion:        { label: "Reunion",     icon: Users,       color: "text-primary     bg-primary/10    border-primary/30" },
+  sporting_event: { label: "Sporting",   icon: Star,        color: "text-secondary   bg-secondary/10  border-secondary/30" },
+  birthday:       { label: "Birthday",   icon: PartyPopper, color: "text-pink-400    bg-pink-400/10   border-pink-400/30" },
+  wedding:        { label: "Wedding",    icon: Heart,       color: "text-rose-400    bg-rose-400/10   border-rose-400/30" },
+  open_day:       { label: "Open Day",   icon: Unlock,      color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
+  request:        { label: "Request",    icon: Send,        color: "text-accent      bg-accent/10     border-accent/30" },
+  other:          { label: "Event",      icon: Calendar,    color: "text-muted-foreground bg-muted/30 border-border" },
 };
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  open:      { label: "Open",      color: "text-secondary bg-secondary/10 border-secondary/30" },
-  confirmed: { label: "Confirmed", color: "text-primary   bg-primary/10   border-primary/30" },
-  pending:   { label: "Pending",   color: "text-accent    bg-accent/10    border-accent/30" },
+  open:      { label: "Open",      color: "text-secondary   bg-secondary/10   border-secondary/30" },
+  confirmed: { label: "Confirmed", color: "text-primary     bg-primary/10     border-primary/30" },
+  pending:   { label: "Pending",   color: "text-accent      bg-accent/10      border-accent/30" },
   declined:  { label: "Declined",  color: "text-destructive bg-destructive/10 border-destructive/30" },
 };
 
@@ -58,6 +57,14 @@ function getFirstDayOfMonth(year: number, month: number) { return new Date(year,
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+/** Resolve effective windowType, falling back to legacy boolean fields */
+function resolveWT(event: CommunityEvent): WindowType {
+  if (event.windowType && event.windowType !== "scheduled") return event.windowType as WindowType;
+  if (event.isOpenDay) return "open";
+  if (!event.isPublic) return "private";
+  return (event.windowType ?? "scheduled") as WindowType;
+}
 
 function WindowTypeBadge({ wt }: { wt: WindowType }) {
   const meta = WINDOW_TYPE_META[wt] ?? WINDOW_TYPE_META.scheduled;
@@ -84,20 +91,75 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={cn("px-2 py-0.5 rounded-full text-xs border font-subheading", meta.color)}>{meta.label}</span>;
 }
 
+/**
+ * Privacy-tier display rules:
+ *  - private  → muted "Hidden from circle" card (owner can still delete)
+ *  - locked   → amber "Busy" block, no title/description shown
+ *  - open / scheduled → full card
+ */
 function EventCard({
-  event, onSelect, onRespond, onDelete, compact = false,
+  event, onSelect, onDelete, compact = false,
 }: {
   event: CommunityEvent;
   onSelect: (e: CommunityEvent) => void;
-  onRespond: (id: number, status: "confirmed" | "declined") => void;
   onDelete: (id: number) => void;
   compact?: boolean;
 }) {
-  const wt = (event.windowType ?? (event.isOpenDay ? "open" : "scheduled")) as WindowType;
+  const wt = resolveWT(event);
   const meta = WINDOW_TYPE_META[wt] ?? WINDOW_TYPE_META.scheduled;
-  const catMeta = CATEGORY_META[event.category] ?? CATEGORY_META.other;
-  const Icon = catMeta.icon;
 
+  // ── Private: muted indicator — owner only (circle sees nothing)
+  if (wt === "private") {
+    return (
+      <div className="bg-muted/20 border border-dashed border-border rounded-xl p-3 flex items-center gap-3 opacity-60">
+        <EyeOff className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-subheading text-muted-foreground truncate">
+            {compact ? event.title : `${event.title} — hidden from circle`}
+          </p>
+          {!compact && (
+            <p className="text-xs text-muted-foreground/60 mt-0.5">
+              {new Date(event.startDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(event.id); }}
+          className="text-muted-foreground hover:text-destructive shrink-0"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  // ── Locked: "Busy" block — circle sees blocked time, no details
+  if (wt === "locked") {
+    return (
+      <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl p-3 flex items-center gap-3">
+        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-subheading text-amber-400/80">Busy</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            {new Date(event.startDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            {event.startTime ? ` · ${event.startTime}` : ""}
+          </p>
+        </div>
+        <WindowTypeBadge wt="locked" />
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(event.id); }}
+          className="text-muted-foreground hover:text-destructive shrink-0"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  const catMeta = CATEGORY_META[event.category] ?? CATEGORY_META.other;
+  const CatIcon = catMeta.icon;
+
+  // ── Open / Scheduled: full card
   if (compact) {
     return (
       <button
@@ -107,7 +169,9 @@ function EventCard({
         <div className="flex items-center gap-2">
           <span className={cn("w-2 h-2 rounded-full shrink-0", meta.dotColor)} />
           <p className="text-sm text-foreground font-subheading truncate flex-1">{event.title}</p>
-          <span className="text-xs text-muted-foreground shrink-0">{new Date(event.startDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+          <span className="text-xs text-muted-foreground shrink-0">
+            {new Date(event.startDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 mt-1.5 ml-3.5">
           <CategoryBadge category={event.category} />
@@ -125,7 +189,7 @@ function EventCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", catMeta.color)}>
-            <Icon className="w-4 h-4" />
+            <CatIcon className="w-4 h-4" />
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">{event.title}</p>
@@ -153,14 +217,12 @@ const DEFAULT_FORM = {
   title: "", description: "", category: "other" as string,
   startDate: "", endDate: "", startTime: "", endTime: "",
   windowType: "scheduled" as WindowType,
-  isOpenDay: false, requestedBy: "", isPublic: true,
 };
 
 export default function Community() {
   const qc = useQueryClient();
   const { data: events = [], isLoading } = useGetCommunityEvents();
   const createEvent = useCreateCommunityEvent();
-  const updateEvent = useUpdateCommunityEvent();
   const deleteEvent = useDeleteCommunityEvent();
   const respondEvent = useRespondToCommunityEvent();
 
@@ -202,9 +264,8 @@ export default function Community() {
   function filteredEvents() {
     return events.filter(e => {
       if (activeFilter === "all") return true;
-      if (activeFilter === "open") return (e.windowType ?? (e.isOpenDay ? "open" : "scheduled")) === "open";
-      if (activeFilter === "locked") return (e.windowType ?? "scheduled") === "locked";
-      if (activeFilter === "scheduled") return (e.windowType ?? "scheduled") === "scheduled";
+      const wt = resolveWT(e);
+      if (["open","locked","scheduled","private"].includes(activeFilter)) return wt === activeFilter;
       if (activeFilter === "request") return e.category === "request";
       return e.category === activeFilter;
     }).sort((a, b) => a.startDate.localeCompare(b.startDate));
@@ -225,8 +286,14 @@ export default function Community() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const isOpen = form.windowType === "open";
-    await createEvent.mutateAsync({ data: { ...form, isOpenDay: isOpen, isPublic: form.windowType !== "private", userId: 1 } as any });
+    await createEvent.mutateAsync({
+      data: {
+        ...form,
+        isOpenDay: form.windowType === "open",
+        isPublic: form.windowType !== "private",
+        userId: 1,
+      } as any,
+    });
     invalidate();
     setShowForm(false);
     setForm(DEFAULT_FORM);
@@ -285,9 +352,7 @@ export default function Community() {
 
           {isLoading ? (
             <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: 35 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 rounded-lg" />
-              ))}
+              {Array.from({ length: 35 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
             </div>
           ) : (
             <div className="grid grid-cols-7 gap-1">
@@ -295,15 +360,16 @@ export default function Community() {
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const ds = dateStr(day);
-                const dayEvents = eventsOnDate(ds);
+                const dayEvs = eventsOnDate(ds);
                 const isToday = ds === todayStr;
                 const isSelected = selectedDate === ds;
 
-                const wtTypes = dayEvents.map(e => (e.windowType ?? (e.isOpenDay ? "open" : "scheduled")) as WindowType);
-                const hasOpen = wtTypes.includes("open");
-                const hasLocked = wtTypes.includes("locked");
-                const hasScheduled = wtTypes.includes("scheduled");
-                const hasRequest = dayEvents.some(e => e.category === "request" && e.status === "pending");
+                const wtSet = new Set(dayEvs.map(e => resolveWT(e)));
+                const hasOpen      = wtSet.has("open");
+                const hasLocked    = wtSet.has("locked");
+                const hasScheduled = wtSet.has("scheduled");
+                const hasPrivate   = wtSet.has("private");
+                const hasRequest   = dayEvs.some(e => e.category === "request" && e.status === "pending");
 
                 return (
                   <button
@@ -327,10 +393,11 @@ export default function Community() {
                       {day}
                     </span>
                     <div className="flex gap-0.5 flex-wrap mt-0.5">
-                      {hasOpen && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Open" />}
-                      {hasLocked && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Locked" />}
-                      {hasScheduled && <span className="w-1.5 h-1.5 rounded-full bg-primary/70" title="Scheduled" />}
-                      {hasRequest && <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" title="Request" />}
+                      {hasOpen      && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                      {hasLocked    && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                      {hasScheduled && <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />}
+                      {hasPrivate   && <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />}
+                      {hasRequest   && <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
                     </div>
                   </button>
                 );
@@ -340,7 +407,7 @@ export default function Community() {
 
           {/* Legend */}
           <div className="flex flex-wrap gap-4 pt-2">
-            {Object.entries(WINDOW_TYPE_META).filter(([k]) => k !== "private").map(([k, meta]) => (
+            {(Object.entries(WINDOW_TYPE_META) as [WindowType, typeof WINDOW_TYPE_META[WindowType]][]).map(([k, meta]) => (
               <span key={k} className="flex items-center gap-1.5 text-xs text-muted-foreground font-subheading">
                 <span className={cn("w-2 h-2 rounded-full", meta.dotColor)} />
                 {meta.label}
@@ -376,7 +443,7 @@ export default function Community() {
                   </div>
                 ) : (
                   selectedDateEvents.map(ev => (
-                    <EventCard key={ev.id} event={ev} onSelect={setSelectedEvent} onRespond={handleRespond} onDelete={handleDelete} />
+                    <EventCard key={ev.id} event={ev} onSelect={setSelectedEvent} onDelete={handleDelete} />
                   ))
                 )}
               </motion.div>
@@ -392,6 +459,7 @@ export default function Community() {
               { key: "open",      label: "Open" },
               { key: "scheduled", label: "Scheduled" },
               { key: "locked",    label: "Locked" },
+              { key: "private",   label: "Private" },
               { key: "request",   label: "Requests" },
             ].map(f => (
               <button
@@ -421,19 +489,14 @@ export default function Community() {
               </div>
             ) : (
               upcomingEvents.map((ev, i) => (
-                <motion.div
-                  key={ev.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <EventCard event={ev} onSelect={setSelectedEvent} onRespond={handleRespond} onDelete={handleDelete} compact />
+                <motion.div key={ev.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <EventCard event={ev} onSelect={setSelectedEvent} onDelete={handleDelete} compact />
                 </motion.div>
               ))
             )}
           </div>
 
-          {/* Window type quick-add panel */}
+          {/* Open day quick-add */}
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Unlock className="w-4 h-4 text-emerald-400" />
@@ -468,16 +531,12 @@ export default function Community() {
       <AnimatePresence>
         {selectedEvent && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
             onClick={() => setSelectedEvent(null)}
           >
             <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
+              initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
               className="bg-card border border-border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-xl"
               onClick={e => e.stopPropagation()}
             >
@@ -485,7 +544,7 @@ export default function Community() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <CategoryBadge category={selectedEvent.category} />
-                    <WindowTypeBadge wt={(selectedEvent.windowType ?? (selectedEvent.isOpenDay ? "open" : "scheduled")) as WindowType} />
+                    <WindowTypeBadge wt={resolveWT(selectedEvent)} />
                   </div>
                   <h3 className="font-serif text-xl text-foreground">{selectedEvent.title}</h3>
                 </div>
@@ -497,7 +556,9 @@ export default function Community() {
               <div className="space-y-2 text-sm text-muted-foreground font-subheading">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-primary" />
-                  <span>{new Date(selectedEvent.startDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</span>
+                  <span>
+                    {new Date(selectedEvent.startDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                  </span>
                 </div>
                 {selectedEvent.startTime && (
                   <div className="flex items-center gap-2">
@@ -521,29 +582,19 @@ export default function Community() {
 
               {selectedEvent.category === "request" && selectedEvent.status === "pending" && (
                 <div className="flex gap-2 pt-1">
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-subheading gap-1"
-                    onClick={() => handleRespond(selectedEvent.id, "confirmed")}
-                  >
+                  <Button size="sm" className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-subheading gap-1"
+                    onClick={() => handleRespond(selectedEvent.id, "confirmed")}>
                     <CheckCircle2 className="w-3.5 h-3.5" /> Confirm
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/10 font-subheading"
-                    onClick={() => handleRespond(selectedEvent.id, "declined")}
-                  >
+                  <Button size="sm" variant="outline" className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/10 font-subheading"
+                    onClick={() => handleRespond(selectedEvent.id, "declined")}>
                     Decline
                   </Button>
                 </div>
               )}
 
               <div className="pt-1 border-t border-border">
-                <button
-                  onClick={() => handleDelete(selectedEvent.id)}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors font-subheading"
-                >
+                <button onClick={() => handleDelete(selectedEvent.id)} className="text-xs text-muted-foreground hover:text-destructive transition-colors font-subheading">
                   Remove event
                 </button>
               </div>
@@ -556,16 +607,12 @@ export default function Community() {
       <AnimatePresence>
         {showForm && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
             onClick={() => setShowForm(false)}
           >
             <motion.form
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
+              initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
               className="bg-card border border-border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-xl max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
               onSubmit={handleCreate}
@@ -586,7 +633,6 @@ export default function Community() {
                   className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary font-subheading"
                 />
 
-                {/* Window type selector */}
                 <div>
                   <label className="text-xs text-muted-foreground font-subheading mb-2 block uppercase tracking-wider">Availability</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -598,15 +644,16 @@ export default function Community() {
                           type="button"
                           onClick={() => setForm(f => ({ ...f, windowType: wt }))}
                           className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-subheading transition-all",
+                            "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-subheading transition-all text-left",
                             form.windowType === wt
                               ? cn("border-2", meta.color)
                               : "bg-background border-border text-muted-foreground hover:border-primary/30"
                           )}
                         >
                           <Icon className="w-3.5 h-3.5 shrink-0" />
-                          <div className="text-left">
+                          <div>
                             <p className="font-medium">{meta.label}</p>
+                            <p className="text-[9px] opacity-60 leading-tight">{meta.description}</p>
                           </div>
                         </button>
                       );
@@ -628,15 +675,14 @@ export default function Community() {
                   <div>
                     <label className="text-xs text-muted-foreground font-subheading mb-1 block">Start Date</label>
                     <input
-                      type="date"
-                      required
+                      type="date" required
                       value={form.startDate}
                       onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                       className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-subheading"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground font-subheading mb-1 block">End Date (optional)</label>
+                    <label className="text-xs text-muted-foreground font-subheading mb-1 block">End Date (opt.)</label>
                     <input
                       type="date"
                       value={form.endDate}
@@ -649,21 +695,13 @@ export default function Community() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs text-muted-foreground font-subheading mb-1 block">Start Time</label>
-                    <input
-                      type="time"
-                      value={form.startTime}
-                      onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-subheading"
-                    />
+                    <input type="time" value={form.startTime} onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-subheading" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground font-subheading mb-1 block">End Time</label>
-                    <input
-                      type="time"
-                      value={form.endTime}
-                      onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-subheading"
-                    />
+                    <input type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-subheading" />
                   </div>
                 </div>
 

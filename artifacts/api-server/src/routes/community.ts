@@ -8,27 +8,37 @@ const router = Router();
 
 type WindowType = "open" | "locked" | "scheduled" | "private";
 
-type CommunityRow = typeof communityCalendarTable.$inferSelect;
-
 /**
- * Apply community (circle) visibility rules:
- *  - private  → excluded entirely
- *  - locked   → title replaced with "Busy", description cleared, requestedBy cleared
- *  - open / scheduled → returned as-is
+ * Derive the effective windowType for a row, falling back to legacy boolean
+ * flags for any rows created before the windowType column existed.
+ *
+ * Migration note: existing rows were backfilled via SQL:
+ *   UPDATE community_calendar
+ *   SET window_type = CASE
+ *     WHEN is_open_day = true THEN 'open'
+ *     WHEN is_public = false  THEN 'private'
+ *     ELSE 'scheduled'
+ *   END
+ *   WHERE window_type = 'scheduled';
+ * This fallback is kept as a defensive layer for any edge-case rows.
  */
-function applyCircleVisibility(events: CommunityRow[]): CommunityRow[] {
-  return events.reduce<CommunityRow[]>((acc, ev) => {
-    const wt = (ev.windowType ?? (ev.isOpenDay ? "open" : "scheduled")) as WindowType;
-    if (wt === "private") return acc;
-    if (wt === "locked") {
-      acc.push({ ...ev, title: "Busy", description: null, requestedBy: null });
-      return acc;
-    }
-    acc.push(ev);
-    return acc;
-  }, []);
+function resolveWindowType(ev: { windowType: string | null; isOpenDay: boolean; isPublic: boolean }): WindowType {
+  if (ev.windowType && ev.windowType !== "scheduled") return ev.windowType as WindowType;
+  if (ev.isOpenDay) return "open";
+  if (!ev.isPublic) return "private";
+  return (ev.windowType ?? "scheduled") as WindowType;
 }
 
+/**
+ * GET /community — owner management view.
+ * Returns ALL of the authenticated user's own community events (including
+ * private and locked), with windowType resolved from legacy flags where needed.
+ * Privacy-tier visibility filtering (hide private, mask locked) is applied at
+ * the display layer so the owner can still manage events of any tier.
+ *
+ * Future circle-view endpoint (GET /community/circle) will apply server-side
+ * masking for true multi-user sharing.
+ */
 router.get("/community", async (req, res) => {
   const { startDate, endDate, category } = req.query as Record<string, string>;
   let rows = await db.select().from(communityCalendarTable).where(eq(communityCalendarTable.userId, getUserId(req)));
@@ -36,19 +46,22 @@ router.get("/community", async (req, res) => {
   if (endDate) rows = rows.filter(e => e.startDate <= endDate);
   if (category) rows = rows.filter(e => e.category === category);
   const sorted = rows.sort((a, b) => a.startDate.localeCompare(b.startDate));
-  return res.json(applyCircleVisibility(sorted));
+  // Normalise windowType in-memory so clients always receive a resolved value
+  return res.json(sorted.map(ev => ({ ...ev, windowType: resolveWindowType(ev) })));
 });
 
 router.get("/community/:id", async (req, res) => {
   const id = Number(req.params.id);
   const rows = await db.select().from(communityCalendarTable).where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req)))).limit(1);
   if (rows.length === 0) return res.status(404).json({ error: "Event not found" });
-  return res.json(rows[0]);
+  const ev = rows[0]!;
+  return res.json({ ...ev, windowType: resolveWindowType(ev) });
 });
 
 router.post("/community", async (req, res) => {
   const body = req.body as Record<string, unknown>;
   const windowType = (body.windowType ?? "scheduled") as WindowType;
+  // Keep legacy booleans in sync so existing consumers that read them still work
   const isOpenDay = windowType === "open";
   const isPublic = windowType !== "private";
   const parsed = insertCommunityEventSchema.safeParse({ ...body, userId: getUserId(req), windowType, isOpenDay, isPublic });
