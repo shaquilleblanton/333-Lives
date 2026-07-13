@@ -1450,6 +1450,103 @@ export interface UpsertStoryAnswerBody {
   audioUrl?: string | null;
 }
 
+export type MediaAttachmentType = typeof MediaAttachmentType[keyof typeof MediaAttachmentType];
+
+
+export const MediaAttachmentType = {
+  photo: 'photo',
+  voice: 'voice',
+  doc: 'doc',
+} as const;
+
+export interface MediaAttachment {
+  type: MediaAttachmentType;
+  objectPath: string;
+  name: string;
+}
+
+export type LifeEventCategory = typeof LifeEventCategory[keyof typeof LifeEventCategory];
+
+
+export const LifeEventCategory = {
+  education: 'education',
+  career: 'career',
+  family: 'family',
+  health: 'health',
+  home: 'home',
+  travel: 'travel',
+  loss: 'loss',
+  achievement: 'achievement',
+  relationship: 'relationship',
+  spiritual: 'spiritual',
+  other: 'other',
+} as const;
+
+export interface LifeEvent {
+  id: number;
+  userId: number;
+  title: string;
+  date: string;
+  approximateDate: boolean;
+  category: LifeEventCategory;
+  description?: string | null;
+  mediaUrls: MediaAttachment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateLifeEventBodyCategory = typeof CreateLifeEventBodyCategory[keyof typeof CreateLifeEventBodyCategory];
+
+
+export const CreateLifeEventBodyCategory = {
+  education: 'education',
+  career: 'career',
+  family: 'family',
+  health: 'health',
+  home: 'home',
+  travel: 'travel',
+  loss: 'loss',
+  achievement: 'achievement',
+  relationship: 'relationship',
+  spiritual: 'spiritual',
+  other: 'other',
+} as const;
+
+export interface CreateLifeEventBody {
+  title: string;
+  date: string;
+  approximateDate?: boolean;
+  category: CreateLifeEventBodyCategory;
+  description?: string;
+  mediaUrls?: MediaAttachment[];
+}
+
+export type UpdateLifeEventBodyCategory = typeof UpdateLifeEventBodyCategory[keyof typeof UpdateLifeEventBodyCategory];
+
+
+export const UpdateLifeEventBodyCategory = {
+  education: 'education',
+  career: 'career',
+  family: 'family',
+  health: 'health',
+  home: 'home',
+  travel: 'travel',
+  loss: 'loss',
+  achievement: 'achievement',
+  relationship: 'relationship',
+  spiritual: 'spiritual',
+  other: 'other',
+} as const;
+
+export interface UpdateLifeEventBody {
+  title?: string;
+  date?: string;
+  approximateDate?: boolean;
+  category?: UpdateLifeEventBodyCategory;
+  description?: string;
+  mediaUrls?: MediaAttachment[];
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

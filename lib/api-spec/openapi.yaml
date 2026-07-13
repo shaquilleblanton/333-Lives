@@ -2361,6 +2361,80 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /life-events:
+    get:
+      tags: [life-events]
+      operationId: getLifeEvents
+      summary: Get all life events for the current user
+      responses:
+        "200":
+          description: List of life events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LifeEvent"
+    post:
+      tags: [life-events]
+      operationId: createLifeEvent
+      summary: Create a new life event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLifeEventBody"
+      responses:
+        "201":
+          description: Created life event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifeEvent"
+
+  /life-events/{id}:
+    put:
+      tags: [life-events]
+      operationId: updateLifeEvent
+      summary: Update a life event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLifeEventBody"
+      responses:
+        "200":
+          description: Updated life event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifeEvent"
+    delete:
+      tags: [life-events]
+      operationId: deleteLifeEvent
+      summary: Delete a life event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -3984,3 +4058,85 @@ components:
         audioUrl:
           type: string
           nullable: true
+
+    MediaAttachment:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [photo, voice, doc]
+        objectPath:
+          type: string
+        name:
+          type: string
+      required: [type, objectPath, name]
+
+    LifeEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        date:
+          type: string
+        approximateDate:
+          type: boolean
+        category:
+          type: string
+          enum: [education, career, family, health, home, travel, loss, achievement, relationship, spiritual, other]
+        description:
+          type: string
+          nullable: true
+        mediaUrls:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaAttachment"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, title, date, approximateDate, category, mediaUrls, createdAt, updatedAt]
+
+    CreateLifeEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+        approximateDate:
+          type: boolean
+        category:
+          type: string
+          enum: [education, career, family, health, home, travel, loss, achievement, relationship, spiritual, other]
+        description:
+          type: string
+        mediaUrls:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaAttachment"
+      required: [title, date, category]
+
+    UpdateLifeEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+        approximateDate:
+          type: boolean
+        category:
+          type: string
+          enum: [education, career, family, health, home, travel, loss, achievement, relationship, spiritual, other]
+        description:
+          type: string
+        mediaUrls:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaAttachment"

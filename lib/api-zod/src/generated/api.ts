@@ -2473,3 +2473,109 @@ export const DeleteStoryAnswerResponse = zod.object({
 })
 
 
+/**
+ * @summary Get all life events for the current user
+ */
+export const GetLifeEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.string(),
+  "approximateDate": zod.boolean(),
+  "category": zod.enum(['education', 'career', 'family', 'health', 'home', 'travel', 'loss', 'achievement', 'relationship', 'spiritual', 'other']),
+  "description": zod.string().nullish(),
+  "mediaUrls": zod.array(zod.object({
+  "type": zod.enum(['photo', 'voice', 'doc']),
+  "objectPath": zod.string(),
+  "name": zod.string()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetLifeEventsResponse = zod.array(GetLifeEventsResponseItem)
+
+
+/**
+ * @summary Create a new life event
+ */
+export const CreateLifeEventBody = zod.object({
+  "title": zod.string(),
+  "date": zod.string(),
+  "approximateDate": zod.boolean().optional(),
+  "category": zod.enum(['education', 'career', 'family', 'health', 'home', 'travel', 'loss', 'achievement', 'relationship', 'spiritual', 'other']),
+  "description": zod.string().optional(),
+  "mediaUrls": zod.array(zod.object({
+  "type": zod.enum(['photo', 'voice', 'doc']),
+  "objectPath": zod.string(),
+  "name": zod.string()
+})).optional()
+})
+
+export const CreateLifeEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.string(),
+  "approximateDate": zod.boolean(),
+  "category": zod.enum(['education', 'career', 'family', 'health', 'home', 'travel', 'loss', 'achievement', 'relationship', 'spiritual', 'other']),
+  "description": zod.string().nullish(),
+  "mediaUrls": zod.array(zod.object({
+  "type": zod.enum(['photo', 'voice', 'doc']),
+  "objectPath": zod.string(),
+  "name": zod.string()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a life event
+ */
+export const UpdateLifeEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateLifeEventBody = zod.object({
+  "title": zod.string().optional(),
+  "date": zod.string().optional(),
+  "approximateDate": zod.boolean().optional(),
+  "category": zod.enum(['education', 'career', 'family', 'health', 'home', 'travel', 'loss', 'achievement', 'relationship', 'spiritual', 'other']).optional(),
+  "description": zod.string().optional(),
+  "mediaUrls": zod.array(zod.object({
+  "type": zod.enum(['photo', 'voice', 'doc']),
+  "objectPath": zod.string(),
+  "name": zod.string()
+})).optional()
+})
+
+export const UpdateLifeEventResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "date": zod.string(),
+  "approximateDate": zod.boolean(),
+  "category": zod.enum(['education', 'career', 'family', 'health', 'home', 'travel', 'loss', 'achievement', 'relationship', 'spiritual', 'other']),
+  "description": zod.string().nullish(),
+  "mediaUrls": zod.array(zod.object({
+  "type": zod.enum(['photo', 'voice', 'doc']),
+  "objectPath": zod.string(),
+  "name": zod.string()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a life event
+ */
+export const DeleteLifeEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteLifeEventResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
