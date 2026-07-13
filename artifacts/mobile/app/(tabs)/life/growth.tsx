@@ -342,7 +342,21 @@ function JournalSection({ colors }: { colors: ReturnType<typeof useColors> }) {
                 </Pressable>
               ))}
             </View>
-            <TextInput value={content} onChangeText={setContent} placeholder="What's on your mind today?" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={6} textAlignVertical="top" autoFocus
+            {/* Writing prompts */}
+            <View style={{ gap: 6 }}>
+              <Text style={[sStyles.fieldLabel, { color: colors.mutedForeground }]}>Prompts</Text>
+              {[
+                "What am I proud of today?",
+                "What challenged me and what did I learn?",
+                "What do I want to create or build this week?",
+              ].map(prompt => (
+                <Pressable key={prompt} onPress={() => setContent(c => c ? c + "\n\n" + prompt + "\n" : prompt + "\n")}
+                  style={[sStyles.promptBtn, { borderColor: colors.border, backgroundColor: colors.muted + "30" }]}>
+                  <Text style={[sStyles.promptText, { color: colors.mutedForeground }]}>{prompt}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <TextInput value={content} onChangeText={setContent} placeholder="What's on your mind today?" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={6} textAlignVertical="top"
               style={[sStyles.input, sStyles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
             <Pressable onPress={handleCreate} disabled={!content.trim() || createEntry.isPending}
               style={[sStyles.saveBtn, { backgroundColor: colors.primary, opacity: !content.trim() || createEntry.isPending ? 0.5 : 1 }]}>
@@ -435,6 +449,8 @@ const sStyles = StyleSheet.create({
   input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontFamily: fonts.body, fontSize: 14 },
   textArea: { minHeight: 140, textAlignVertical: "top" },
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
+  promptBtn: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
+  promptText: { fontFamily: fonts.sub, fontSize: 12, lineHeight: 16 },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
   pillText: { fontFamily: fonts.sub, fontSize: 12, textTransform: "capitalize" },

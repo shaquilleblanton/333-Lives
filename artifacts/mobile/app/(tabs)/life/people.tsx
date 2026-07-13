@@ -79,7 +79,7 @@ function PersonCard({ person, onPress }: { person: Person; onPress: () => void }
   );
 }
 
-function PersonDetailModal({ person, onClose, onDeleted }: { person: Person; onClose: () => void; onDeleted: () => void }) {
+function PersonDetailModal({ person, onClose, onDeleted, onEdit }: { person: Person; onClose: () => void; onDeleted: () => void; onEdit: () => void }) {
   const colors = useColors();
   const qc = useQueryClient();
   const { data: moments = [], isLoading } = useGetRelationshipMoments(person.id);
@@ -160,6 +160,15 @@ function PersonDetailModal({ person, onClose, onDeleted }: { person: Person; onC
                 <Text style={[styles.infoText, { color: colors.foreground }]}>{person.bio}</Text>
               </View>
             ) : null}
+
+            {/* Edit person button */}
+            <Pressable
+              onPress={onEdit}
+              style={({ pressed }) => [styles.editPersonBtn, { borderColor: colors.border, backgroundColor: pressed ? colors.muted + "40" : colors.card }]}
+            >
+              <Feather name="edit-2" size={14} color={colors.mutedForeground} />
+              <Text style={[styles.editPersonText, { color: colors.mutedForeground }]}>Edit Person</Text>
+            </Pressable>
 
             {/* Timeline header */}
             <View style={styles.timelineHeader}>
@@ -399,7 +408,18 @@ export default function PeopleScreen() {
         renderItem={({ item }) => <PersonCard person={item} onPress={() => setSelectedPerson(item)} />}
       />
 
-      {selectedPerson ? <PersonDetailModal person={selectedPerson} onClose={() => setSelectedPerson(null)} onDeleted={() => setSelectedPerson(null)} /> : null}
+      {selectedPerson ? (
+        <PersonDetailModal
+          person={selectedPerson}
+          onClose={() => setSelectedPerson(null)}
+          onDeleted={() => setSelectedPerson(null)}
+          onEdit={() => {
+            setEditing(selectedPerson);
+            setSelectedPerson(null);
+            setFormOpen(true);
+          }}
+        />
+      ) : null}
       <PersonFormModal
         visible={formOpen}
         person={editing}
@@ -447,6 +467,8 @@ const styles = StyleSheet.create({
   infoCard: { borderRadius: 14, borderWidth: 1, padding: 14 },
   infoLabel: { fontFamily: fonts.subSemibold, fontSize: 10, letterSpacing: 1.5, marginBottom: 8, textTransform: "uppercase" },
   infoText: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
+  editPersonBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 12, borderWidth: 1, paddingVertical: 10 },
+  editPersonText: { fontFamily: fonts.sub, fontSize: 13 },
   timelineHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" },
   addLink: { fontFamily: fonts.subSemibold, fontSize: 13 },

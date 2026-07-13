@@ -105,6 +105,13 @@ function MessageCard({ msg }: { msg: Message }) {
   );
 }
 
+type MsgType = "text" | "audio" | "video";
+const MSG_TYPES: { value: MsgType; icon: keyof typeof Feather.glyphMap; label: string }[] = [
+  { value: "text",  icon: "file-text", label: "Text"  },
+  { value: "audio", icon: "mic",       label: "Audio" },
+  { value: "video", icon: "video",     label: "Video" },
+];
+
 function ComposeModal({ visible, onClose, onSave, isSaving }: {
   visible: boolean;
   onClose: () => void;
@@ -115,10 +122,11 @@ function ComposeModal({ visible, onClose, onSave, isSaving }: {
   const [title, setTitle] = useState("");
   const [recipient, setRecipient] = useState("");
   const [unlockDate, setUnlockDate] = useState("");
+  const [msgType, setMsgType] = useState<MsgType>("text");
   const [content, setContent] = useState("");
   const [passcode, setPasscode] = useState("");
 
-  function reset() { setTitle(""); setRecipient(""); setUnlockDate(""); setContent(""); setPasscode(""); }
+  function reset() { setTitle(""); setRecipient(""); setUnlockDate(""); setMsgType("text"); setContent(""); setPasscode(""); }
 
   function submit() {
     if (!title.trim() || !unlockDate.trim()) return;
@@ -127,7 +135,7 @@ function ComposeModal({ visible, onClose, onSave, isSaving }: {
     onSave({
       title: title.trim(),
       recipientName: recipient.trim() || undefined,
-      type: "text",
+      type: msgType,
       content: content.trim() || undefined,
       unlockDate: dateObj.toISOString(),
       passcode: passcode.trim() || undefined,
@@ -151,10 +159,34 @@ function ComposeModal({ visible, onClose, onSave, isSaving }: {
           <View style={{ flexDirection: "row", gap: 10 }}>
             <TextInput value={recipient} onChangeText={setRecipient} placeholder="Recipient (optional)" placeholderTextColor={colors.mutedForeground + "99"}
               style={[styles.input, { flex: 1, backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
-            <TextInput value={unlockDate} onChangeText={setUnlockDate} placeholder="Unlock date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground + "99"}
+            <TextInput value={unlockDate} onChangeText={setUnlockDate} placeholder="YYYY-MM-DD (unlock date)" placeholderTextColor={colors.mutedForeground + "99"}
               style={[styles.input, { flex: 1, backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
           </View>
-          <TextInput value={content} onChangeText={setContent} placeholder="Write your message…" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={8} textAlignVertical="top"
+
+          {/* Message type selector */}
+          <View>
+            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Type</Text>
+            <View style={styles.typePills}>
+              {MSG_TYPES.map(t => (
+                <Pressable
+                  key={t.value}
+                  onPress={() => setMsgType(t.value)}
+                  style={[styles.typePill, {
+                    borderColor: msgType === t.value ? colors.primary : colors.border,
+                    backgroundColor: msgType === t.value ? colors.primary + "1A" : "transparent",
+                    flex: 1,
+                  }]}
+                >
+                  <Feather name={t.icon} size={14} color={msgType === t.value ? colors.primary : colors.mutedForeground} />
+                  <Text style={[styles.typePillText, { color: msgType === t.value ? colors.primary : colors.mutedForeground }]}>{t.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <TextInput value={content} onChangeText={setContent}
+            placeholder={msgType === "text" ? "Write your message…" : `Describe this ${msgType} message or add a note…`}
+            placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={8} textAlignVertical="top"
             style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
           <TextInput value={passcode} onChangeText={setPasscode} placeholder="Secret passcode (optional)" placeholderTextColor={colors.mutedForeground + "99"} secureTextEntry
             style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
@@ -251,6 +283,10 @@ const styles = StyleSheet.create({
   emptySub: { fontFamily: fonts.sub, fontSize: 14, textAlign: "center" },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, paddingTop: 60 },
   modalTitle: { fontFamily: fonts.serif, fontSize: 20 },
+  fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 },
+  typePills: { flexDirection: "row", gap: 8 },
+  typePill: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
+  typePillText: { fontFamily: fonts.sub, fontSize: 13 },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center" },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
 });

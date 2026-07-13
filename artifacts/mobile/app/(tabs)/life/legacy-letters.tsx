@@ -175,6 +175,8 @@ function LetterDetailModal({ letter, onClose, onSeal, onUnseal, onEdit, onDelete
   );
 }
 
+type MediaType = "text" | "voice";
+
 function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
   visible: boolean;
   letter: LegacyLetter | null;
@@ -189,6 +191,7 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
   const [recipientName, setRecipientName] = useState(letter?.recipientName ?? "");
   const [recipientRelation, setRecipientRelation] = useState(letter?.recipientRelation ?? "");
   const [triggerType, setTriggerType] = useState<TriggerType>((letter?.triggerType as TriggerType) ?? "date");
+  const [mediaType, setMediaType] = useState<MediaType>((letter?.mediaType as MediaType) ?? "text");
   const [content, setContent] = useState(letter?.content ?? "");
 
   React.useEffect(() => {
@@ -197,20 +200,23 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
       setRecipientName(letter?.recipientName ?? "");
       setRecipientRelation(letter?.recipientRelation ?? "");
       setTriggerType((letter?.triggerType as TriggerType) ?? "date");
+      setMediaType((letter?.mediaType as MediaType) ?? "text");
       setContent(letter?.content ?? "");
     }
   }, [visible, letter]);
 
-  function reset() { setTitle(""); setRecipientName(""); setRecipientRelation(""); setTriggerType("date"); setContent(""); }
+  function reset() { setTitle(""); setRecipientName(""); setRecipientRelation(""); setTriggerType("date"); setMediaType("text"); setContent(""); }
 
   function submit() {
-    if (!title.trim() || !recipientName.trim() || !content.trim()) return;
+    if (!title.trim() || !recipientName.trim()) return;
+    if (mediaType === "text" && !content.trim()) return;
     onSave({
       title: title.trim(),
       recipientName: recipientName.trim(),
       recipientRelation: recipientRelation.trim() || undefined,
       triggerType,
-      content: content.trim(),
+      mediaType,
+      content: content.trim() || undefined,
       status: "draft",
       isSealed: false,
     });
@@ -245,10 +251,34 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
               </Pressable>
             ))}
           </View>
-          <TextInput value={content} onChangeText={setContent} placeholder="Write your letter…" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={14} textAlignVertical="top"
-            style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
-          <Pressable onPress={submit} disabled={!title.trim() || !recipientName.trim() || !content.trim() || isSaving}
-            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !recipientName.trim() || !content.trim() || isSaving ? 0.5 : 1 }]}>
+
+          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Format</Text>
+          <View style={[styles.pills, { marginBottom: 4 }]}>
+            {(["text", "voice"] as MediaType[]).map(m => (
+              <Pressable key={m} onPress={() => setMediaType(m)}
+                style={[styles.pill, { borderColor: mediaType === m ? colors.primary : colors.border, backgroundColor: mediaType === m ? colors.primary + "1A" : "transparent" }]}>
+                <Feather name={m === "text" ? "file-text" : "mic"} size={12} color={mediaType === m ? colors.primary : colors.mutedForeground} style={{ marginRight: 4 }} />
+                <Text style={[styles.pillText, { color: mediaType === m ? colors.primary : colors.mutedForeground }]}>{m === "text" ? "Written" : "Voice Recording"}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {mediaType === "text" ? (
+            <TextInput value={content} onChangeText={setContent} placeholder="Write your letter…" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={14} textAlignVertical="top"
+              style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
+          ) : (
+            <View style={[styles.voiceNote, { backgroundColor: colors.card, borderColor: colors.primary + "40" }]}>
+              <Feather name="mic" size={28} color={colors.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.voiceNoteTitle, { color: colors.foreground }]}>Voice Letter</Text>
+              <Text style={[styles.voiceNoteSub, { color: colors.mutedForeground }]}>
+                Add a note about what this voice letter contains, then record on your device and attach the file.
+              </Text>
+              <TextInput value={content} onChangeText={setContent} placeholder="Describe or transcribe this voice letter…" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={4} textAlignVertical="top"
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground, marginTop: 12 }]} />
+            </View>
+          )}
+          <Pressable onPress={submit} disabled={!title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving}
+            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving ? 0.5 : 1 }]}>
             {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{isEditing ? "Save Changes" : "Save as Draft"}</Text>}
           </Pressable>
         </ScrollView>
@@ -402,6 +432,9 @@ const styles = StyleSheet.create({
   letterContent: { fontFamily: fonts.body, fontSize: 15, lineHeight: 24 },
   actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, borderWidth: 1, paddingVertical: 14 },
   actionBtnText: { fontFamily: fonts.subSemibold, fontSize: 14 },
+  voiceNote: { borderRadius: 14, borderWidth: 1, borderStyle: "dashed", padding: 20, alignItems: "center" },
+  voiceNoteTitle: { fontFamily: fonts.serif, fontSize: 17, marginBottom: 6 },
+  voiceNoteSub: { fontFamily: fonts.sub, fontSize: 13, textAlign: "center", lineHeight: 18 },
   input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontFamily: fonts.body, fontSize: 14 },
   textArea: { minHeight: 220, textAlignVertical: "top" },
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
