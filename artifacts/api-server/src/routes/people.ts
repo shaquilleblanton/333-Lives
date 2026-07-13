@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { getUserId } from "../middlewares/auth";
+import { getUserId, requireOwner } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { peopleTable, insertPersonSchema, updatePersonSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
-
 const router = Router();
 
 router.get("/people", async (req, res) => {
@@ -29,8 +28,51 @@ router.put("/people/:id", async (req, res) => {
   const id = Number(req.params.id);
   const parsed = updatePersonSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
-  const updated = await db.update(peopleTable).set({ ...parsed.data, updatedAt: new Date() }).where(and(eq(peopleTable.id, id), eq(peopleTable.userId, getUserId(req)))).returning();
+
+  // Strip circle-linking fields — only the app owner may set these (see PATCH /:id/circle-link).
+  // Allowing any user to set linkedUserId would let them unilaterally include another account
+  // in their Pulse circle and read that person's private posts (IDOR risk).
+  const { linkedUserId: _l, isCircle: _c, ...safeData } = parsed.data;
+
+  const updated = await db
+    .update(peopleTable)
+    .set({ ...safeData, updatedAt: new Date() })
+    .where(and(eq(peopleTable.id, id), eq(peopleTable.userId, getUserId(req))))
+    .returning();
   if (updated.length === 0) return res.status(404).json({ error: "Person not found" });
+  return res.json(updated[0]);
+});
+
+// PATCH /people/:id/circle-link — owner-only: link a Person to a user account and toggle circle membership.
+// This is the sole authorized path for setting linkedUserId/isCircle. The owner controls which family
+// members can see each other's Pulse posts.
+router.patch("/people/:id/circle-link", requireOwner, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+
+  const { linkedUserId, isCircle } = req.body as { linkedUserId?: number | null; isCircle?: boolean };
+
+  if (linkedUserId !== undefined && linkedUserId !== null && !Number.isInteger(linkedUserId)) {
+    return res.status(400).json({ error: "linkedUserId must be an integer or null" });
+  }
+  if (isCircle !== undefined && typeof isCircle !== "boolean") {
+    return res.status(400).json({ error: "isCircle must be a boolean" });
+  }
+
+  // Verify the person exists (owner manages circles across all users)
+  const existing = await db.select({ id: peopleTable.id }).from(peopleTable).where(eq(peopleTable.id, id)).limit(1);
+  if (existing.length === 0) return res.status(404).json({ error: "Person not found" });
+
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (linkedUserId !== undefined) patch.linkedUserId = linkedUserId;
+  if (isCircle !== undefined) patch.isCircle = isCircle;
+
+  const updated = await db
+    .update(peopleTable)
+    .set(patch)
+    .where(eq(peopleTable.id, id))
+    .returning();
+
   return res.json(updated[0]);
 });
 
