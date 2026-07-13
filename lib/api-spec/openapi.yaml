@@ -2545,6 +2545,218 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /memory-collections:
+    get:
+      tags: [memory-collections]
+      operationId: getMemoryCollections
+      summary: List all memory collections
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemoryCollection"
+    post:
+      tags: [memory-collections]
+      operationId: createMemoryCollection
+      summary: Create a memory collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemoryCollectionBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemoryCollection"
+
+  /memory-collections/{id}:
+    get:
+      tags: [memory-collections]
+      operationId: getMemoryCollection
+      summary: Get a single memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemoryCollection"
+    patch:
+      tags: [memory-collections]
+      operationId: updateMemoryCollection
+      summary: Update a memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemoryCollectionBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemoryCollection"
+    delete:
+      tags: [memory-collections]
+      operationId: deleteMemoryCollection
+      summary: Delete a memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /memory-collections/{id}/items:
+    get:
+      tags: [memory-collections]
+      operationId: getCollectionItems
+      summary: List items in a memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionItem"
+    post:
+      tags: [memory-collections]
+      operationId: createCollectionItem
+      summary: Add an item to a memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCollectionItemBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionItem"
+
+  /memory-collections/{id}/items/reorder:
+    post:
+      tags: [memory-collections]
+      operationId: reorderCollectionItems
+      summary: Bulk reorder items by providing an ordered list of IDs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderItemsBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /memory-collections/{id}/items/{itemId}:
+    patch:
+      tags: [memory-collections]
+      operationId: updateCollectionItem
+      summary: Update caption or sortOrder of an item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCollectionItemBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionItem"
+    delete:
+      tags: [memory-collections]
+      operationId: deleteCollectionItem
+      summary: Remove an item from a memory collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -4444,3 +4656,117 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MediaAttachment"
+
+    MemoryCollection:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverUrl:
+          type: string
+          nullable: true
+        personId:
+          type: integer
+          nullable: true
+        isInMemory:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, name, isInMemory, createdAt, updatedAt]
+
+    CreateMemoryCollectionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+        personId:
+          type: integer
+          nullable: true
+        isInMemory:
+          type: boolean
+      required: [name]
+
+    UpdateMemoryCollectionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+          nullable: true
+        personId:
+          type: integer
+          nullable: true
+        isInMemory:
+          type: boolean
+
+    CollectionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        collectionId:
+          type: integer
+        mediaUrl:
+          type: string
+        type:
+          type: string
+          enum: [photo, voice]
+        caption:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, collectionId, mediaUrl, type, sortOrder, createdAt]
+
+    CreateCollectionItemBody:
+      type: object
+      properties:
+        mediaUrl:
+          type: string
+        type:
+          type: string
+          enum: [photo, voice]
+        caption:
+          type: string
+        sortOrder:
+          type: integer
+      required: [mediaUrl]
+
+    UpdateCollectionItemBody:
+      type: object
+      properties:
+        caption:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+
+    ReorderItemsBody:
+      type: object
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: integer
+      required: [orderedIds]

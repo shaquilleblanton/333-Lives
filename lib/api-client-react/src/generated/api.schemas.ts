@@ -1691,6 +1691,76 @@ export interface UpdateLifeEventBody {
   mediaUrls?: MediaAttachment[];
 }
 
+export interface MemoryCollection {
+  id: number;
+  userId: number;
+  name: string;
+  description?: string | null;
+  coverUrl?: string | null;
+  personId?: number | null;
+  isInMemory: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMemoryCollectionBody {
+  name: string;
+  description?: string;
+  coverUrl?: string;
+  personId?: number | null;
+  isInMemory?: boolean;
+}
+
+export interface UpdateMemoryCollectionBody {
+  name?: string;
+  description?: string;
+  coverUrl?: string | null;
+  personId?: number | null;
+  isInMemory?: boolean;
+}
+
+export type CollectionItemType = typeof CollectionItemType[keyof typeof CollectionItemType];
+
+
+export const CollectionItemType = {
+  photo: 'photo',
+  voice: 'voice',
+} as const;
+
+export interface CollectionItem {
+  id: number;
+  collectionId: number;
+  mediaUrl: string;
+  type: CollectionItemType;
+  caption?: string | null;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export type CreateCollectionItemBodyType = typeof CreateCollectionItemBodyType[keyof typeof CreateCollectionItemBodyType];
+
+
+export const CreateCollectionItemBodyType = {
+  photo: 'photo',
+  voice: 'voice',
+} as const;
+
+export interface CreateCollectionItemBody {
+  mediaUrl: string;
+  type?: CreateCollectionItemBodyType;
+  caption?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateCollectionItemBody {
+  caption?: string | null;
+  sortOrder?: number;
+}
+
+export interface ReorderItemsBody {
+  orderedIds: number[];
+}
+
 export type GetMessagesParams = {
 type?: GetMessagesType;
 };

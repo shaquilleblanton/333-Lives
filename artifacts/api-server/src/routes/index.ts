@@ -26,6 +26,7 @@ import familyMembersRouter from "./family-members";
 import storyAnswersRouter from "./story-answers";
 import lifeEventsRouter from "./life-events";
 import pulseRouter from "./pulse";
+import memoryCollectionsRouter from "./memory-collections";
 
 const router: IRouter = Router();
 
@@ -60,5 +61,6 @@ router.use(familyMembersRouter);
 router.use(storyAnswersRouter);
 router.use(lifeEventsRouter);
 router.use(pulseRouter);
+router.use(memoryCollectionsRouter);
 
 export default router;

@@ -2749,3 +2749,201 @@ export const RemovePulseReactionResponse = zod.object({
 })
 
 
+/**
+ * @summary List all memory collections
+ */
+export const GetMemoryCollectionsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetMemoryCollectionsResponse = zod.array(GetMemoryCollectionsResponseItem)
+
+
+/**
+ * @summary Create a memory collection
+ */
+export const CreateMemoryCollectionBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean().optional()
+})
+
+export const CreateMemoryCollectionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a single memory collection
+ */
+export const GetMemoryCollectionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetMemoryCollectionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a memory collection
+ */
+export const UpdateMemoryCollectionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateMemoryCollectionBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().optional(),
+  "coverUrl": zod.string().nullish(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean().optional()
+})
+
+export const UpdateMemoryCollectionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "personId": zod.number().nullish(),
+  "isInMemory": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a memory collection
+ */
+export const DeleteMemoryCollectionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMemoryCollectionResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary List items in a memory collection
+ */
+export const GetCollectionItemsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCollectionItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "collectionId": zod.number(),
+  "mediaUrl": zod.string(),
+  "type": zod.enum(['photo', 'voice']),
+  "caption": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const GetCollectionItemsResponse = zod.array(GetCollectionItemsResponseItem)
+
+
+/**
+ * @summary Add an item to a memory collection
+ */
+export const CreateCollectionItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CreateCollectionItemBody = zod.object({
+  "mediaUrl": zod.string(),
+  "type": zod.enum(['photo', 'voice']).optional(),
+  "caption": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const CreateCollectionItemResponse = zod.object({
+  "id": zod.number(),
+  "collectionId": zod.number(),
+  "mediaUrl": zod.string(),
+  "type": zod.enum(['photo', 'voice']),
+  "caption": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Bulk reorder items by providing an ordered list of IDs
+ */
+export const ReorderCollectionItemsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReorderCollectionItemsBody = zod.object({
+  "orderedIds": zod.array(zod.number())
+})
+
+export const ReorderCollectionItemsResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Update caption or sortOrder of an item
+ */
+export const UpdateCollectionItemParams = zod.object({
+  "id": zod.coerce.number(),
+  "itemId": zod.coerce.number()
+})
+
+export const UpdateCollectionItemBody = zod.object({
+  "caption": zod.string().nullish(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateCollectionItemResponse = zod.object({
+  "id": zod.number(),
+  "collectionId": zod.number(),
+  "mediaUrl": zod.string(),
+  "type": zod.enum(['photo', 'voice']),
+  "caption": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove an item from a memory collection
+ */
+export const DeleteCollectionItemParams = zod.object({
+  "id": zod.coerce.number(),
+  "itemId": zod.coerce.number()
+})
+
+export const DeleteCollectionItemResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

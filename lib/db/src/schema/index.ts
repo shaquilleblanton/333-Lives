@@ -20,4 +20,5 @@ export * from "./family-members";
 export * from "./story-answers";
 export * from "./life-events";
 export * from "./pulse";
+export * from "./memory-collections";
 
