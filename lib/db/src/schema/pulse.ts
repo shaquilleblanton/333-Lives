@@ -11,6 +11,30 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 
+/**
+ * pulse_circle_members — explicit circle membership for the Pulse feed.
+ *
+ * Each row means "userId has memberUserId in their circle."
+ * In 333 Lives (a closed, invite-only family app), new users are
+ * auto-added to all existing circles and vice-versa — so the circle
+ * always equals all app users. The table gives the owner fine-grained
+ * control (e.g. temporarily muting someone) without changing the API.
+ */
+export const pulseCircleMembersTable = pgTable(
+  "pulse_circle_members",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    memberUserId: integer("member_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique("pulse_circle_unique").on(t.userId, t.memberUserId)],
+);
+
 export const PULSE_POST_TYPES = ["text", "photo", "voice"] as const;
 export type PulsePostType = (typeof PULSE_POST_TYPES)[number];
 

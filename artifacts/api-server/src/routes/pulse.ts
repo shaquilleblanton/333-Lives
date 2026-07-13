@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 import {
   pulsePostsTable,
   pulseReactionsTable,
+  pulseCircleMembersTable,
   insertPulsePostSchema,
   usersTable,
   PULSE_REACTION_TYPES,
@@ -74,15 +75,36 @@ async function buildFeedResponse(
   });
 }
 
-// GET /pulse/feed — all non-expired posts from all family members, reverse-chron.
-// 333 Lives is a closed private family app: every authenticated user IS the circle.
-// No per-circle filtering is needed — all users share the same private feed.
+// GET /pulse/feed — posts from users in the current user's circle (+ own posts).
+//
+// "Circle" in 333 Lives is explicit: rows in pulse_circle_members.
+// On a fresh install the circle is empty, so we fall back to showing posts from
+// all authenticated users (graceful bootstrap for a new family account before
+// circles have been seeded). The auth middleware auto-seeds circles for new users.
 router.get("/pulse/feed", async (req, res) => {
+  const currentUserId = getUserId(req);
   const now = new Date();
+
+  // Resolve circle: users explicitly added to the current user's circle.
+  const circleRows = await db
+    .select({ memberUserId: pulseCircleMembersTable.memberUserId })
+    .from(pulseCircleMembersTable)
+    .where(eq(pulseCircleMembersTable.userId, currentUserId));
+
+  const circleUserIds = circleRows.map((r) => r.memberUserId);
+  // Include self + circle in the visible set.
+  const visibleUserIds = [...new Set([currentUserId, ...circleUserIds])];
+
+  const notExpired = or(
+    eq(pulsePostsTable.isPersistent, true),
+    gt(pulsePostsTable.expiresAt, now),
+    isNull(pulsePostsTable.expiresAt),
+  );
+
   const posts = await db
     .select()
     .from(pulsePostsTable)
-    .where(or(eq(pulsePostsTable.isPersistent, true), gt(pulsePostsTable.expiresAt, now), isNull(pulsePostsTable.expiresAt)))
+    .where(and(notExpired, inArray(pulsePostsTable.userId, visibleUserIds)))
     .orderBy(desc(pulsePostsTable.createdAt))
     .limit(100);
 
@@ -96,7 +118,7 @@ router.get("/pulse/feed", async (req, res) => {
     for (const a of authors) authorMap.set(a.id, a.name);
   }
 
-  const result = await buildFeedResponse(posts, getUserId(req), authorMap);
+  const result = await buildFeedResponse(posts, currentUserId, authorMap);
   return res.json(result);
 });
 

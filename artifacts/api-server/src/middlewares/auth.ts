@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { usersTable, pulseCircleMembersTable } from "@workspace/db/schema";
+import { eq, ne, sql } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -78,7 +78,32 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
     .values({ clerkId: clerkUserId, email, name })
     .onConflictDoNothing({ target: usersTable.clerkId })
     .returning({ id: usersTable.id });
-  if (inserted.length > 0) return inserted[0].id;
+  if (inserted.length > 0) {
+    const newUserId = inserted[0].id;
+    // Auto-add the new user to all existing users' circles, and add all
+    // existing users to the new user's circle. This keeps the Pulse feed
+    // working as a family-wide shared space for a closed, invite-only app.
+    try {
+      const existingUsers = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(ne(usersTable.id, newUserId));
+      if (existingUsers.length > 0) {
+        const circlePairs = existingUsers.flatMap((u) => [
+          { userId: newUserId, memberUserId: u.id },
+          { userId: u.id, memberUserId: newUserId },
+        ]);
+        await db
+          .insert(pulseCircleMembersTable)
+          .values(circlePairs)
+          .onConflictDoNothing();
+      }
+    } catch (err) {
+      // Non-fatal — circle can be seeded later; don't block sign-in.
+      console.error("Failed to seed pulse circle for new user", err);
+    }
+    return newUserId;
+  }
 
   // Concurrent request created the row first — read it back.
   const raced = await db
