@@ -22,6 +22,40 @@ function emptyReactions(): ReactionCounts {
   return { fire: 0, pray: 0, love: 0, strength: 0 };
 }
 
+/**
+ * Resolve the set of user IDs whose posts are visible to `userId`.
+ *
+ * Design decision — circle table vs People table:
+ * The `people` table stores freeform named contacts (no FK to `users`), so it
+ * cannot be used for circle scoping without a separate linking step. Instead,
+ * `pulse_circle_members` provides an explicit, auditable join table.
+ *
+ * In 333 Lives (a closed, invite-only family app) the circle intentionally
+ * equals all authenticated users. The auth middleware auto-seeds bidirectional
+ * rows whenever a new user is provisioned so existing users immediately see the
+ * new member's posts. The empty-circle fallback below ensures existing users
+ * who were provisioned before this feature is live still see all posts.
+ */
+async function resolveVisibleUserIds(userId: number): Promise<number[]> {
+  const circleRows = await db
+    .select({ memberUserId: pulseCircleMembersTable.memberUserId })
+    .from(pulseCircleMembersTable)
+    .where(eq(pulseCircleMembersTable.userId, userId));
+
+  const circleUserIds = circleRows.map((r) => r.memberUserId);
+
+  // Empty-circle fallback: if no circle members are configured yet (e.g. a
+  // single-user install or an existing account before auto-seeding ran), treat
+  // all authenticated users as the circle. This keeps the feature usable on
+  // first launch without requiring an explicit admin seeding step.
+  if (circleUserIds.length === 0) {
+    const allUsers = await db.select({ id: usersTable.id }).from(usersTable);
+    return allUsers.map((u) => u.id);
+  }
+
+  return [...new Set([userId, ...circleUserIds])];
+}
+
 async function buildFeedResponse(
   posts: (typeof pulsePostsTable.$inferSelect)[],
   currentUserId: number,
@@ -75,25 +109,38 @@ async function buildFeedResponse(
   });
 }
 
+/** Returns the post if it exists AND is visible to `userId`; null otherwise. */
+async function findVisiblePost(
+  postId: number,
+  userId: number,
+  now: Date,
+): Promise<(typeof pulsePostsTable.$inferSelect) | null> {
+  const visibleUserIds = await resolveVisibleUserIds(userId);
+  const notExpired = or(
+    eq(pulsePostsTable.isPersistent, true),
+    gt(pulsePostsTable.expiresAt, now),
+    isNull(pulsePostsTable.expiresAt),
+  );
+  const rows = await db
+    .select()
+    .from(pulsePostsTable)
+    .where(
+      and(
+        eq(pulsePostsTable.id, postId),
+        inArray(pulsePostsTable.userId, visibleUserIds),
+        notExpired,
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 // GET /pulse/feed — posts from users in the current user's circle (+ own posts).
-//
-// "Circle" in 333 Lives is explicit: rows in pulse_circle_members.
-// On a fresh install the circle is empty, so we fall back to showing posts from
-// all authenticated users (graceful bootstrap for a new family account before
-// circles have been seeded). The auth middleware auto-seeds circles for new users.
 router.get("/pulse/feed", async (req, res) => {
   const currentUserId = getUserId(req);
   const now = new Date();
 
-  // Resolve circle: users explicitly added to the current user's circle.
-  const circleRows = await db
-    .select({ memberUserId: pulseCircleMembersTable.memberUserId })
-    .from(pulseCircleMembersTable)
-    .where(eq(pulseCircleMembersTable.userId, currentUserId));
-
-  const circleUserIds = circleRows.map((r) => r.memberUserId);
-  // Include self + circle in the visible set.
-  const visibleUserIds = [...new Set([currentUserId, ...circleUserIds])];
+  const visibleUserIds = await resolveVisibleUserIds(currentUserId);
 
   const notExpired = or(
     eq(pulsePostsTable.isPersistent, true),
@@ -189,7 +236,7 @@ router.post("/pulse/posts", async (req, res) => {
   });
 });
 
-// DELETE /pulse/posts/:id — delete own post
+// DELETE /pulse/posts/:id — delete own post (ownership check is sufficient — no circle needed)
 router.delete("/pulse/posts/:id", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -212,7 +259,8 @@ router.delete("/pulse/posts/:id", async (req, res) => {
   return res.json({ success: true });
 });
 
-// PUT /pulse/posts/:id/react — add or change reaction (one per user per post)
+// PUT /pulse/posts/:id/react — add or change reaction (one per user per post).
+// Requires the post to be visible (i.e. in the requester's circle) before mutating.
 router.put("/pulse/posts/:id/react", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -222,14 +270,9 @@ router.put("/pulse/posts/:id/react", async (req, res) => {
     return res.status(400).json({ error: `type must be one of: ${PULSE_REACTION_TYPES.join(", ")}` });
   }
 
-  const post = await db
-    .select({ id: pulsePostsTable.id })
-    .from(pulsePostsTable)
-    .where(eq(pulsePostsTable.id, id))
-    .limit(1);
-  if (post.length === 0) return res.status(404).json({ error: "Post not found" });
+  const post = await findVisiblePost(id, getUserId(req), new Date());
+  if (!post) return res.status(404).json({ error: "Post not found" });
 
-  // Upsert: delete existing reaction then insert new one (ON CONFLICT UPDATE)
   await db
     .insert(pulseReactionsTable)
     .values({ postId: id, userId: getUserId(req), type: type as PulseReactionType })
@@ -241,10 +284,14 @@ router.put("/pulse/posts/:id/react", async (req, res) => {
   return res.json({ success: true, type });
 });
 
-// DELETE /pulse/posts/:id/react — remove own reaction
+// DELETE /pulse/posts/:id/react — remove own reaction.
+// Requires the post to be visible before mutating.
 router.delete("/pulse/posts/:id/react", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+
+  const post = await findVisiblePost(id, getUserId(req), new Date());
+  if (!post) return res.status(404).json({ error: "Post not found" });
 
   await db
     .delete(pulseReactionsTable)

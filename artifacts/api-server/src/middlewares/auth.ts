@@ -70,7 +70,30 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
       .set({ clerkId: clerkUserId, name })
       .where(eq(usersTable.id, byEmail[0].id))
       .returning({ id: usersTable.id });
-    if (updated.length > 0) return updated[0].id;
+    if (updated.length > 0) {
+      const linkedUserId = updated[0].id;
+      // Backfill pulse circles: an existing row that just got linked needs the
+      // same bidirectional circle seeding as a fresh insert.
+      try {
+        const otherUsers = await db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(ne(usersTable.id, linkedUserId));
+        if (otherUsers.length > 0) {
+          const circlePairs = otherUsers.flatMap((u) => [
+            { userId: linkedUserId, memberUserId: u.id },
+            { userId: u.id, memberUserId: linkedUserId },
+          ]);
+          await db
+            .insert(pulseCircleMembersTable)
+            .values(circlePairs)
+            .onConflictDoNothing();
+        }
+      } catch (err) {
+        console.error("Failed to backfill pulse circle for linked user", err);
+      }
+      return linkedUserId;
+    }
   }
 
   const inserted = await db
