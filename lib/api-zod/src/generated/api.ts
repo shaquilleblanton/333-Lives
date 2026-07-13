@@ -1053,6 +1053,9 @@ export const GetPeopleResponseItem = zod.object({
   "birthday": zod.coerce.date().nullish(),
   "lostDate": zod.coerce.date().nullish(),
   "note": zod.string().nullish(),
+  "anniversary": zod.coerce.date().nullish(),
+  "anniversaryLabel": zod.string().nullish(),
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -1069,7 +1072,10 @@ export const CreatePersonBody = zod.object({
   "photoUrl": zod.string().optional(),
   "birthday": zod.coerce.date().optional(),
   "lostDate": zod.coerce.date().optional(),
-  "note": zod.string().optional()
+  "note": zod.string().optional(),
+  "anniversary": zod.coerce.date().optional(),
+  "anniversaryLabel": zod.string().optional(),
+  "reconnectDays": zod.number().optional().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.')
 })
 
 export const CreatePersonResponse = zod.object({
@@ -1082,8 +1088,33 @@ export const CreatePersonResponse = zod.object({
   "birthday": zod.coerce.date().nullish(),
   "lostDate": zod.coerce.date().nullish(),
   "note": zod.string().nullish(),
+  "anniversary": zod.coerce.date().nullish(),
+  "anniversaryLabel": zod.string().nullish(),
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Upcoming birthdays/anniversaries (next 7 days) and overdue connections
+ */
+export const GetPeopleRemindersResponse = zod.object({
+  "upcomingEvents": zod.array(zod.object({
+  "personId": zod.number(),
+  "personName": zod.string(),
+  "type": zod.enum(['birthday', 'anniversary']),
+  "label": zod.string(),
+  "daysUntil": zod.number(),
+  "date": zod.coerce.date()
+})),
+  "overdueConnections": zod.array(zod.object({
+  "personId": zod.number(),
+  "personName": zod.string(),
+  "reconnectDays": zod.number(),
+  "daysSinceLastMoment": zod.number(),
+  "lastMomentDate": zod.coerce.date().nullish()
+}))
 })
 
 
@@ -1104,6 +1135,9 @@ export const GetPersonResponse = zod.object({
   "birthday": zod.coerce.date().nullish(),
   "lostDate": zod.coerce.date().nullish(),
   "note": zod.string().nullish(),
+  "anniversary": zod.coerce.date().nullish(),
+  "anniversaryLabel": zod.string().nullish(),
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -1123,7 +1157,10 @@ export const UpdatePersonBody = zod.object({
   "photoUrl": zod.string().optional(),
   "birthday": zod.coerce.date().optional(),
   "lostDate": zod.coerce.date().optional(),
-  "note": zod.string().optional()
+  "note": zod.string().optional(),
+  "anniversary": zod.coerce.date().optional(),
+  "anniversaryLabel": zod.string().optional(),
+  "reconnectDays": zod.number().optional().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.')
 })
 
 export const UpdatePersonResponse = zod.object({
@@ -1136,6 +1173,9 @@ export const UpdatePersonResponse = zod.object({
   "birthday": zod.coerce.date().nullish(),
   "lostDate": zod.coerce.date().nullish(),
   "note": zod.string().nullish(),
+  "anniversary": zod.coerce.date().nullish(),
+  "anniversaryLabel": zod.string().nullish(),
+  "reconnectDays": zod.number().nullish().describe('Reconnect reminder threshold in days (30\/60\/90\/180). null = no reminder.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })

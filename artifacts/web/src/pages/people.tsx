@@ -9,6 +9,7 @@ import {
   useGetRelationshipMoments,
   useCreateRelationshipMoment,
   useDeleteRelationshipMoment,
+  useGetPeopleReminders,
   getGetPeopleQueryKey,
   getGetRelationshipMomentsQueryKey,
 } from "@workspace/api-client-react";
@@ -16,7 +17,7 @@ import type { Person, RelationshipMoment } from "@workspace/api-client-react";
 import {
   Users, Plus, Heart, Calendar, Mail, Edit3, Loader2,
   MessageSquare, Star, Trophy, Flower2, Handshake, X,
-  ChevronRight, Trash2, Clock
+  ChevronRight, Trash2, Clock, AlertCircle, Cake
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-type RelationshipFilter = "all" | "family" | "friend" | "partner" | "mentor" | "colleague" | "other";
+type RelationshipFilter = "all" | "family" | "friend" | "partner" | "mentor" | "colleague" | "other" | "overdue";
 
 const MOMENT_META: Record<string, { label: string; icon: React.ElementType; color: string; dot: string }> = {
   conversation: { label: "Conversation",  icon: MessageSquare, color: "text-secondary  bg-secondary/10  border-secondary/30",  dot: "bg-secondary" },
@@ -64,12 +65,19 @@ function getInitials(name: string) {
 export default function People() {
   const [, setLocation] = useLocation();
   const { data: people, isLoading } = useGetPeople();
+  const { data: reminders } = useGetPeopleReminders();
   const [filter, setFilter] = useState<RelationshipFilter>("all");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
-  const filteredPeople = people?.filter(p => filter === "all" || p.relationship === filter) || [];
+  const overdueIds = new Set(reminders?.overdueConnections.map((oc) => oc.personId) ?? []);
+
+  const filteredPeople = people?.filter((p) => {
+    if (filter === "overdue") return overdueIds.has(p.id);
+    if (filter === "all") return true;
+    return p.relationship === filter;
+  }) || [];
 
   return (
     <div className="p-6 md:p-12 max-w-5xl mx-auto w-full space-y-10 animate-in fade-in duration-700 slide-in-from-bottom-4">
@@ -104,6 +112,23 @@ export default function People() {
             {f}
           </button>
         ))}
+        {overdueIds.size > 0 && (
+          <button
+            onClick={() => setFilter("overdue")}
+            className={cn(
+              "px-4 py-1.5 rounded-full text-sm font-subheading transition-colors border flex items-center gap-1.5",
+              filter === "overdue"
+                ? "bg-rose-500 text-white border-rose-500"
+                : "bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20"
+            )}
+          >
+            <AlertCircle className="w-3.5 h-3.5" />
+            Overdue
+            <span className="bg-rose-500/20 text-rose-400 rounded-full px-1.5 py-0.5 text-xs leading-none">
+              {overdueIds.size}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Grid */}
@@ -116,7 +141,7 @@ export default function People() {
           <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-serif text-foreground mb-2">No people found</h3>
           <p className="text-sm text-muted-foreground font-subheading max-w-sm mx-auto">
-            {filter === "all" ? "Begin building your circle of influence and love." : `No one categorized as ${filter} yet.`}
+            {filter === "all" ? "Begin building your circle of influence and love." : filter === "overdue" ? "No overdue connections right now. Keep nurturing your relationships." : `No one categorized as ${filter} yet.`}
           </p>
         </div>
       ) : (
@@ -135,6 +160,12 @@ export default function People() {
             >
               {person.lostDate && (
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-[100px] -z-10 blur-xl" />
+              )}
+              {overdueIds.has(person.id) && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 bg-rose-500/15 border border-rose-500/30 rounded-full px-2 py-0.5">
+                  <AlertCircle className="w-3 h-3 text-rose-400" />
+                  <span className="text-xs text-rose-400 font-subheading">Overdue</span>
+                </div>
               )}
 
               <div className="flex items-start gap-4 mb-4">
@@ -543,6 +574,9 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
     birthday: person?.birthday ? person.birthday.split("T")[0] : "",
     lostDate: person?.lostDate ? person.lostDate.split("T")[0] : "",
     note: person?.note || "",
+    anniversary: person?.anniversary ? person.anniversary.split("T")[0] : "",
+    anniversaryLabel: person?.anniversaryLabel || "",
+    reconnectDays: person?.reconnectDays?.toString() || "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -550,9 +584,12 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
     if (!formData.name) return;
     const payload = {
       ...formData,
-      relationship: formData.relationship as Exclude<RelationshipFilter, "all">,
+      relationship: formData.relationship as Exclude<RelationshipFilter, "all" | "overdue">,
       birthday: formData.birthday || undefined,
       lostDate: formData.lostDate || undefined,
+      anniversary: formData.anniversary || undefined,
+      anniversaryLabel: formData.anniversaryLabel || undefined,
+      reconnectDays: formData.reconnectDays ? Number(formData.reconnectDays) : undefined,
     };
     if (person) {
       updatePerson.mutate(
@@ -609,6 +646,35 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
               <label className="text-sm font-subheading text-muted-foreground">Date of Passing</label>
               <Input type="date" value={formData.lostDate} onChange={e => setFormData({ ...formData, lostDate: e.target.value })} className="bg-card border-border block" />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
+                <Cake className="w-3.5 h-3.5" /> Anniversary Date
+              </label>
+              <Input type="date" value={formData.anniversary} onChange={e => setFormData({ ...formData, anniversary: e.target.value })} className="bg-card border-border block" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-subheading text-muted-foreground">Anniversary Label</label>
+              <Input value={formData.anniversaryLabel} onChange={e => setFormData({ ...formData, anniversaryLabel: e.target.value })} className="bg-card border-border" placeholder="e.g. Wedding Anniversary" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-subheading text-muted-foreground flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5" /> Reconnect Reminder
+            </label>
+            <Select value={formData.reconnectDays} onValueChange={v => setFormData({ ...formData, reconnectDays: v })}>
+              <SelectTrigger className="bg-card border-border">
+                <SelectValue placeholder="No reminder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No reminder</SelectItem>
+                <SelectItem value="30">Every 30 days</SelectItem>
+                <SelectItem value="60">Every 60 days</SelectItem>
+                <SelectItem value="90">Every 90 days</SelectItem>
+                <SelectItem value="180">Every 180 days</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Private Notes</label>

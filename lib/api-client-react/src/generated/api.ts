@@ -76,6 +76,7 @@ import type {
   LegacyLetter,
   LifeEvent,
   Message,
+  PeopleReminders,
   Person,
   PulsePost,
   PulseReactionBody,
@@ -4065,6 +4066,83 @@ export const useCreatePerson = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreatePersonMutationOptions(options));
     }
+
+export const getGetPeopleRemindersUrl = () => {
+
+
+
+
+  return `/api/people/reminders`
+}
+
+/**
+ * @summary Upcoming birthdays/anniversaries (next 7 days) and overdue connections
+ */
+export const getPeopleReminders = async ( options?: RequestInit): Promise<PeopleReminders> => {
+
+  return customFetch<PeopleReminders>(getGetPeopleRemindersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPeopleRemindersQueryKey = () => {
+    return [
+    `/api/people/reminders`
+    ] as const;
+    }
+
+
+export const getGetPeopleRemindersQueryOptions = <TData = Awaited<ReturnType<typeof getPeopleReminders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeopleReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPeopleRemindersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPeopleReminders>>> = ({ signal }) => getPeopleReminders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPeopleReminders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPeopleRemindersQueryResult = NonNullable<Awaited<ReturnType<typeof getPeopleReminders>>>
+export type GetPeopleRemindersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Upcoming birthdays/anniversaries (next 7 days) and overdue connections
+ */
+
+export function useGetPeopleReminders<TData = Awaited<ReturnType<typeof getPeopleReminders>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeopleReminders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPeopleRemindersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetPersonUrl = (id: number,) => {
 

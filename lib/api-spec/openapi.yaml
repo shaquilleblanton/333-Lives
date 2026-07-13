@@ -1167,6 +1167,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Person"
 
+  /people/reminders:
+    get:
+      operationId: getPeopleReminders
+      tags: [people]
+      summary: Upcoming birthdays/anniversaries (next 7 days) and overdue connections
+      responses:
+        "200":
+          description: Reminders data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeopleReminders"
+
   /people/{id}:
     get:
       operationId: getPerson
@@ -3334,6 +3347,17 @@ components:
         note:
           type: string
           nullable: true
+        anniversary:
+          type: string
+          format: date
+          nullable: true
+        anniversaryLabel:
+          type: string
+          nullable: true
+        reconnectDays:
+          type: integer
+          nullable: true
+          description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
         createdAt:
           type: string
           format: date-time
@@ -3362,6 +3386,14 @@ components:
           format: date
         note:
           type: string
+        anniversary:
+          type: string
+          format: date
+        anniversaryLabel:
+          type: string
+        reconnectDays:
+          type: integer
+          description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
       required: [name]
 
     UpdatePersonBody:
@@ -3384,6 +3416,63 @@ components:
           format: date
         note:
           type: string
+        anniversary:
+          type: string
+          format: date
+        anniversaryLabel:
+          type: string
+        reconnectDays:
+          type: integer
+          description: Reconnect reminder threshold in days (30/60/90/180). null = no reminder.
+
+    PeopleReminders:
+      type: object
+      properties:
+        upcomingEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingEvent"
+        overdueConnections:
+          type: array
+          items:
+            $ref: "#/components/schemas/OverdueConnection"
+      required: [upcomingEvents, overdueConnections]
+
+    UpcomingEvent:
+      type: object
+      properties:
+        personId:
+          type: integer
+        personName:
+          type: string
+        type:
+          type: string
+          enum: [birthday, anniversary]
+        label:
+          type: string
+        daysUntil:
+          type: integer
+        date:
+          type: string
+          format: date
+      required: [personId, personName, type, label, daysUntil, date]
+
+    OverdueConnection:
+      type: object
+      properties:
+        personId:
+          type: integer
+        personName:
+          type: string
+        reconnectDays:
+          type: integer
+        daysSinceLastMoment:
+          type: integer
+        lastMomentDate:
+          type: string
+          format: date
+          nullable: true
+      required: [personId, personName, reconnectDays, daysSinceLastMoment]
 
     CommunityEvent:
       type: object

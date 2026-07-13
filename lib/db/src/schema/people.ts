@@ -15,10 +15,19 @@ export const peopleTable = pgTable("people", {
   birthday: date("birthday"),
   lostDate: date("lost_date"),
   note: text("note"),
+  /** Anniversary date for this person (wedding, work, etc.). */
+  anniversary: date("anniversary"),
+  /** Human-readable label for the anniversary, e.g. "Wedding Anniversary". */
+  anniversaryLabel: text("anniversary_label"),
+  /**
+   * How often (in days) the user wants a reconnect nudge for this person.
+   * null = no reminder. Options: 30 / 60 / 90 / 180.
+   */
+  reconnectDays: integer("reconnect_days"),
   /**
    * linkedUserId — links this People entry to an actual app user account.
    * When set alongside isCircle=true, that user appears in the Pulse feed circle.
-   * The owner links entries by calling PATCH /people/:id with { linkedUserId }.
+   * The owner links entries by calling PATCH /people/:id/circle-link.
    */
   linkedUserId: integer("linked_user_id").references(() => usersTable.id, { onDelete: "set null" }),
   /**

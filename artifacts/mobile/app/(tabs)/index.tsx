@@ -11,6 +11,7 @@ import {
   useGetIntentionHistory,
   useGetIntentions,
   useUpdateIntention,
+  useGetPeopleReminders,
   type Intention,
 } from "@workspace/api-client-react";
 import * as Haptics from "expo-haptics";
@@ -99,6 +100,7 @@ export default function TodayScreen() {
   } = useGetIntentions();
   const { data: dashboard } = useGetDashboard();
   const { data: history } = useGetIntentionHistory();
+  const { data: reminders } = useGetPeopleReminders();
 
   const createIntention = useCreateIntention();
   const updateIntention = useUpdateIntention();
@@ -254,6 +256,32 @@ export default function TodayScreen() {
     </>
   );
 
+  const upcomingEvents = reminders?.upcomingEvents ?? [];
+  const overdueConnections = reminders?.overdueConnections ?? [];
+  const hasReminders = upcomingEvents.length > 0 || overdueConnections.length > 0;
+
+  const ComingUpStrip = hasReminders ? (
+    <View style={[{ backgroundColor: colors.card, borderColor: colors.primary + "33", borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 12, gap: 6 }]}>
+      <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.subheading, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 2 }}>Coming Up</Text>
+      {upcomingEvents.map((ev) => (
+        <View key={`${ev.personId}-${ev.type}`} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Text style={{ fontSize: 13 }}>{ev.type === "birthday" ? "🎂" : "🎉"}</Text>
+          <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{ev.label}</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.subheading }}>
+            {ev.daysUntil === 0 ? "Today!" : ev.daysUntil === 1 ? "Tomorrow" : `In ${ev.daysUntil}d`}
+          </Text>
+        </View>
+      ))}
+      {overdueConnections.slice(0, 2).map((oc) => (
+        <View key={oc.personId} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Text style={{ fontSize: 13 }}>💭</Text>
+          <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{oc.personName}</Text>
+          <Text style={{ color: "#F87171", fontSize: 12, fontFamily: fonts.subheading }}>{oc.daysSinceLastMoment}d overdue</Text>
+        </View>
+      ))}
+    </View>
+  ) : null;
+
   const contentTopPad = insets.top + WEB_TOP_INSET + 12;
   const contentBottomPad = insets.bottom + WEB_BOTTOM_INSET + 40;
 
@@ -278,6 +306,7 @@ export default function TodayScreen() {
         }
       >
         {Header}
+        {ComingUpStrip}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary + "33" }]}>
           <View style={styles.cardHead}>
             <View style={[styles.cardIcon, { backgroundColor: colors.primary + "26" }]}>
@@ -371,6 +400,7 @@ export default function TodayScreen() {
       }
     >
       {Header}
+      {ComingUpStrip}
       <View
         style={[
           styles.card,

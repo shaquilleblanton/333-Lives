@@ -666,6 +666,10 @@ export interface Person {
   birthday?: string | null;
   lostDate?: string | null;
   note?: string | null;
+  anniversary?: string | null;
+  anniversaryLabel?: string | null;
+  /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
+  reconnectDays?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -690,6 +694,10 @@ export interface CreatePersonBody {
   birthday?: string;
   lostDate?: string;
   note?: string;
+  anniversary?: string;
+  anniversaryLabel?: string;
+  /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
+  reconnectDays?: number;
 }
 
 export type UpdatePersonBodyRelationship = typeof UpdatePersonBodyRelationship[keyof typeof UpdatePersonBodyRelationship];
@@ -712,6 +720,40 @@ export interface UpdatePersonBody {
   birthday?: string;
   lostDate?: string;
   note?: string;
+  anniversary?: string;
+  anniversaryLabel?: string;
+  /** Reconnect reminder threshold in days (30/60/90/180). null = no reminder. */
+  reconnectDays?: number;
+}
+
+export type UpcomingEventType = typeof UpcomingEventType[keyof typeof UpcomingEventType];
+
+
+export const UpcomingEventType = {
+  birthday: 'birthday',
+  anniversary: 'anniversary',
+} as const;
+
+export interface UpcomingEvent {
+  personId: number;
+  personName: string;
+  type: UpcomingEventType;
+  label: string;
+  daysUntil: number;
+  date: string;
+}
+
+export interface OverdueConnection {
+  personId: number;
+  personName: string;
+  reconnectDays: number;
+  daysSinceLastMoment: number;
+  lastMomentDate?: string | null;
+}
+
+export interface PeopleReminders {
+  upcomingEvents: UpcomingEvent[];
+  overdueConnections: OverdueConnection[];
 }
 
 export type CommunityEventCategory = typeof CommunityEventCategory[keyof typeof CommunityEventCategory];

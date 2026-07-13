@@ -11,6 +11,7 @@ import {
   useGetGratitudeEntries,
   useGetAffirmations,
   useGetTasks,
+  useGetPeopleReminders,
   getGetDashboardQueryKey,
   getGetIntentionHistoryQueryKey,
   getGetIntentionsQueryKey,
@@ -25,6 +26,7 @@ import {
   CheckCircle2, Circle, MessageSquare, Shield, Heart,
   Flame, Sparkles, Sunrise, Loader2, ArrowRight, Check,
   Pencil, Trash2, X, Trophy, ListChecks, AlertTriangle,
+  Cake, Calendar,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -95,6 +97,9 @@ export default function Home() {
           </blockquote>
         </div>
       </section>
+
+      {/* Coming Up — birthdays & anniversaries this week */}
+      <ComingUpWidget />
 
       {/* Today's Gratitude Widget */}
       <section>
@@ -187,6 +192,50 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ComingUpWidget() {
+  const { data } = useGetPeopleReminders();
+  const events = data?.upcomingEvents ?? [];
+  const overdue = data?.overdueConnections ?? [];
+
+  if (events.length === 0 && overdue.length === 0) return null;
+
+  return (
+    <section className="bg-card/40 border border-border/50 p-6 rounded-2xl backdrop-blur-sm space-y-4">
+      <div className="flex items-center gap-2 text-foreground">
+        <Calendar className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-subheading font-medium uppercase tracking-wider text-muted-foreground">Coming Up</h3>
+      </div>
+      <div className="space-y-2">
+        {events.map((ev) => (
+          <div key={`${ev.personId}-${ev.type}`} className="flex items-center gap-3 text-sm">
+            {ev.type === "birthday"
+              ? <Cake className="w-4 h-4 text-pink-400 shrink-0" />
+              : <Calendar className="w-4 h-4 text-accent shrink-0" />
+            }
+            <span className="text-foreground">{ev.label}</span>
+            <span className="ml-auto text-muted-foreground font-subheading">
+              {ev.daysUntil === 0 ? "Today 🎉" : ev.daysUntil === 1 ? "Tomorrow" : `In ${ev.daysUntil} days`}
+            </span>
+          </div>
+        ))}
+        {overdue.length > 0 && (
+          <div className="pt-1 border-t border-border/30 mt-2 space-y-2">
+            {overdue.slice(0, 3).map((oc) => (
+              <div key={oc.personId} className="flex items-center gap-3 text-sm">
+                <Heart className="w-4 h-4 text-rose-400 shrink-0" />
+                <span className="text-foreground">{oc.personName}</span>
+                <span className="ml-auto text-rose-400/80 font-subheading text-xs">
+                  {oc.daysSinceLastMoment}d since last connection
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
