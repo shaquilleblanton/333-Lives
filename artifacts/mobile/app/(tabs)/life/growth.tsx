@@ -6,6 +6,7 @@ import {
   getGetHabitsQueryKey,
   useGetGoals,
   useCreateGoal,
+  useUpdateGoal,
   getGetGoalsQueryKey,
   useGetJournalEntries,
   useCreateJournalEntry,
@@ -146,11 +147,20 @@ function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
   const qc = useQueryClient();
   const { data: goals, isLoading, refetch, isRefetching } = useGetGoals();
   const createGoal = useCreateGoal();
+  const updateGoal = useUpdateGoal();
   const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<typeof GOAL_CATEGORIES[number]>("personal");
 
   function invalidate() { qc.invalidateQueries({ queryKey: getGetGoalsQueryKey() }); }
+
+  async function adjustProgress(id: number, current: number, delta: number) {
+    const next = Math.min(100, Math.max(0, current + delta));
+    try {
+      await updateGoal.mutateAsync({ id, data: { progress: next, isCompleted: next >= 100 } as any });
+      invalidate();
+    } catch { Alert.alert("Couldn't update progress", "Please try again."); }
+  }
 
   async function handleCreate() {
     if (!title.trim()) return;
@@ -180,25 +190,49 @@ function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            {(goals ?? []).map(g => (
-              <View key={g.id} style={[sStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[sStyles.cardTitle, { color: colors.foreground }]}>{g.title}</Text>
-                  <Text style={[sStyles.cardMeta, { color: colors.mutedForeground }]}>
-                    {g.category} · {g.isCompleted ? "completed" : "active"}
-                    {g.targetDate ? ` · ${new Date(g.targetDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
-                  </Text>
-                  {typeof g.progress === "number" ? (
-                    <View style={{ marginTop: 8 }}>
+            {(goals ?? []).map(g => {
+              const progress = typeof g.progress === "number" ? g.progress : 0;
+              return (
+                <View key={g.id} style={[sStyles.card, { backgroundColor: colors.card, borderColor: g.isCompleted ? colors.primary + "40" : colors.border }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[sStyles.cardTitle, { color: colors.foreground }]}>{g.title}</Text>
+                    <Text style={[sStyles.cardMeta, { color: colors.mutedForeground }]}>
+                      {g.category} · {g.isCompleted ? "completed" : "active"}
+                      {g.targetDate ? ` · ${new Date(g.targetDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                    </Text>
+                    {/* Progress bar */}
+                    <View style={{ marginTop: 10 }}>
                       <View style={[sStyles.progressBar, { backgroundColor: colors.border }]}>
-                        <View style={[sStyles.progressFill, { backgroundColor: colors.primary, width: `${g.progress}%` as any }]} />
+                        <View style={[sStyles.progressFill, { backgroundColor: colors.primary, width: `${progress}%` as any }]} />
                       </View>
-                      <Text style={[sStyles.cardMeta, { color: colors.mutedForeground, marginTop: 4 }]}>{g.progress}% complete</Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                        <Text style={[sStyles.cardMeta, { color: colors.mutedForeground }]}>{progress}% complete</Text>
+                        {!g.isCompleted ? (
+                          <View style={{ flexDirection: "row", gap: 6 }}>
+                            <Pressable
+                              onPress={() => adjustProgress(g.id, progress, -10)}
+                              disabled={updateGoal.isPending || progress <= 0}
+                              style={[sStyles.progressBtn, { borderColor: colors.border, opacity: progress <= 0 ? 0.3 : 1 }]}
+                            >
+                              <Feather name="minus" size={12} color={colors.mutedForeground} />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => adjustProgress(g.id, progress, 10)}
+                              disabled={updateGoal.isPending || progress >= 100}
+                              style={[sStyles.progressBtn, { borderColor: colors.primary, backgroundColor: colors.primary + "1A", opacity: progress >= 100 ? 0.3 : 1 }]}
+                            >
+                              <Feather name="plus" size={12} color={colors.primary} />
+                            </Pressable>
+                          </View>
+                        ) : (
+                          <Feather name="check-circle" size={16} color={colors.primary} />
+                        )}
+                      </View>
                     </View>
-                  ) : null}
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )
       }
@@ -389,6 +423,7 @@ const sStyles = StyleSheet.create({
   checkBtn: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   progressBar: { height: 4, borderRadius: 2, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 2 },
+  progressBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   moodBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1 },
   moodText: { fontFamily: fonts.sub, fontSize: 11, textTransform: "capitalize" },
   empty: { alignItems: "center", paddingTop: 60, gap: 12 },

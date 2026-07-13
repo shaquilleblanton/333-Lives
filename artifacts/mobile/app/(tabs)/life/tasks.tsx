@@ -37,32 +37,50 @@ const PRIORITY_COLORS: Record<Priority, string> = {
   medium: "#fbbf24",
   low: "#38bdf8",
 };
-
+const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 const CATEGORIES: Category[] = ["personal", "finance", "health", "family", "work", "other"];
 const PRIORITIES: Priority[] = ["high", "medium", "low"];
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
-function TaskRow({ task, onToggle, onDelete }: { task: Task; onToggle: () => void; onDelete: () => void }) {
+function todayKey() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function TaskRow({
+  task, overdue, onToggle, onEdit, onDelete,
+}: { task: Task; overdue: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const pColor = PRIORITY_COLORS[(task.priority as Priority) ?? "low"];
 
   return (
-    <View style={[styles.taskRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Pressable onPress={onToggle} style={styles.checkBtn} hitSlop={8}>
+    <Pressable
+      onPress={onEdit}
+      style={({ pressed }) => [
+        styles.taskRow,
+        {
+          backgroundColor: colors.card,
+          borderColor: overdue ? "#fb7185" + "50" : task.isCompleted ? colors.border + "60" : colors.border,
+          opacity: pressed ? 0.85 : 1,
+        },
+      ]}
+    >
+      <Pressable onPress={onToggle} hitSlop={8} style={styles.checkBtn}>
         <Feather
           name={task.isCompleted ? "check-circle" : "circle"}
           size={22}
-          color={task.isCompleted ? colors.primary : colors.mutedForeground}
+          color={task.isCompleted ? colors.primary : overdue ? "#fb7185" : colors.mutedForeground}
         />
       </Pressable>
       <View style={{ flex: 1 }}>
         <Text
           style={[
             styles.taskTitle,
-            { color: task.isCompleted ? colors.mutedForeground : colors.foreground,
-              textDecorationLine: task.isCompleted ? "line-through" : "none" },
+            {
+              color: task.isCompleted ? colors.mutedForeground : colors.foreground,
+              textDecorationLine: task.isCompleted ? "line-through" : "none",
+            },
           ]}
           numberOfLines={2}
         >
@@ -74,36 +92,62 @@ function TaskRow({ task, onToggle, onDelete }: { task: Task; onToggle: () => voi
             {task.priority ?? "low"} · {task.category ?? "other"}
           </Text>
           {task.dueDate ? (
-            <Text style={[styles.taskMetaText, { color: colors.mutedForeground }]}>
-              {" · "}{new Date(task.dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            <Text style={[styles.taskMetaText, { color: overdue ? "#fb7185" : colors.mutedForeground }]}>
+              {" · "}
+              {new Date(task.dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </Text>
           ) : null}
         </View>
       </View>
       <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4 }}>
-        <Feather name="trash-2" size={16} color={colors.mutedForeground + "80"} />
+        <Feather name="trash-2" size={16} color={colors.mutedForeground + "70"} />
       </Pressable>
-    </View>
+    </Pressable>
   );
 }
 
-function AddTaskModal({ visible, onClose, onSave, isPending }: {
+function TaskModal({
+  task,
+  visible,
+  onClose,
+  onSave,
+  isPending,
+}: {
+  task: Task | null;
   visible: boolean;
   onClose: () => void;
-  onSave: (payload: { title: string; priority: Priority; category: Category; dueDate: string | null }) => void;
+  onSave: (payload: {
+    title: string; notes: string; dueDate: string | null; priority: Priority; category: Category;
+  }) => void;
   isPending: boolean;
 }) {
   const colors = useColors();
-  const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState<Priority>("medium");
-  const [category, setCategory] = useState<Category>("personal");
+  const isEditing = !!task;
+
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [notes, setNotes] = useState(task?.notes ?? "");
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
+  const [priority, setPriority] = useState<Priority>((task?.priority as Priority) ?? "medium");
+  const [category, setCategory] = useState<Category>((task?.category as Category) ?? "personal");
+
+  React.useEffect(() => {
+    if (visible) {
+      setTitle(task?.title ?? "");
+      setNotes(task?.notes ?? "");
+      setDueDate(task?.dueDate ?? "");
+      setPriority((task?.priority as Priority) ?? "medium");
+      setCategory((task?.category as Category) ?? "personal");
+    }
+  }, [visible, task]);
 
   function submit() {
     if (!title.trim()) return;
-    onSave({ title: title.trim(), priority, category, dueDate: null });
-    setTitle("");
-    setPriority("medium");
-    setCategory("personal");
+    let finalDueDate: string | null = null;
+    if (dueDate.trim()) {
+      const d = new Date(dueDate.trim() + "T12:00:00");
+      if (!isNaN(d.getTime())) finalDueDate = dueDate.trim();
+    }
+    onSave({ title: title.trim(), notes: notes.trim(), dueDate: finalDueDate, priority, category });
   }
 
   return (
@@ -111,7 +155,9 @@ function AddTaskModal({ visible, onClose, onSave, isPending }: {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
         <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>New Task</Text>
+          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
+            {isEditing ? "Edit Task" : "New Task"}
+          </Text>
 
           <TextInput
             value={title}
@@ -119,9 +165,27 @@ function AddTaskModal({ visible, onClose, onSave, isPending }: {
             placeholder="What needs to get done?"
             placeholderTextColor={colors.mutedForeground + "99"}
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            multiline
+            autoFocus={!isEditing}
+            returnKeyType="next"
+          />
+
+          <TextInput
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Notes (optional)"
+            placeholderTextColor={colors.mutedForeground + "99"}
+            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+            returnKeyType="next"
+          />
+
+          <TextInput
+            value={dueDate}
+            onChangeText={setDueDate}
+            placeholder="Due date: YYYY-MM-DD (optional)"
+            placeholderTextColor={colors.mutedForeground + "99"}
+            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+            autoCapitalize="none"
             returnKeyType="done"
-            autoFocus
           />
 
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Priority</Text>
@@ -132,8 +196,10 @@ function AddTaskModal({ visible, onClose, onSave, isPending }: {
                 onPress={() => setPriority(p)}
                 style={[
                   styles.pill,
-                  { borderColor: priority === p ? PRIORITY_COLORS[p] : colors.border,
-                    backgroundColor: priority === p ? PRIORITY_COLORS[p] + "1A" : "transparent" },
+                  {
+                    borderColor: priority === p ? PRIORITY_COLORS[p] : colors.border,
+                    backgroundColor: priority === p ? PRIORITY_COLORS[p] + "1A" : "transparent",
+                  },
                 ]}
               >
                 <Text style={[styles.pillText, { color: priority === p ? PRIORITY_COLORS[p] : colors.mutedForeground }]}>
@@ -151,8 +217,10 @@ function AddTaskModal({ visible, onClose, onSave, isPending }: {
                 onPress={() => setCategory(c)}
                 style={[
                   styles.pill,
-                  { borderColor: category === c ? colors.primary : colors.border,
-                    backgroundColor: category === c ? colors.primary + "1A" : "transparent" },
+                  {
+                    borderColor: category === c ? colors.primary : colors.border,
+                    backgroundColor: category === c ? colors.primary + "1A" : "transparent",
+                  },
                 ]}
               >
                 <Text style={[styles.pillText, { color: category === c ? colors.primary : colors.mutedForeground }]}>
@@ -173,12 +241,23 @@ function AddTaskModal({ visible, onClose, onSave, isPending }: {
             {isPending ? (
               <ActivityIndicator color="#000" size="small" />
             ) : (
-              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Task</Text>
+              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
+                {isEditing ? "Save Changes" : "Add Task"}
+              </Text>
             )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+function GroupHeader({ label, count, accent }: { label: string; count: number; accent: string }) {
+  return (
+    <View style={styles.groupHeader}>
+      <Text style={[styles.groupLabel, { color: accent }]}>{label}</Text>
+      <Text style={[styles.groupCount, { color: accent + "99" }]}>({count})</Text>
+    </View>
   );
 }
 
@@ -190,27 +269,26 @@ export default function TasksScreen() {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
-  const [modalOpen, setModalOpen] = useState(false);
 
-  function invalidate() {
-    qc.invalidateQueries({ queryKey: getGetTasksQueryKey() });
-  }
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Task | null>(null);
+
+  function invalidate() { qc.invalidateQueries({ queryKey: getGetTasksQueryKey() }); }
+  function openCreate() { setEditing(null); setModalOpen(true); }
+  function openEdit(t: Task) { setEditing(t); setModalOpen(true); }
 
   async function toggle(t: Task) {
     try {
       await updateTask.mutateAsync({ id: t.id, data: { isCompleted: !t.isCompleted } });
       invalidate();
-    } catch {
-      Alert.alert("Couldn't update task", "Please try again.");
-    }
+    } catch { Alert.alert("Couldn't update task", "Please try again."); }
   }
 
   function confirmDelete(t: Task) {
     Alert.alert("Delete task?", `"${t.title}"`, [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Delete",
-        style: "destructive",
+        text: "Delete", style: "destructive",
         onPress: async () => {
           try { await deleteTask.mutateAsync({ id: t.id }); invalidate(); }
           catch { Alert.alert("Couldn't delete", "Please try again."); }
@@ -219,95 +297,138 @@ export default function TasksScreen() {
     ]);
   }
 
-  async function handleCreate(payload: { title: string; priority: Priority; category: Category; dueDate: string | null }) {
+  async function handleSave(payload: {
+    title: string; notes: string; dueDate: string | null; priority: Priority; category: Category;
+  }) {
     try {
-      await createTask.mutateAsync({ data: payload as any });
+      if (editing) {
+        await updateTask.mutateAsync({ id: editing.id, data: payload as any });
+      } else {
+        await createTask.mutateAsync({ data: payload as any });
+      }
       invalidate();
       setModalOpen(false);
-    } catch {
-      Alert.alert("Couldn't save task", "Please try again.");
-    }
+      setEditing(null);
+    } catch { Alert.alert("Couldn't save task", "Please try again."); }
   }
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
+  const tk = todayKey();
+  const all = tasks ?? [];
+  const active = all.filter(t => !t.isCompleted);
+  const completed = all.filter(t => t.isCompleted);
 
-  const sorted = [...(tasks ?? [])].sort((a, b) => {
-    const po = { high: 0, medium: 1, low: 2 };
-    if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-    return (po[(a.priority as Priority) ?? "low"] ?? 1) - (po[(b.priority as Priority) ?? "low"] ?? 1);
-  });
+  const byPriority = (a: Task, b: Task) =>
+    (PRIORITY_ORDER[(a.priority as Priority) ?? "low"] ?? 1) -
+    (PRIORITY_ORDER[(b.priority as Priority) ?? "low"] ?? 1);
 
-  const incomplete = sorted.filter(t => !t.isCompleted);
-  const complete = sorted.filter(t => t.isCompleted);
+  const overdue  = active.filter(t => t.dueDate && t.dueDate < tk).sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
+  const dueToday = active.filter(t => t.dueDate === tk).sort(byPriority);
+  const upcoming = active.filter(t => t.dueDate && t.dueDate > tk).sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
+  const someday  = active.filter(t => !t.dueDate).sort(byPriority);
+
+  type GroupedItem = { type: "header"; key: string; label: string; count: number; accent: string } | { type: "task"; task: Task; overdue: boolean };
+  const listData: GroupedItem[] = [];
+  if (overdue.length)  { listData.push({ type: "header", key: "h-overdue",  label: "Overdue",  count: overdue.length,  accent: "#fb7185" }); overdue.forEach(t  => listData.push({ type: "task", task: t, overdue: true  })); }
+  if (dueToday.length) { listData.push({ type: "header", key: "h-today",   label: "Today",    count: dueToday.length, accent: colors.primary }); dueToday.forEach(t => listData.push({ type: "task", task: t, overdue: false })); }
+  if (upcoming.length) { listData.push({ type: "header", key: "h-upcoming", label: "Upcoming", count: upcoming.length, accent: colors.foreground }); upcoming.forEach(t => listData.push({ type: "task", task: t, overdue: false })); }
+  if (someday.length)  { listData.push({ type: "header", key: "h-someday",  label: "Someday",  count: someday.length,  accent: colors.mutedForeground }); someday.forEach(t  => listData.push({ type: "task", task: t, overdue: false })); }
+  if (completed.length){ listData.push({ type: "header", key: "h-done",     label: "Completed",count: completed.length, accent: colors.mutedForeground }); completed.slice(0, 20).forEach(t => listData.push({ type: "task", task: t, overdue: false })); }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FlatList
-        data={[...incomplete, ...complete]}
-        keyExtractor={t => String(t.id)}
+        data={listData}
+        keyExtractor={item => item.type === "header" ? item.key : String(item.task.id)}
         contentContainerStyle={{ paddingTop: topPad, paddingBottom: botPad, paddingHorizontal: 20, gap: 8 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
         ListHeaderComponent={
-          <View style={styles.pageHeader}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-              <Feather name="arrow-left" size={22} color={colors.foreground} />
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.pageTitle, { color: colors.foreground }]}>Tasks</Text>
-              <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>
-                {incomplete.length} remaining · {complete.length} done
-              </Text>
+          <View style={{ marginBottom: 4 }}>
+            <View style={styles.pageHeader}>
+              <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+                <Feather name="arrow-left" size={22} color={colors.foreground} />
+              </Pressable>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.pageTitle, { color: colors.foreground }]}>Tasks</Text>
+                <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>
+                  {overdue.length ? `${overdue.length} overdue · ` : ""}{dueToday.length} today · {completed.length} done
+                </Text>
+              </View>
+              <Pressable onPress={openCreate} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
+                <Feather name="plus" size={20} color={colors.primaryForeground} />
+              </Pressable>
             </View>
-            <Pressable
-              onPress={() => setModalOpen(true)}
-              style={[styles.addBtn, { backgroundColor: colors.primary }]}
-            >
-              <Feather name="plus" size={20} color={colors.primaryForeground} />
-            </Pressable>
+
+            {/* Stats row */}
+            <View style={[styles.statsRow, { gap: 8 }]}>
+              {[
+                { label: "Overdue", value: overdue.length, color: "#fb7185" },
+                { label: "Today",   value: dueToday.length, color: colors.primary },
+                { label: "Done",    value: completed.length, color: colors.accent ?? colors.secondary },
+              ].map(s => (
+                <View key={s.label} style={[styles.statCard, { backgroundColor: colors.card, borderColor: s.color + "30", flex: 1 }]}>
+                  <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
+                  <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         }
         ListEmptyComponent={
           isLoading ? (
-            <View style={styles.empty}>
-              <ActivityIndicator color={colors.primary} />
-            </View>
-          ) : (
+            <View style={styles.empty}><ActivityIndicator color={colors.primary} /></View>
+          ) : all.length === 0 ? (
             <View style={styles.empty}>
               <Feather name="check-square" size={40} color={colors.mutedForeground + "50"} />
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No tasks yet</Text>
               <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Tap + to add your first task.</Text>
             </View>
-          )
+          ) : null
         }
-        renderItem={({ item }) => (
-          <TaskRow task={item} onToggle={() => toggle(item)} onDelete={() => confirmDelete(item)} />
-        )}
+        renderItem={({ item }) => {
+          if (item.type === "header") {
+            return <GroupHeader label={item.label} count={item.count} accent={item.accent} />;
+          }
+          return (
+            <TaskRow
+              task={item.task}
+              overdue={item.overdue}
+              onToggle={() => toggle(item.task)}
+              onEdit={() => openEdit(item.task)}
+              onDelete={() => confirmDelete(item.task)}
+            />
+          );
+        }}
       />
-      <AddTaskModal
+
+      <TaskModal
+        task={editing}
         visible={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleCreate}
-        isPending={createTask.isPending}
+        onClose={() => { setModalOpen(false); setEditing(null); }}
+        onSave={handleSave}
+        isPending={createTask.isPending || updateTask.isPending}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pageHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 },
+  pageHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
   backBtn: { padding: 4 },
   pageTitle: { fontFamily: fonts.serifBold, fontSize: 28 },
   pageSub: { fontFamily: fonts.sub, fontSize: 13, marginTop: 2 },
   addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  statsRow: { flexDirection: "row", marginBottom: 16 },
+  statCard: { borderRadius: 14, borderWidth: 1, padding: 12, alignItems: "center" },
+  statValue: { fontFamily: fonts.serifBold, fontSize: 22 },
+  statLabel: { fontFamily: fonts.sub, fontSize: 11, marginTop: 2 },
+  groupHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12, marginBottom: 4 },
+  groupLabel: { fontFamily: fonts.subSemibold, fontSize: 12, textTransform: "uppercase", letterSpacing: 1 },
+  groupCount: { fontFamily: fonts.sub, fontSize: 12 },
   taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
+    flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, borderWidth: 1, padding: 14,
   },
   checkBtn: { padding: 2 },
   taskTitle: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 20 },
@@ -319,40 +440,15 @@ const styles = StyleSheet.create({
   emptySub: { fontFamily: fonts.sub, fontSize: 14 },
   overlay: { flex: 1 },
   sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    padding: 24,
-    paddingBottom: 40,
-    gap: 12,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1,
+    padding: 24, paddingBottom: 40, gap: 12,
   },
   sheetTitle: { fontFamily: fonts.serif, fontSize: 22, marginBottom: 4 },
-  input: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
+  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontFamily: fonts.body, fontSize: 14 },
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
+  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
   pillText: { fontFamily: fonts.sub, fontSize: 12, textTransform: "capitalize" },
-  saveBtn: {
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
+  saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center", marginTop: 8 },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
 });

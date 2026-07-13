@@ -3,6 +3,7 @@ import {
   useGetPeople,
   useCreatePerson,
   useUpdatePerson,
+  useDeletePerson,
   useGetRelationshipMoments,
   useCreateRelationshipMoment,
   getGetPeopleQueryKey,
@@ -78,11 +79,12 @@ function PersonCard({ person, onPress }: { person: Person; onPress: () => void }
   );
 }
 
-function PersonDetailModal({ person, onClose }: { person: Person; onClose: () => void }) {
+function PersonDetailModal({ person, onClose, onDeleted }: { person: Person; onClose: () => void; onDeleted: () => void }) {
   const colors = useColors();
   const qc = useQueryClient();
   const { data: moments = [], isLoading } = useGetRelationshipMoments(person.id);
   const createMoment = useCreateRelationshipMoment();
+  const deletePerson = useDeletePerson();
   const [showForm, setShowForm] = useState(false);
   const [mDate, setMDate] = useState(new Date().toISOString().split("T")[0]);
   const [mType, setMType] = useState<MomentType>("memory");
@@ -91,6 +93,22 @@ function PersonDetailModal({ person, onClose }: { person: Person; onClose: () =>
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: getGetRelationshipMomentsQueryKey(person.id) });
+  }
+
+  function confirmDelete() {
+    Alert.alert("Delete person?", `Remove ${person.name} and all their moments? This cannot be undone.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete", style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePerson.mutateAsync({ id: person.id });
+            qc.invalidateQueries({ queryKey: getGetPeopleQueryKey() });
+            onDeleted();
+          } catch { Alert.alert("Couldn't delete", "Please try again."); }
+        },
+      },
+    ]);
   }
 
   async function handleAddMoment() {
@@ -117,7 +135,9 @@ function PersonDetailModal({ person, onClose }: { person: Person; onClose: () =>
               <Feather name="x" size={22} color={colors.foreground} />
             </Pressable>
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>{person.name}</Text>
-            <View style={{ width: 22 }} />
+            <Pressable onPress={confirmDelete} hitSlop={8} disabled={deletePerson.isPending}>
+              <Feather name="trash-2" size={18} color="#f87171" />
+            </Pressable>
           </View>
 
           <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 16 }}>
@@ -379,7 +399,7 @@ export default function PeopleScreen() {
         renderItem={({ item }) => <PersonCard person={item} onPress={() => setSelectedPerson(item)} />}
       />
 
-      {selectedPerson ? <PersonDetailModal person={selectedPerson} onClose={() => setSelectedPerson(null)} /> : null}
+      {selectedPerson ? <PersonDetailModal person={selectedPerson} onClose={() => setSelectedPerson(null)} onDeleted={() => setSelectedPerson(null)} /> : null}
       <PersonFormModal
         visible={formOpen}
         person={editing}
