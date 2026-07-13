@@ -3193,6 +3193,12 @@ components:
         affirmation:
           type: string
           nullable: true
+        promptId:
+          type: integer
+          nullable: true
+        promptText:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -3214,6 +3220,10 @@ components:
           enum: [great, good, okay, rough, struggling]
         affirmation:
           type: string
+        promptId:
+          type: integer
+        promptText:
+          type: string
       required: [content]
 
     UpdateJournalEntryBody:
@@ -3225,6 +3235,10 @@ components:
           type: string
           enum: [great, good, okay, rough, struggling]
         affirmation:
+          type: string
+        promptId:
+          type: integer
+        promptText:
           type: string
 
     Goal:

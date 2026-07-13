@@ -10,6 +10,8 @@ export const journalEntriesTable = pgTable("journal_entries", {
   content: text("content").notNull(),
   mood: text("mood", { enum: ["great", "good", "okay", "rough", "struggling"] }).notNull().default("okay"),
   affirmation: text("affirmation"),
+  promptId: integer("prompt_id"),
+  promptText: text("prompt_text"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -607,6 +607,8 @@ export const GetJournalEntriesResponseItem = zod.object({
   "content": zod.string(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
   "affirmation": zod.string().nullish(),
+  "promptId": zod.number().nullish(),
+  "promptText": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -620,7 +622,9 @@ export const CreateJournalEntryBody = zod.object({
   "date": zod.coerce.date().optional(),
   "content": zod.string(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']).optional(),
-  "affirmation": zod.string().optional()
+  "affirmation": zod.string().optional(),
+  "promptId": zod.number().optional(),
+  "promptText": zod.string().optional()
 })
 
 export const CreateJournalEntryResponse = zod.object({
@@ -630,6 +634,8 @@ export const CreateJournalEntryResponse = zod.object({
   "content": zod.string(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
   "affirmation": zod.string().nullish(),
+  "promptId": zod.number().nullish(),
+  "promptText": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -645,6 +651,8 @@ export const GetTodayJournalEntryResponse = zod.object({
   "content": zod.string(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
   "affirmation": zod.string().nullish(),
+  "promptId": zod.number().nullish(),
+  "promptText": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -660,7 +668,9 @@ export const UpdateJournalEntryParams = zod.object({
 export const UpdateJournalEntryBody = zod.object({
   "content": zod.string().optional(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']).optional(),
-  "affirmation": zod.string().optional()
+  "affirmation": zod.string().optional(),
+  "promptId": zod.number().optional(),
+  "promptText": zod.string().optional()
 })
 
 export const UpdateJournalEntryResponse = zod.object({
@@ -670,6 +680,8 @@ export const UpdateJournalEntryResponse = zod.object({
   "content": zod.string(),
   "mood": zod.enum(['great', 'good', 'okay', 'rough', 'struggling']),
   "affirmation": zod.string().nullish(),
+  "promptId": zod.number().nullish(),
+  "promptText": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })

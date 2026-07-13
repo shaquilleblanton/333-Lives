@@ -26,6 +26,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "bolt", selected: "bolt.fill" }} />
         <Label>Pulse</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="growth">
+        <Icon sf={{ default: "leaf", selected: "leaf.fill" }} />
+        <Label>Growth</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memories">
         <Icon sf={{ default: "photo.on.rectangle", selected: "photo.fill.on.rectangle.fill" }} />
         <Label>Memories</Label>
@@ -118,6 +122,18 @@ function ClassicTabLayout() {
               <SymbolView name="bolt" tintColor={color} size={24} />
             ) : (
               <Feather name="zap" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="growth"
+        options={{
+          title: "Growth",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="leaf" tintColor={color} size={24} />
+            ) : (
+              <Feather name="trending-up" size={22} color={color} />
             ),
         }}
       />

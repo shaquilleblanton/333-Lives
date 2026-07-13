@@ -329,6 +329,8 @@ export interface JournalEntry {
   content: string;
   mood: JournalEntryMood;
   affirmation?: string | null;
+  promptId?: number | null;
+  promptText?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -349,6 +351,8 @@ export interface CreateJournalEntryBody {
   content: string;
   mood?: CreateJournalEntryBodyMood;
   affirmation?: string;
+  promptId?: number;
+  promptText?: string;
 }
 
 export type UpdateJournalEntryBodyMood = typeof UpdateJournalEntryBodyMood[keyof typeof UpdateJournalEntryBodyMood];
@@ -366,6 +370,8 @@ export interface UpdateJournalEntryBody {
   content?: string;
   mood?: UpdateJournalEntryBodyMood;
   affirmation?: string;
+  promptId?: number;
+  promptText?: string;
 }
 
 export type GoalCategory = typeof GoalCategory[keyof typeof GoalCategory];
