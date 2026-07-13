@@ -2,6 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import {
   useGetCommunityEvents,
   useCreateCommunityEvent,
+  useUpdateCommunityEvent,
+  useDeleteCommunityEvent,
   useRespondToCommunityEvent,
   getGetCommunityEventsQueryKey,
 } from "@workspace/api-client-react";
@@ -57,7 +59,12 @@ const CATEGORY_LABELS: Record<EventCategory, string> = {
   other: "Event",
 };
 
-function EventCard({ event, onRespond }: { event: CommunityEvent; onRespond: (rsvp: string) => void }) {
+function EventCard({ event, onRespond, onEdit, onDelete }: {
+  event: CommunityEvent;
+  onRespond: (rsvp: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const colors = useColors();
   const icon = CATEGORY_ICONS[(event.category as EventCategory)] ?? "calendar";
   const label = CATEGORY_LABELS[(event.category as EventCategory)] ?? "Event";
@@ -76,8 +83,16 @@ function EventCard({ event, onRespond }: { event: CommunityEvent; onRespond: (rs
           <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>{label} · {dateStr}</Text>
           {event.requestedBy ? <Text style={[styles.eventMeta, { color: colors.mutedForeground }]}>By: {event.requestedBy}</Text> : null}
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: colors.muted + "40" }]}>
-          <Text style={[styles.statusText, { color: colors.mutedForeground }]}>{event.status}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={[styles.statusBadge, { backgroundColor: colors.muted + "40" }]}>
+            <Text style={[styles.statusText, { color: colors.mutedForeground }]}>{event.status}</Text>
+          </View>
+          <Pressable onPress={onEdit} hitSlop={8}>
+            <Feather name="edit-2" size={14} color={colors.mutedForeground} />
+          </Pressable>
+          <Pressable onPress={onDelete} hitSlop={8}>
+            <Feather name="trash-2" size={14} color="#f87171" />
+          </Pressable>
         </View>
       </View>
 
@@ -192,7 +207,10 @@ export default function CommunityScreen() {
   const { data: events, isLoading, refetch, isRefetching } = useGetCommunityEvents();
   const createEvent = useCreateCommunityEvent();
   const respondEvent = useRespondToCommunityEvent();
+  const updateEvent = useUpdateCommunityEvent();
+  const deleteEvent = useDeleteCommunityEvent();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CommunityEvent | null>(null);
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
 
   function invalidate() { qc.invalidateQueries({ queryKey: getGetCommunityEventsQueryKey() }); }
@@ -203,6 +221,28 @@ export default function CommunityScreen() {
       invalidate();
       setCreateOpen(false);
     } catch { Alert.alert("Couldn't create event", "Please try again."); }
+  }
+
+  async function handleUpdate(data: any) {
+    if (!editingEvent) return;
+    try {
+      await updateEvent.mutateAsync({ id: editingEvent.id, data });
+      invalidate();
+      setEditingEvent(null);
+    } catch { Alert.alert("Couldn't update event", "Please try again."); }
+  }
+
+  function confirmDelete(event: CommunityEvent) {
+    Alert.alert("Delete event?", `"${event.title}"`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete", style: "destructive",
+        onPress: async () => {
+          try { await deleteEvent.mutateAsync({ id: event.id }); invalidate(); }
+          catch { Alert.alert("Couldn't delete", "Please try again."); }
+        },
+      },
+    ]);
   }
 
   async function handleRespond(eventId: number, rsvp: string) {
@@ -261,9 +301,22 @@ export default function CommunityScreen() {
             </View>
           )
         }
-        renderItem={({ item }) => <EventCard event={item} onRespond={rsvp => handleRespond(item.id, rsvp)} />}
+        renderItem={({ item }) => (
+          <EventCard
+            event={item}
+            onRespond={rsvp => handleRespond(item.id, rsvp)}
+            onEdit={() => setEditingEvent(item)}
+            onDelete={() => confirmDelete(item)}
+          />
+        )}
       />
       <CreateEventModal visible={createOpen} onClose={() => setCreateOpen(false)} onSave={handleCreate} isSaving={createEvent.isPending} />
+      <CreateEventModal
+        visible={!!editingEvent}
+        onClose={() => setEditingEvent(null)}
+        onSave={handleUpdate}
+        isSaving={updateEvent.isPending}
+      />
     </View>
   );
 }

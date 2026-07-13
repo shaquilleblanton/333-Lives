@@ -9,7 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -80,6 +80,23 @@ export default function GratitudeScreen() {
 
   const sortedEntries = [...(entries ?? [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const streak = useMemo(() => {
+    const all = entries ?? [];
+    if (all.length === 0) return 0;
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const dateSet = new Set(all.map(e => e.date));
+    const startDate = dateSet.has(today) ? today : dateSet.has(yesterday) ? yesterday : null;
+    if (!startDate) return 0;
+    let current = 0;
+    let d = new Date(startDate + "T12:00:00");
+    while (dateSet.has(d.toISOString().split("T")[0])) {
+      current++;
+      d = new Date(d.getTime() - 86400000);
+    }
+    return current;
+  }, [entries]);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
@@ -96,6 +113,13 @@ export default function GratitudeScreen() {
             <Text style={[styles.pageTitle, { color: colors.foreground }]}>Gratitude</Text>
             <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>Count your blessings, daily.</Text>
           </View>
+          {/* Streak pill */}
+          {streak > 0 ? (
+            <View style={[styles.streakPill, { backgroundColor: colors.primary + "20", borderColor: colors.primary + "40" }]}>
+              <Feather name="zap" size={12} color={colors.primary} />
+              <Text style={[styles.streakText, { color: colors.primary }]}>{streak} day{streak !== 1 ? "s" : ""}</Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Today's entry card */}
@@ -224,6 +248,8 @@ const styles = StyleSheet.create({
   textArea: { minHeight: 80, textAlignVertical: "top" },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center", marginTop: 4 },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
+  streakPill: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1 },
+  streakText: { fontFamily: fonts.subSemibold, fontSize: 12 },
   sectionLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.5, marginBottom: 12 },
   pastCard: { borderRadius: 14, borderWidth: 1, padding: 16, gap: 4 },
   pastDate: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 0.5, marginBottom: 6, textTransform: "uppercase" },
