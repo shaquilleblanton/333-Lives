@@ -22,6 +22,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
         <Label>Life</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="pulse">
+        <Icon sf={{ default: "bolt", selected: "bolt.fill" }} />
+        <Label>Pulse</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memos">
         <Icon sf={{ default: "mic", selected: "mic.fill" }} />
         <Label>Memos</Label>
@@ -98,6 +102,18 @@ function ClassicTabLayout() {
               <SymbolView name="sparkles" tintColor={color} size={24} />
             ) : (
               <Feather name="grid" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="pulse"
+        options={{
+          title: "Pulse",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="bolt" tintColor={color} size={24} />
+            ) : (
+              <Feather name="zap" size={22} color={color} />
             ),
         }}
       />

@@ -25,6 +25,7 @@ import feedbackRouter from "./feedback";
 import familyMembersRouter from "./family-members";
 import storyAnswersRouter from "./story-answers";
 import lifeEventsRouter from "./life-events";
+import pulseRouter from "./pulse";
 
 const router: IRouter = Router();
 
@@ -58,5 +59,6 @@ router.use(feedbackRouter);
 router.use(familyMembersRouter);
 router.use(storyAnswersRouter);
 router.use(lifeEventsRouter);
+router.use(pulseRouter);
 
 export default router;

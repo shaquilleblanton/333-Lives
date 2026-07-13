@@ -1450,6 +1450,94 @@ export interface UpsertStoryAnswerBody {
   audioUrl?: string | null;
 }
 
+export interface PulseReactions {
+  fire: number;
+  pray: number;
+  love: number;
+  strength: number;
+}
+
+export type PulseReactorType = typeof PulseReactorType[keyof typeof PulseReactorType];
+
+
+export const PulseReactorType = {
+  fire: 'fire',
+  pray: 'pray',
+  love: 'love',
+  strength: 'strength',
+} as const;
+
+export interface PulseReactor {
+  userId: number;
+  type: PulseReactorType;
+  name: string;
+}
+
+export type PulsePostType = typeof PulsePostType[keyof typeof PulsePostType];
+
+
+export const PulsePostType = {
+  text: 'text',
+  photo: 'photo',
+  voice: 'voice',
+} as const;
+
+export type PulsePostMyReaction = typeof PulsePostMyReaction[keyof typeof PulsePostMyReaction] | null;
+
+
+export const PulsePostMyReaction = {
+  fire: 'fire',
+  pray: 'pray',
+  love: 'love',
+  strength: 'strength',
+} as const;
+
+export interface PulsePost {
+  id: number;
+  userId: number;
+  authorName: string;
+  isOwn: boolean;
+  content?: string | null;
+  mediaUrl?: string | null;
+  type: PulsePostType;
+  isPersistent: boolean;
+  expiresAt?: string | null;
+  reactions: PulseReactions;
+  myReaction?: PulsePostMyReaction;
+  reactorNames: PulseReactor[];
+  createdAt: string;
+}
+
+export type CreatePulsePostBodyType = typeof CreatePulsePostBodyType[keyof typeof CreatePulsePostBodyType];
+
+
+export const CreatePulsePostBodyType = {
+  text: 'text',
+  photo: 'photo',
+  voice: 'voice',
+} as const;
+
+export interface CreatePulsePostBody {
+  type: CreatePulsePostBodyType;
+  content?: string | null;
+  mediaUrl?: string | null;
+  isPersistent?: boolean;
+}
+
+export type PulseReactionBodyType = typeof PulseReactionBodyType[keyof typeof PulseReactionBodyType];
+
+
+export const PulseReactionBodyType = {
+  fire: 'fire',
+  pray: 'pray',
+  love: 'love',
+  strength: 'strength',
+} as const;
+
+export interface PulseReactionBody {
+  type: PulseReactionBodyType;
+}
+
 export type MediaAttachmentType = typeof MediaAttachmentType[keyof typeof MediaAttachmentType];
 
 

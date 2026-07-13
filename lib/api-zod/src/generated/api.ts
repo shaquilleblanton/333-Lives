@@ -2579,3 +2579,109 @@ export const DeleteLifeEventResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the private pulse feed for the current user's circle
+ */
+export const GetPulseFeedResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "authorName": zod.string(),
+  "isOwn": zod.boolean(),
+  "content": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "type": zod.enum(['text', 'photo', 'voice']),
+  "isPersistent": zod.boolean(),
+  "expiresAt": zod.coerce.date().nullish(),
+  "reactions": zod.object({
+  "fire": zod.number(),
+  "pray": zod.number(),
+  "love": zod.number(),
+  "strength": zod.number()
+}),
+  "myReaction": zod.enum(['fire', 'pray', 'love', 'strength']).nullish(),
+  "reactorNames": zod.array(zod.object({
+  "userId": zod.number(),
+  "type": zod.enum(['fire', 'pray', 'love', 'strength']),
+  "name": zod.string()
+})),
+  "createdAt": zod.coerce.date()
+})
+export const GetPulseFeedResponse = zod.array(GetPulseFeedResponseItem)
+
+
+/**
+ * @summary Create a new pulse post
+ */
+export const CreatePulsePostBody = zod.object({
+  "type": zod.enum(['text', 'photo', 'voice']),
+  "content": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "isPersistent": zod.boolean().optional()
+})
+
+export const CreatePulsePostResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "authorName": zod.string(),
+  "isOwn": zod.boolean(),
+  "content": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "type": zod.enum(['text', 'photo', 'voice']),
+  "isPersistent": zod.boolean(),
+  "expiresAt": zod.coerce.date().nullish(),
+  "reactions": zod.object({
+  "fire": zod.number(),
+  "pray": zod.number(),
+  "love": zod.number(),
+  "strength": zod.number()
+}),
+  "myReaction": zod.enum(['fire', 'pray', 'love', 'strength']).nullish(),
+  "reactorNames": zod.array(zod.object({
+  "userId": zod.number(),
+  "type": zod.enum(['fire', 'pray', 'love', 'strength']),
+  "name": zod.string()
+})),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete own pulse post
+ */
+export const DeletePulsePostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePulsePostResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Add or change reaction to a pulse post
+ */
+export const ReactToPulsePostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReactToPulsePostBody = zod.object({
+  "type": zod.enum(['fire', 'pray', 'love', 'strength'])
+})
+
+export const ReactToPulsePostResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Remove own reaction from a pulse post
+ */
+export const RemovePulseReactionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RemovePulseReactionResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

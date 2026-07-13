@@ -39,6 +39,7 @@ import type {
   CreateLifeEventBody,
   CreateMessageBody,
   CreatePersonBody,
+  CreatePulsePostBody,
   CreateRelationshipMomentBody,
   CreateShopCheckoutBody,
   CreateTaskBody,
@@ -76,6 +77,8 @@ import type {
   LifeEvent,
   Message,
   Person,
+  PulsePost,
+  PulseReactionBody,
   RelationshipMoment,
   ReorderBlocksBody,
   RespondToCommunityEventBody,
@@ -8231,5 +8234,363 @@ export const useDeleteLifeEvent = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteLifeEventMutationOptions(options));
+    }
+
+export const getGetPulseFeedUrl = () => {
+
+
+
+
+  return `/api/pulse/feed`
+}
+
+/**
+ * @summary Get the private pulse feed for the current user's circle
+ */
+export const getPulseFeed = async ( options?: RequestInit): Promise<PulsePost[]> => {
+
+  return customFetch<PulsePost[]>(getGetPulseFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPulseFeedQueryKey = () => {
+    return [
+    `/api/pulse/feed`
+    ] as const;
+    }
+
+
+export const getGetPulseFeedQueryOptions = <TData = Awaited<ReturnType<typeof getPulseFeed>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPulseFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPulseFeedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPulseFeed>>> = ({ signal }) => getPulseFeed({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPulseFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPulseFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getPulseFeed>>>
+export type GetPulseFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the private pulse feed for the current user's circle
+ */
+
+export function useGetPulseFeed<TData = Awaited<ReturnType<typeof getPulseFeed>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPulseFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPulseFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreatePulsePostUrl = () => {
+
+
+
+
+  return `/api/pulse/posts`
+}
+
+/**
+ * @summary Create a new pulse post
+ */
+export const createPulsePost = async (createPulsePostBody: CreatePulsePostBody, options?: RequestInit): Promise<PulsePost> => {
+
+  return customFetch<PulsePost>(getCreatePulsePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createPulsePostBody)
+  }
+);}
+
+
+
+
+export const getCreatePulsePostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPulsePost>>, TError,{data: BodyType<CreatePulsePostBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPulsePost>>, TError,{data: BodyType<CreatePulsePostBody>}, TContext> => {
+
+const mutationKey = ['createPulsePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPulsePost>>, {data: BodyType<CreatePulsePostBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPulsePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePulsePostMutationResult = NonNullable<Awaited<ReturnType<typeof createPulsePost>>>
+    export type CreatePulsePostMutationBody = BodyType<CreatePulsePostBody>
+    export type CreatePulsePostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new pulse post
+ */
+export const useCreatePulsePost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPulsePost>>, TError,{data: BodyType<CreatePulsePostBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPulsePost>>,
+        TError,
+        {data: BodyType<CreatePulsePostBody>},
+        TContext
+      > => {
+      return useMutation(getCreatePulsePostMutationOptions(options));
+    }
+
+export const getDeletePulsePostUrl = (id: number,) => {
+
+
+
+
+  return `/api/pulse/posts/${id}`
+}
+
+/**
+ * @summary Delete own pulse post
+ */
+export const deletePulsePost = async (id: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeletePulsePostUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePulsePostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePulsePost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePulsePost>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePulsePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePulsePost>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePulsePost(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePulsePostMutationResult = NonNullable<Awaited<ReturnType<typeof deletePulsePost>>>
+
+    export type DeletePulsePostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete own pulse post
+ */
+export const useDeletePulsePost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePulsePost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePulsePost>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePulsePostMutationOptions(options));
+    }
+
+export const getReactToPulsePostUrl = (id: number,) => {
+
+
+
+
+  return `/api/pulse/posts/${id}/react`
+}
+
+/**
+ * @summary Add or change reaction to a pulse post
+ */
+export const reactToPulsePost = async (id: number,
+    pulseReactionBody: PulseReactionBody, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getReactToPulsePostUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(pulseReactionBody)
+  }
+);}
+
+
+
+
+export const getReactToPulsePostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactToPulsePost>>, TError,{id: number;data: BodyType<PulseReactionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactToPulsePost>>, TError,{id: number;data: BodyType<PulseReactionBody>}, TContext> => {
+
+const mutationKey = ['reactToPulsePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactToPulsePost>>, {id: number;data: BodyType<PulseReactionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reactToPulsePost(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactToPulsePostMutationResult = NonNullable<Awaited<ReturnType<typeof reactToPulsePost>>>
+    export type ReactToPulsePostMutationBody = BodyType<PulseReactionBody>
+    export type ReactToPulsePostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add or change reaction to a pulse post
+ */
+export const useReactToPulsePost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactToPulsePost>>, TError,{id: number;data: BodyType<PulseReactionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reactToPulsePost>>,
+        TError,
+        {id: number;data: BodyType<PulseReactionBody>},
+        TContext
+      > => {
+      return useMutation(getReactToPulsePostMutationOptions(options));
+    }
+
+export const getRemovePulseReactionUrl = (id: number,) => {
+
+
+
+
+  return `/api/pulse/posts/${id}/react`
+}
+
+/**
+ * @summary Remove own reaction from a pulse post
+ */
+export const removePulseReaction = async (id: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getRemovePulseReactionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemovePulseReactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePulseReaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removePulseReaction>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['removePulseReaction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePulseReaction>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  removePulseReaction(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemovePulseReactionMutationResult = NonNullable<Awaited<ReturnType<typeof removePulseReaction>>>
+
+    export type RemovePulseReactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove own reaction from a pulse post
+ */
+export const useRemovePulseReaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePulseReaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removePulseReaction>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRemovePulseReactionMutationOptions(options));
     }
 

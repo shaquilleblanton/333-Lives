@@ -21,6 +21,7 @@ import {
   GitBranch,
   BookOpen,
   CalendarRange,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { href: "/memos", label: "Voice Memos", icon: Mic },
   { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/family-tree", label: "Family Tree", icon: GitBranch },
+  { href: "/pulse", label: "What's Good", icon: Zap },
   { href: "/timeline", label: "Life Timeline", icon: CalendarRange },
   { href: "/story", label: "Tell Your Story", icon: BookOpen },
   { href: "/community", label: "Community", icon: Calendar },

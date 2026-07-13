@@ -47,6 +47,8 @@ tags:
     description: Family Tree — blood relatives, chosen family, and ancestors with lineage documentation
   - name: story
     description: Tell Your Story — chapter-based guided oral history with text and voice answers
+  - name: pulse
+    description: What's Good Today — private social pulse for your close circle
 
 paths:
   /storage/uploads/request-url:
@@ -2435,6 +2437,101 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /pulse/feed:
+    get:
+      tags: [pulse]
+      operationId: getPulseFeed
+      summary: Get the private pulse feed for the current user's circle
+      responses:
+        "200":
+          description: List of pulse posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PulsePost"
+
+  /pulse/posts:
+    post:
+      tags: [pulse]
+      operationId: createPulsePost
+      summary: Create a new pulse post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePulsePostBody"
+      responses:
+        "201":
+          description: Created pulse post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PulsePost"
+
+  /pulse/posts/{id}:
+    delete:
+      tags: [pulse]
+      operationId: deletePulsePost
+      summary: Delete own pulse post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /pulse/posts/{id}/react:
+    put:
+      tags: [pulse]
+      operationId: reactToPulsePost
+      summary: Add or change reaction to a pulse post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PulseReactionBody"
+      responses:
+        "200":
+          description: Reaction saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      tags: [pulse]
+      operationId: removePulseReaction
+      summary: Remove own reaction from a pulse post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reaction removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -4058,6 +4155,96 @@ components:
         audioUrl:
           type: string
           nullable: true
+
+    PulseReactions:
+      type: object
+      properties:
+        fire:
+          type: integer
+        pray:
+          type: integer
+        love:
+          type: integer
+        strength:
+          type: integer
+      required: [fire, pray, love, strength]
+
+    PulseReactor:
+      type: object
+      properties:
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [fire, pray, love, strength]
+        name:
+          type: string
+      required: [userId, type, name]
+
+    PulsePost:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        authorName:
+          type: string
+        isOwn:
+          type: boolean
+        content:
+          type: string
+          nullable: true
+        mediaUrl:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [text, photo, voice]
+        isPersistent:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        reactions:
+          $ref: "#/components/schemas/PulseReactions"
+        myReaction:
+          type: string
+          enum: [fire, pray, love, strength]
+          nullable: true
+        reactorNames:
+          type: array
+          items:
+            $ref: "#/components/schemas/PulseReactor"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, authorName, isOwn, type, isPersistent, reactions, reactorNames, createdAt]
+
+    CreatePulsePostBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [text, photo, voice]
+        content:
+          type: string
+          nullable: true
+        mediaUrl:
+          type: string
+          nullable: true
+        isPersistent:
+          type: boolean
+      required: [type]
+
+    PulseReactionBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [fire, pray, love, strength]
+      required: [type]
 
     MediaAttachment:
       type: object
