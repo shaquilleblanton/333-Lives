@@ -7,6 +7,7 @@ import {
   useRespondToCommunityEvent,
   getGetCommunityEventsQueryKey,
 } from "@workspace/api-client-react";
+// ↑ getGetCommunityEventsQueryKey used for all invalidations — do not use hardcoded string keys
 import type { CommunityEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -284,7 +285,7 @@ export default function CommunityScreen() {
   const [editingEvent, setEditingEvent] = useState<CommunityEvent | null>(null);
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
 
-  function invalidate() { qc.invalidateQueries({ queryKey: ["/community"], exact: false }); }
+  function invalidate() { qc.invalidateQueries({ queryKey: getGetCommunityEventsQueryKey() }); }
 
   async function handleCreate(data: any) {
     try {

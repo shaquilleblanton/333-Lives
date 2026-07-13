@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useGetEvents, useCreateEvent, getGetEventsQueryKey } from "@workspace/api-client-react";
+import { useGetEvents, useCreateEvent, useDeleteEvent, getGetEventsQueryKey } from "@workspace/api-client-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarIcon, Clock, Plus, Loader2, Unlock, Lock, CalendarCheck, EyeOff } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Loader2, Unlock, Lock, CalendarCheck, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,14 @@ const getEventColor = (type: string) => {
 
 export default function Calendar() {
   const { data: events, isLoading } = useGetEvents();
+  const deleteEvent = useDeleteEvent();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+
+  async function handleDelete(id: number) {
+    await deleteEvent.mutateAsync({ id });
+    queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
+  }
 
   const today = new Date();
   const monthStart = startOfMonth(today);
@@ -140,7 +147,7 @@ export default function Calendar() {
                 const wtMeta = WINDOW_TYPE_META[wt] ?? WINDOW_TYPE_META.scheduled;
                 const WtIcon = wtMeta.icon;
                 return (
-                  <div key={event.id} className="p-4 bg-card/40 border border-border/50 rounded-xl">
+                  <div key={event.id} className="p-4 bg-card/40 border border-border/50 rounded-xl group">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={cn("w-2 h-2 rounded-full",
                         event.type === "medication" ? "bg-secondary" :
@@ -150,6 +157,14 @@ export default function Calendar() {
                       <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border font-subheading", wtMeta.ringColor)}>
                         <WtIcon className="w-2.5 h-2.5" />{wtMeta.label}
                       </span>
+                      <button
+                        onClick={() => handleDelete(event.id)}
+                        disabled={deleteEvent.isPending}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"
+                        title="Delete event"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     <div className="space-y-1 pl-4 border-l border-border/50 ml-1">
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">

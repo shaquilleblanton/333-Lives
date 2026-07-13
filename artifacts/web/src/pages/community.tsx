@@ -190,6 +190,78 @@ function EventCard({
   );
 }
 
+/**
+ * WeekStrip — 7-day at-a-glance availability view (#78).
+ * Shows today + next 6 days as tappable blocks, colour-coded by the dominant
+ * windowType for that day. Locked days show as "Busy", open days glow emerald.
+ */
+function WeekStrip({ events, onDayClick }: { events: CommunityEvent[]; onDayClick: (ds: string) => void }) {
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function dominantWT(ds: string): WindowType | null {
+    const dayEvs = events.filter(e => e.startDate === ds || (e.endDate && e.startDate <= ds && e.endDate >= ds));
+    if (dayEvs.length === 0) return null;
+    if (dayEvs.some(e => (e.windowType as WindowType) === "open")) return "open";
+    if (dayEvs.some(e => (e.windowType as WindowType) === "locked")) return "locked";
+    return "scheduled";
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-subheading text-muted-foreground uppercase tracking-wider">This Week</p>
+      <div className="grid grid-cols-7 gap-2">
+        {days.map((d, i) => {
+          const ds = d.toISOString().split("T")[0]!;
+          const isToday = i === 0;
+          const wt = dominantWT(ds);
+          const meta = wt ? WINDOW_TYPE_META[wt] : null;
+          return (
+            <button
+              key={ds}
+              onClick={() => onDayClick(ds)}
+              className={cn(
+                "flex flex-col items-center gap-1 py-3 px-1 rounded-xl border transition-all hover:scale-105",
+                wt === "open"      && "bg-emerald-400/10 border-emerald-400/40 hover:border-emerald-400",
+                wt === "locked"    && "bg-amber-400/10   border-amber-400/40   hover:border-amber-400",
+                wt === "scheduled" && "bg-primary/10      border-primary/30     hover:border-primary",
+                !wt                && "bg-card/50          border-border/50      hover:border-border",
+                isToday            && "ring-1 ring-primary/40",
+              )}
+            >
+              <span className="text-[10px] font-subheading text-muted-foreground uppercase">
+                {isToday ? "Today" : DAY_LABELS[d.getDay()]}
+              </span>
+              <span className={cn(
+                "text-base font-serif",
+                wt === "open"      && "text-emerald-400",
+                wt === "locked"    && "text-amber-400",
+                wt === "scheduled" && "text-primary",
+                !wt                && "text-foreground",
+              )}>
+                {d.getDate()}
+              </span>
+              {meta ? (
+                <span className={cn("text-[9px] font-subheading truncate max-w-full px-1", meta.color.split(" ")[0])}>
+                  {wt === "locked" ? "Busy" : meta.label}
+                </span>
+              ) : (
+                <span className="text-[9px] font-subheading text-muted-foreground/50">Free</span>
+              )}
+              {meta && <span className={cn("w-1.5 h-1.5 rounded-full", meta.dotColor)} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_FORM = {
   title: "", description: "", category: "other" as string,
   startDate: "", endDate: "", startTime: "", endTime: "",
@@ -294,6 +366,14 @@ export default function Community() {
           <Plus className="w-4 h-4" /> Add Event
         </Button>
       </header>
+
+      {/* ── Week-at-a-glance availability strip (#78) ── */}
+      <WeekStrip events={events} onDayClick={(ds) => {
+        const d = new Date(ds + "T12:00:00");
+        setViewYear(d.getFullYear());
+        setViewMonth(d.getMonth());
+        setSelectedDate(ds);
+      }} />
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">

@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   useGetEvents,
   useCreateEvent,
+  useDeleteEvent,
   getGetEventsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -235,6 +236,7 @@ export default function CalendarScreen() {
   const qc = useQueryClient();
   const { data: events, isLoading, refetch, isRefetching } = useGetEvents();
   const createEvent = useCreateEvent();
+  const deleteEvent = useDeleteEvent();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
@@ -258,6 +260,16 @@ export default function CalendarScreen() {
   async function handleCreate(data: any) {
     try { await createEvent.mutateAsync({ data }); invalidate(); setAddOpen(false); }
     catch { Alert.alert("Couldn't save event", "Please try again."); }
+  }
+
+  function confirmDelete(id: number, title: string) {
+    Alert.alert("Delete event?", `"${title}" will be removed.`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: async () => {
+        try { await deleteEvent.mutateAsync({ id }); invalidate(); }
+        catch { Alert.alert("Couldn't delete", "Please try again."); }
+      }},
+    ]);
   }
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
@@ -358,6 +370,9 @@ export default function CalendarScreen() {
                         <Feather name={WtIcon} size={9} color={wtColor} />
                         <Text style={[styles.typeText, { color: wtColor }]}>{WINDOW_TYPE_LABELS[wt]}</Text>
                       </View>
+                      <Pressable onPress={() => confirmDelete(e.id, e.title)} hitSlop={8}>
+                        <Feather name="trash-2" size={14} color="#f87171" />
+                      </Pressable>
                     </View>
                   </View>
                 );
