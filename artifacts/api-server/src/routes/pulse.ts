@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserId } from "../middlewares/auth";
+import { getUserId, requireOwner } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import {
   pulsePostsTable,
@@ -10,7 +10,7 @@ import {
   PULSE_REACTION_TYPES,
   type PulseReactionType,
 } from "@workspace/db/schema";
-import { eq, and, or, gt, isNull, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, or, gt, isNull, desc, inArray, ne, sql } from "drizzle-orm";
 import { ObjectStorageService } from "../lib/objectStorage";
 
 const router = Router();
@@ -293,6 +293,62 @@ router.delete("/pulse/posts/:id/react", async (req, res) => {
     .where(and(eq(pulseReactionsTable.postId, id), eq(pulseReactionsTable.userId, getUserId(req))));
 
   return res.json({ success: true });
+});
+
+// ─── Owner-only: Circle management ──────────────────────────────────────────
+//
+// Pulse circles are intentionally managed by the app owner, not auto-expanded.
+// Default is least-privilege: a user's circle is empty and they see only their
+// own posts. The owner uses these endpoints to grant mutual feed access between
+// users (e.g., all family members after onboarding).
+//
+// POST   /pulse/circle/:userId  — add userId to all other users' circles (bilateral)
+// DELETE /pulse/circle/:userId  — remove userId from all other users' circles
+
+router.post("/pulse/circle/:userId", requireOwner, async (req, res) => {
+  const targetId = Number(req.params.userId);
+  if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Invalid userId" });
+
+  const targetUser = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.id, targetId))
+    .limit(1);
+  if (targetUser.length === 0) return res.status(404).json({ error: "User not found" });
+
+  const otherUsers = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(ne(usersTable.id, targetId));
+
+  if (otherUsers.length > 0) {
+    const pairs = otherUsers.flatMap((u) => [
+      { userId: targetId, memberUserId: u.id },
+      { userId: u.id, memberUserId: targetId },
+    ]);
+    await db.insert(pulseCircleMembersTable).values(pairs).onConflictDoNothing();
+  }
+
+  return res.json({ success: true, addedTo: otherUsers.length, userId: targetId });
+});
+
+router.delete("/pulse/circle/:userId", requireOwner, async (req, res) => {
+  const targetId = Number(req.params.userId);
+  if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Invalid userId" });
+
+  await db
+    .delete(pulseCircleMembersTable)
+    .where(
+      and(
+        // Remove rows where targetId is the member or the owner
+        eq(pulseCircleMembersTable.memberUserId, targetId),
+      ),
+    );
+  await db
+    .delete(pulseCircleMembersTable)
+    .where(eq(pulseCircleMembersTable.userId, targetId));
+
+  return res.json({ success: true, userId: targetId });
 });
 
 export default router;
