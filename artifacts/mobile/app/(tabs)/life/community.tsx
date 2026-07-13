@@ -123,11 +123,12 @@ function EventCard({ event, onRespond, onEdit, onDelete }: {
   );
 }
 
-function CreateEventModal({ visible, onClose, onSave, isSaving }: {
+function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
   visible: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
   isSaving: boolean;
+  initialData?: CommunityEvent | null;
 }) {
   const colors = useColors();
   const [title, setTitle] = useState("");
@@ -135,6 +136,18 @@ function CreateEventModal({ visible, onClose, onSave, isSaving }: {
   const [category, setCategory] = useState<EventCategory>("other");
   const [startDate, setStartDate] = useState("");
   const [isOpenDay, setIsOpenDay] = useState(false);
+
+  React.useEffect(() => {
+    if (visible && initialData) {
+      setTitle(initialData.title ?? "");
+      setDescription(initialData.description ?? "");
+      setCategory((initialData.category as EventCategory) ?? "other");
+      setStartDate(initialData.startDate ?? "");
+      setIsOpenDay(initialData.isOpenDay ?? false);
+    } else if (visible && !initialData) {
+      setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setIsOpenDay(false);
+    }
+  }, [visible, initialData]);
 
   function reset() { setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setIsOpenDay(false); }
 
@@ -152,7 +165,7 @@ function CreateEventModal({ visible, onClose, onSave, isSaving }: {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={() => { reset(); onClose(); }} />
         <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>New Event</Text>
+          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{initialData ? "Edit Event" : "New Event"}</Text>
           <TextInput value={title} onChangeText={setTitle} placeholder="Event title" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
           <TextInput value={startDate} onChangeText={setStartDate} placeholder="Date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground + "99"}
@@ -316,6 +329,7 @@ export default function CommunityScreen() {
         onClose={() => setEditingEvent(null)}
         onSave={handleUpdate}
         isSaving={updateEvent.isPending}
+        initialData={editingEvent}
       />
     </View>
   );

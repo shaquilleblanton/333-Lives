@@ -9,11 +9,13 @@ import {
 import type { VaultItem } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -89,14 +91,36 @@ function VaultFormModal({ visible, item, onClose, onSave, isSaving }: {
   const [name, setName] = useState(item?.name ?? "");
   const [category, setCategory] = useState<VaultCategory>((item?.category as VaultCategory) ?? "important_info");
   const [content, setContent] = useState(item?.content ?? "");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (visible) {
       setName(item?.name ?? "");
       setCategory((item?.category as VaultCategory) ?? "important_info");
       setContent(item?.content ?? "");
+      setPhotoUri(null);
     }
   }, [visible, item]);
+
+  async function pickPhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permission needed", "Allow photo library access to attach a photo."); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8, allowsEditing: true });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+      if (!content.trim()) setContent(result.assets[0].uri);
+    }
+  }
+
+  async function takePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") { Alert.alert("Permission needed", "Allow camera access to take a photo."); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8, allowsEditing: true });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+      if (!content.trim()) setContent(result.assets[0].uri);
+    }
+  }
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -133,16 +157,44 @@ function VaultFormModal({ visible, item, onClose, onSave, isSaving }: {
             ))}
           </View>
 
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder="Notes / content…"
-            placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
+          {/* Photo upload when category is "photo" */}
+          {category === "photo" ? (
+            <View style={{ gap: 8 }}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.photoPreview} resizeMode="cover" />
+              ) : null}
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Pressable onPress={pickPhoto}
+                  style={[styles.photoBtn, { borderColor: colors.border, backgroundColor: colors.muted + "30", flex: 1 }]}>
+                  <Feather name="image" size={15} color={colors.mutedForeground} />
+                  <Text style={[styles.photoBtnText, { color: colors.mutedForeground }]}>Library</Text>
+                </Pressable>
+                <Pressable onPress={takePhoto}
+                  style={[styles.photoBtn, { borderColor: colors.border, backgroundColor: colors.muted + "30", flex: 1 }]}>
+                  <Feather name="camera" size={15} color={colors.mutedForeground} />
+                  <Text style={[styles.photoBtnText, { color: colors.mutedForeground }]}>Camera</Text>
+                </Pressable>
+              </View>
+              <TextInput
+                value={content}
+                onChangeText={setContent}
+                placeholder="Caption or description (optional)…"
+                placeholderTextColor={colors.mutedForeground + "99"}
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              />
+            </View>
+          ) : (
+            <TextInput
+              value={content}
+              onChangeText={setContent}
+              placeholder="Notes / content…"
+              placeholderTextColor={colors.mutedForeground + "99"}
+              style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          )}
 
           <Pressable
             onPress={() => onSave({ name: name.trim(), category, content: content.trim() })}
@@ -284,4 +336,7 @@ const styles = StyleSheet.create({
   pillText: { fontFamily: fonts.sub, fontSize: 12 },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center", marginTop: 4 },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
+  photoPreview: { width: "100%", height: 160, borderRadius: 12, marginBottom: 4 },
+  photoBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 12, borderWidth: 1, paddingVertical: 10 },
+  photoBtnText: { fontFamily: fonts.sub, fontSize: 13 },
 });
