@@ -32,6 +32,11 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 const WEEKDAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
 type EventType = "event" | "medication" | "routine";
+/**
+ * Personal calendar (events table) supports all 4 tiers.
+ * Community calendar (community_calendar) only uses open/locked/scheduled —
+ * private events are excluded from the community endpoint server-side.
+ */
 type WindowType = "open" | "locked" | "scheduled" | "private";
 
 const EVENT_TYPES: EventType[] = ["event", "medication", "routine"];

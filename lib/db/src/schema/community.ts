@@ -27,7 +27,10 @@ export const communityCalendarTable = pgTable("community_calendar", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertCommunityEventSchema = createInsertSchema(communityCalendarTable).omit({ id: true, createdAt: true, updatedAt: true });
+// isOpenDay and isPublic are deprecated legacy fields — omitted from external
+// schema validation and derived internally from windowType on every write.
+export const insertCommunityEventSchema = createInsertSchema(communityCalendarTable)
+  .omit({ id: true, createdAt: true, updatedAt: true, isOpenDay: true, isPublic: true });
 export const updateCommunityEventSchema = insertCommunityEventSchema.partial();
 export type InsertCommunityEvent = z.infer<typeof insertCommunityEventSchema>;
 export type CommunityEvent = typeof communityCalendarTable.$inferSelect;

@@ -32,26 +32,24 @@ import { useColors } from "@/hooks/useColors";
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
-type WindowType = "open" | "locked" | "scheduled" | "private";
+/** Community calendar only surfaces 3 tiers — private is excluded server-side. */
+type WindowType = "open" | "locked" | "scheduled";
 
-const WINDOW_TYPES: WindowType[] = ["open", "locked", "scheduled", "private"];
+const WINDOW_TYPES: WindowType[] = ["open", "locked", "scheduled"];
 const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
   open: "Open",
   locked: "Locked",
   scheduled: "Scheduled",
-  private: "Private",
 };
 const WINDOW_TYPE_ICONS: Record<WindowType, keyof typeof Feather.glyphMap> = {
   open: "unlock",
   locked: "lock",
   scheduled: "calendar",
-  private: "eye-off",
 };
 const WINDOW_TYPE_DESC: Record<WindowType, string> = {
   open: "Available — come through",
   locked: "Do not disturb",
   scheduled: "Already committed",
-  private: "Hidden from circle",
 };
 
 const CATEGORIES = ["graduation", "cookout", "reunion", "sporting_event", "birthday", "wedding", "open_day", "request", "other"] as const;
@@ -84,7 +82,7 @@ const CATEGORY_LABELS: Record<EventCategory, string> = {
 function WindowTypePill({ wt, colors }: { wt: WindowType; colors: any }) {
   const icon = WINDOW_TYPE_ICONS[wt];
   const label = WINDOW_TYPE_LABELS[wt];
-  const color = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
+  const color = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : colors.primary;
   return (
     <View style={[styles.statusBadge, { backgroundColor: color + "20", borderColor: color + "50", borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 4 }]}>
       <Feather name={icon} size={10} color={color} />
@@ -100,14 +98,14 @@ function EventCard({ event, onRespond, onEdit, onDelete }: {
   onDelete: () => void;
 }) {
   const colors = useColors();
-  const wt = (event.windowType ?? (event.isOpenDay ? "open" : "scheduled")) as WindowType;
+  const wt = (event.windowType ?? "scheduled") as WindowType;
   const isLocked = wt === "locked";
 
   const icon = isLocked ? "lock" : CATEGORY_ICONS[(event.category as EventCategory)] ?? "calendar";
   const label = isLocked ? "Blocked Time" : CATEGORY_LABELS[(event.category as EventCategory)] ?? "Event";
   const startDate = new Date(event.startDate + "T12:00:00");
   const dateStr = startDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const dotColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
+  const dotColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : colors.primary;
 
   return (
     <View style={[styles.eventCard, { backgroundColor: colors.card, borderColor: isLocked ? "#fbbf24" + "30" : colors.border }]}>
@@ -183,7 +181,7 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
       setDescription(initialData.description ?? "");
       setCategory((initialData.category as EventCategory) ?? "other");
       setStartDate(initialData.startDate ?? "");
-      setWindowType((initialData.windowType ?? (initialData.isOpenDay ? "open" : "scheduled")) as WindowType);
+      setWindowType((initialData.windowType ?? "scheduled") as WindowType);
     } else if (visible && !initialData) {
       setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setWindowType("scheduled");
     }
@@ -203,8 +201,6 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
       endDate: dateObj.toISOString().split("T")[0],
       status: "open",
       windowType,
-      isOpenDay: windowType === "open",
-      isPublic: windowType !== "private",
     });
     reset();
   }
@@ -225,7 +221,7 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
           <View style={[styles.pills, { marginBottom: 8 }]}>
             {WINDOW_TYPES.map(wt => {
               const icon = WINDOW_TYPE_ICONS[wt];
-              const accentColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : wt === "private" ? colors.mutedForeground : colors.primary;
+              const accentColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : colors.primary;
               const isSelected = windowType === wt;
               return (
                 <Pressable
@@ -330,7 +326,7 @@ export default function CommunityScreen() {
   const allSorted = [...(events ?? [])].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   const sorted = activeFilter === "all" ? allSorted
     : activeFilter === "request" ? allSorted.filter(e => e.category === "request")
-    : allSorted.filter(e => (e.windowType ?? (e.isOpenDay ? "open" : "scheduled")) === activeFilter);
+    : allSorted.filter(e => (e.windowType ?? "scheduled") === activeFilter);
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;

@@ -3786,17 +3786,13 @@ components:
           nullable: true
         windowType:
           type: string
-          enum: [open, locked, scheduled, private]
-        isOpenDay:
-          type: boolean
+          enum: [open, locked, scheduled]
         status:
           type: string
           enum: [open, confirmed, pending, declined]
         requestedBy:
           type: string
           nullable: true
-        isPublic:
-          type: boolean
         color:
           type: string
           nullable: true
@@ -3806,7 +3802,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-      required: [id, userId, title, category, startDate, windowType, isOpenDay, status, isPublic, createdAt, updatedAt]
+      required: [id, userId, title, category, startDate, windowType, status, createdAt, updatedAt]
 
     CreateCommunityEventBody:
       type: object
@@ -3830,16 +3826,12 @@ components:
           type: string
         windowType:
           type: string
-          enum: [open, locked, scheduled, private]
-        isOpenDay:
-          type: boolean
+          enum: [open, locked, scheduled]
         status:
           type: string
           enum: [open, confirmed, pending, declined]
         requestedBy:
           type: string
-        isPublic:
-          type: boolean
         color:
           type: string
       required: [title, startDate]
@@ -3866,9 +3858,7 @@ components:
           type: string
         windowType:
           type: string
-          enum: [open, locked, scheduled, private]
-        isOpenDay:
-          type: boolean
+          enum: [open, locked, scheduled]
         status:
           type: string
           enum: [open, confirmed, pending, declined]

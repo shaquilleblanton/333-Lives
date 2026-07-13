@@ -831,7 +831,6 @@ export const CommunityEventWindowType = {
   open: 'open',
   locked: 'locked',
   scheduled: 'scheduled',
-  private: 'private',
 } as const;
 
 export type CommunityEventStatus = typeof CommunityEventStatus[keyof typeof CommunityEventStatus];
@@ -855,10 +854,8 @@ export interface CommunityEvent {
   startTime?: string | null;
   endTime?: string | null;
   windowType: CommunityEventWindowType;
-  isOpenDay: boolean;
   status: CommunityEventStatus;
   requestedBy?: string | null;
-  isPublic: boolean;
   color?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -886,7 +883,6 @@ export const CreateCommunityEventBodyWindowType = {
   open: 'open',
   locked: 'locked',
   scheduled: 'scheduled',
-  private: 'private',
 } as const;
 
 export type CreateCommunityEventBodyStatus = typeof CreateCommunityEventBodyStatus[keyof typeof CreateCommunityEventBodyStatus];
@@ -908,10 +904,8 @@ export interface CreateCommunityEventBody {
   startTime?: string;
   endTime?: string;
   windowType?: CreateCommunityEventBodyWindowType;
-  isOpenDay?: boolean;
   status?: CreateCommunityEventBodyStatus;
   requestedBy?: string;
-  isPublic?: boolean;
   color?: string;
 }
 
@@ -937,7 +931,6 @@ export const UpdateCommunityEventBodyWindowType = {
   open: 'open',
   locked: 'locked',
   scheduled: 'scheduled',
-  private: 'private',
 } as const;
 
 export type UpdateCommunityEventBodyStatus = typeof UpdateCommunityEventBodyStatus[keyof typeof UpdateCommunityEventBodyStatus];
@@ -959,7 +952,6 @@ export interface UpdateCommunityEventBody {
   startTime?: string;
   endTime?: string;
   windowType?: UpdateCommunityEventBodyWindowType;
-  isOpenDay?: boolean;
   status?: UpdateCommunityEventBodyStatus;
   requestedBy?: string;
   color?: string;
