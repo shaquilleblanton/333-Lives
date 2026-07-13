@@ -339,16 +339,16 @@ function PostCard({
           <p className="text-sm font-subheading text-foreground/90 leading-relaxed whitespace-pre-wrap">{post.content}</p>
         )}
         {post.mediaUrl && post.type === "photo" && (
-          <a href={`/api/storage${post.mediaUrl}`} target="_blank" rel="noopener noreferrer"
+          <a href={`/api${post.mediaUrl}`} target="_blank" rel="noopener noreferrer"
             className="block rounded-xl overflow-hidden border border-border/40 bg-muted/30">
-            <img src={`/api/storage${post.mediaUrl}`} alt="Post photo" className="w-full max-h-64 object-cover"
+            <img src={`/api${post.mediaUrl}`} alt="Post photo" className="w-full max-h-64 object-cover"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           </a>
         )}
         {post.mediaUrl && post.type === "voice" && (
           <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/40">
             <Mic className="w-4 h-4 text-primary shrink-0" />
-            <audio controls src={`/api/storage${post.mediaUrl}`} className="flex-1 h-8" />
+            <audio controls src={`/api${post.mediaUrl}`} className="flex-1 h-8" />
           </div>
         )}
 

@@ -44,8 +44,8 @@ import { useColors } from "@/hooks/useColors";
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
-function streamUrl(objectPath: string) {
-  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${objectPath}`;
+function streamUrl(proxyPath: string) {
+  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api${proxyPath}`;
 }
 
 const REACTIONS = [

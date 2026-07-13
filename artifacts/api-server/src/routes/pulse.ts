@@ -4,13 +4,13 @@ import { db } from "@workspace/db";
 import {
   pulsePostsTable,
   pulseReactionsTable,
-  pulseCircleMembersTable,
   insertPulsePostSchema,
   usersTable,
+  peopleTable,
   PULSE_REACTION_TYPES,
   type PulseReactionType,
 } from "@workspace/db/schema";
-import { eq, and, or, gt, isNull, desc, inArray, ne, sql } from "drizzle-orm";
+import { eq, and, or, gt, isNull, isNotNull, desc, inArray, sql } from "drizzle-orm";
 import { ObjectStorageService } from "../lib/objectStorage";
 
 const router = Router();
@@ -25,30 +25,41 @@ function emptyReactions(): ReactionCounts {
 /**
  * Resolve the set of user IDs whose posts are visible to `userId`.
  *
- * Design decision — circle table vs People table:
- * The `people` table stores freeform named contacts (no FK to `users`), so it
- * cannot be used for circle scoping without a separate linking step. Instead,
- * `pulse_circle_members` provides an explicit, auditable join table.
+ * Circle resolution is People-based: a user's circle consists of the app-user
+ * accounts linked to their People entries where isCircle=true. The owner
+ * manages circles by:
+ *   1. Creating a Person entry (POST /people).
+ *   2. Setting linkedUserId + isCircle=true on it (PATCH /people/:id).
  *
- * In 333 Lives (a closed, invite-only family app) the circle intentionally
- * equals all authenticated users. The auth middleware auto-seeds bidirectional
- * rows whenever a new user is provisioned so existing users immediately see the
- * new member's posts. The empty-circle fallback below ensures existing users
- * who were provisioned before this feature is live still see all posts.
+ * Default is least-privilege: an empty circle means the current user sees only
+ * their own posts. Self is always included.
  */
 async function resolveVisibleUserIds(userId: number): Promise<number[]> {
   const circleRows = await db
-    .select({ memberUserId: pulseCircleMembersTable.memberUserId })
-    .from(pulseCircleMembersTable)
-    .where(eq(pulseCircleMembersTable.userId, userId));
+    .select({ linkedUserId: peopleTable.linkedUserId })
+    .from(peopleTable)
+    .where(
+      and(
+        eq(peopleTable.userId, userId),
+        eq(peopleTable.isCircle, true),
+        isNotNull(peopleTable.linkedUserId),
+      ),
+    );
 
-  const circleUserIds = circleRows.map((r) => r.memberUserId);
+  const circleUserIds = circleRows
+    .map((r) => r.linkedUserId)
+    .filter((id): id is number => id !== null);
 
-  // No fallback to "all users": an empty circle means the current user only
-  // sees their own posts. Circles are seeded bidirectionally when a new user
-  // is provisioned (auth middleware) and at server startup for existing users
-  // (seedPulseCircles in lib/pulseCircle.ts). Self is always included below.
   return [...new Set([userId, ...circleUserIds])];
+}
+
+/**
+ * Returns the media proxy path for a post, or null when no media is attached.
+ * Clients must fetch media through this path (never directly from storage) so
+ * that the circle-visibility gate is enforced before any bytes are served.
+ */
+function mediaProxyPath(postId: number, rawMediaUrl: string | null): string | null {
+  return rawMediaUrl ? `/pulse/posts/${postId}/media` : null;
 }
 
 async function buildFeedResponse(
@@ -92,7 +103,9 @@ async function buildFeedResponse(
       authorName: authorMap.get(post.userId) ?? "Unknown",
       isOwn: post.userId === currentUserId,
       content: post.content,
-      mediaUrl: post.mediaUrl,
+      // mediaUrl is a circle-checked proxy path, never a raw storage path.
+      // Fetch via /api/pulse/posts/:id/media which enforces circle visibility.
+      mediaUrl: mediaProxyPath(post.id, post.mediaUrl),
       type: post.type,
       isPersistent: post.isPersistent,
       expiresAt: post.expiresAt?.toISOString() ?? null,
@@ -130,7 +143,7 @@ async function findVisiblePost(
   return rows[0] ?? null;
 }
 
-// GET /pulse/feed — posts from users in the current user's circle (+ own posts).
+// GET /pulse/feed — posts from users in the current user's People-based circle (+ own posts).
 router.get("/pulse/feed", async (req, res) => {
   const currentUserId = getUserId(req);
   const now = new Date();
@@ -164,7 +177,8 @@ router.get("/pulse/feed", async (req, res) => {
   return res.json(result);
 });
 
-// POST /pulse/posts — create a post
+// POST /pulse/posts — create a post. Media is stored as owner-private (ACL=private);
+// it is served exclusively through the circle-checked /pulse/posts/:id/media endpoint.
 router.post("/pulse/posts", async (req, res) => {
   const parsed = insertPulsePostSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
@@ -178,14 +192,14 @@ router.post("/pulse/posts", async (req, res) => {
     return res.status(400).json({ error: "mediaUrl is required for photo/voice posts" });
   }
 
-  // ACL-bind the media object. Set visibility to "public" so all authenticated
-  // family members can view it via /storage/objects/* (that route requires auth,
-  // so "public" here means any signed-in user — not the open internet).
+  // ACL: private (owner-only in storage layer). Media is served exclusively
+  // through GET /pulse/posts/:id/media which enforces circle visibility before
+  // proxying any bytes. This ensures media is never accessible outside the circle.
   if (mediaUrl) {
     try {
       await objectStorage.trySetObjectEntityAclPolicy(mediaUrl, {
         owner: String(getUserId(req)),
-        visibility: "public",
+        visibility: "private",
       });
     } catch (err) {
       req.log.error({ err }, "Pulse post media ACL set failed");
@@ -220,7 +234,7 @@ router.post("/pulse/posts", async (req, res) => {
     authorName,
     isOwn: true,
     content: post.content,
-    mediaUrl: post.mediaUrl,
+    mediaUrl: mediaProxyPath(post.id, post.mediaUrl),
     type: post.type,
     isPersistent: post.isPersistent,
     expiresAt: post.expiresAt?.toISOString() ?? null,
@@ -231,7 +245,7 @@ router.post("/pulse/posts", async (req, res) => {
   });
 });
 
-// DELETE /pulse/posts/:id — delete own post (ownership check is sufficient — no circle needed)
+// DELETE /pulse/posts/:id — delete own post (ownership check is sufficient — no circle needed).
 router.delete("/pulse/posts/:id", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -254,8 +268,34 @@ router.delete("/pulse/posts/:id", async (req, res) => {
   return res.json({ success: true });
 });
 
+// GET /pulse/posts/:id/media — circle-checked media proxy.
+// The raw storage path is never exposed to clients; all media is routed through
+// here so that circle-visibility is enforced before any bytes are served.
+// Uses server-side object download (ACL bypassed after the circle gate passes).
+router.get("/pulse/posts/:id/media", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+
+  const post = await findVisiblePost(id, getUserId(req), new Date());
+  if (!post || !post.mediaUrl) return res.status(404).json({ error: "Media not found" });
+
+  try {
+    const file = await objectStorage.getObjectEntityFile(post.mediaUrl);
+    const downloadResponse = await objectStorage.downloadObject(file);
+    const contentType = downloadResponse.headers.get("Content-Type") ?? "application/octet-stream";
+    const contentLength = downloadResponse.headers.get("Content-Length");
+    res.set("Content-Type", contentType);
+    res.set("Cache-Control", "private, max-age=3600");
+    if (contentLength) res.set("Content-Length", contentLength);
+    const buffer = Buffer.from(await downloadResponse.arrayBuffer());
+    return res.send(buffer);
+  } catch {
+    return res.status(404).json({ error: "Media object not found" });
+  }
+});
+
 // PUT /pulse/posts/:id/react — add or change reaction (one per user per post).
-// Requires the post to be visible (i.e. in the requester's circle) before mutating.
+// Requires the post to be visible (circle check) before mutating.
 router.put("/pulse/posts/:id/react", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -280,7 +320,7 @@ router.put("/pulse/posts/:id/react", async (req, res) => {
 });
 
 // DELETE /pulse/posts/:id/react — remove own reaction.
-// Requires the post to be visible before mutating.
+// Requires the post to be visible (circle check) before mutating.
 router.delete("/pulse/posts/:id/react", async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -295,60 +335,31 @@ router.delete("/pulse/posts/:id/react", async (req, res) => {
   return res.json({ success: true });
 });
 
-// ─── Owner-only: Circle management ──────────────────────────────────────────
+// ─── Owner-only: Circle management via People ────────────────────────────────
 //
-// Pulse circles are intentionally managed by the app owner, not auto-expanded.
-// Default is least-privilege: a user's circle is empty and they see only their
-// own posts. The owner uses these endpoints to grant mutual feed access between
-// users (e.g., all family members after onboarding).
+// Circles are managed through the People feature:
+//   1. Create a Person entry for a family member (POST /people).
+//   2. Link them to their app-user account: PATCH /people/:id { linkedUserId, isCircle: true }.
 //
-// POST   /pulse/circle/:userId  — add userId to all other users' circles (bilateral)
-// DELETE /pulse/circle/:userId  — remove userId from all other users' circles
+// GET /pulse/circle — owner view of all people with isCircle=true and a linked user.
+// This is a convenience read for the settings/admin UI.
 
-router.post("/pulse/circle/:userId", requireOwner, async (req, res) => {
-  const targetId = Number(req.params.userId);
-  if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Invalid userId" });
-
-  const targetUser = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.id, targetId))
-    .limit(1);
-  if (targetUser.length === 0) return res.status(404).json({ error: "User not found" });
-
-  const otherUsers = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(ne(usersTable.id, targetId));
-
-  if (otherUsers.length > 0) {
-    const pairs = otherUsers.flatMap((u) => [
-      { userId: targetId, memberUserId: u.id },
-      { userId: u.id, memberUserId: targetId },
-    ]);
-    await db.insert(pulseCircleMembersTable).values(pairs).onConflictDoNothing();
-  }
-
-  return res.json({ success: true, addedTo: otherUsers.length, userId: targetId });
-});
-
-router.delete("/pulse/circle/:userId", requireOwner, async (req, res) => {
-  const targetId = Number(req.params.userId);
-  if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Invalid userId" });
-
-  await db
-    .delete(pulseCircleMembersTable)
+router.get("/pulse/circle", requireOwner, async (req, res) => {
+  const rows = await db
+    .select({
+      personId: peopleTable.id,
+      personName: peopleTable.name,
+      linkedUserId: peopleTable.linkedUserId,
+      ownedByUserId: peopleTable.userId,
+    })
+    .from(peopleTable)
     .where(
       and(
-        // Remove rows where targetId is the member or the owner
-        eq(pulseCircleMembersTable.memberUserId, targetId),
+        eq(peopleTable.isCircle, true),
+        isNotNull(peopleTable.linkedUserId),
       ),
     );
-  await db
-    .delete(pulseCircleMembersTable)
-    .where(eq(pulseCircleMembersTable.userId, targetId));
-
-  return res.json({ success: true, userId: targetId });
+  return res.json(rows);
 });
 
 export default router;
