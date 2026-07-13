@@ -9,8 +9,10 @@ import {
   useDeleteFamilyMemberMoment,
   getGetFamilyMembersQueryKey,
   getGetFamilyMemberMomentsQueryKey,
+  requestUploadUrl,
 } from "@workspace/api-client-react";
 import type { FamilyMember, FamilyMemberMoment } from "@workspace/api-client-react";
+import * as FileSystem from "expo-file-system/legacy";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -178,9 +180,31 @@ function MemberFormModal({ visible, member, onClose, onSave, isSaving }: {
     if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
   }
 
-  function submit() {
+  async function submit() {
     if (!name.trim()) return;
-    const data: any = {
+    let resolvedPhotoUrl: string | undefined = undefined;
+    if (photoUri) {
+      try {
+        const ext = photoUri.split(".").pop()?.toLowerCase() || "jpg";
+        const contentType = ext === "png" ? "image/png" : ext === "heic" ? "image/heic" : "image/jpeg";
+        const info = await FileSystem.getInfoAsync(photoUri);
+        const size = info.exists && "size" in info ? (info.size as number) : 0;
+        const upload = await requestUploadUrl({
+          name: `family-member-${Date.now()}.${ext}`,
+          size,
+          contentType,
+        });
+        const result = await FileSystem.uploadAsync(upload.uploadURL, photoUri, {
+          httpMethod: "PUT",
+          headers: { "Content-Type": contentType },
+        });
+        if (result.status < 200 || result.status >= 300) throw new Error(`upload failed (${result.status})`);
+        resolvedPhotoUrl = upload.objectPath;
+      } catch {
+        Alert.alert("Photo upload failed", "Couldn't upload the photo. Saving member without photo.");
+      }
+    }
+    onSave({
       name: name.trim(),
       relation,
       birthDate: birthDate || undefined,
@@ -188,9 +212,8 @@ function MemberFormModal({ visible, member, onClose, onSave, isSaving }: {
       birthplace: birthplace.trim() || undefined,
       affiliation: affiliation.trim() || undefined,
       notes: notes.trim() || undefined,
-    };
-    if (photoUri) data.photoUri = photoUri;
-    onSave(data);
+      photoUrl: resolvedPhotoUrl,
+    });
   }
 
   return (
@@ -500,6 +523,8 @@ export default function FamilyTreeScreen() {
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [detailMember, setDetailMember] = useState<FamilyMember | null>(null);
   const [search, setSearch] = useState("");
+  const [filterRelation, setFilterRelation] = useState<"all" | Relation>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "living" | "deceased">("all");
 
   const topPad = insets.top + WEB_TOP_INSET + 16;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 16;
@@ -509,10 +534,13 @@ export default function FamilyTreeScreen() {
   const filtered = useMemo(() => {
     if (!members) return [];
     const q = search.toLowerCase();
-    return members.filter(m =>
-      !q || m.name.toLowerCase().includes(q) || (m.affiliation ?? "").toLowerCase().includes(q)
-    );
-  }, [members, search]);
+    return members.filter(m => {
+      const matchSearch = !q || m.name.toLowerCase().includes(q) || (m.affiliation ?? "").toLowerCase().includes(q);
+      const matchRel = filterRelation === "all" || m.relation === filterRelation;
+      const matchStatus = filterStatus === "all" || (filterStatus === "deceased" ? !!m.deathDate : !m.deathDate);
+      return matchSearch && matchRel && matchStatus;
+    });
+  }, [members, search, filterRelation, filterStatus]);
 
   const treeGroups = useMemo(() => {
     if (!filtered) return [];
@@ -593,6 +621,42 @@ export default function FamilyTreeScreen() {
           ) : null}
         </View>
       </View>
+
+      {/* Filters */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}
+        style={{ flexShrink: 0 }}
+      >
+        {/* Status filter */}
+        {(["all", "living", "deceased"] as const).map(s => (
+          <Pressable key={s} onPress={() => setFilterStatus(s)}
+            style={[styles.filterPill, {
+              borderColor: filterStatus === s ? colors.primary : colors.border,
+              backgroundColor: filterStatus === s ? colors.primary + "1A" : "transparent",
+            }]}
+          >
+            <Text style={[styles.filterPillText, { color: filterStatus === s ? colors.primary : colors.mutedForeground }]}>
+              {s === "all" ? "All" : s === "deceased" ? "In Memory" : "Living"}
+            </Text>
+          </Pressable>
+        ))}
+        <View style={[styles.filterDivider, { backgroundColor: colors.border }]} />
+        {/* Relation filter */}
+        {(["all", ...GENERATION_ORDER] as const).map(r => (
+          <Pressable key={r} onPress={() => setFilterRelation(r as "all" | Relation)}
+            style={[styles.filterPill, {
+              borderColor: filterRelation === r ? colors.primary : colors.border,
+              backgroundColor: filterRelation === r ? colors.primary + "1A" : "transparent",
+            }]}
+          >
+            <Text style={[styles.filterPillText, { color: filterRelation === r ? colors.primary : colors.mutedForeground }]}>
+              {r === "all" ? "Any relation" : RELATION_LABELS[r as Relation]}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
 
       {isLoading ? (
         <View style={styles.center}><ActivityIndicator color={colors.primary} size="large" /></View>
@@ -780,4 +844,8 @@ const styles = StyleSheet.create({
   momentTitle: { fontFamily: fonts.subSemibold, fontSize: 14 },
   momentMeta: { fontFamily: fonts.sub, fontSize: 11, marginTop: 2 },
   momentDesc: { fontFamily: fonts.body, fontSize: 13, marginTop: 4, lineHeight: 18 },
+  filterRow: { paddingHorizontal: 20, paddingBottom: 10, flexDirection: "row", alignItems: "center", gap: 6 },
+  filterPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
+  filterPillText: { fontFamily: fonts.sub, fontSize: 11 },
+  filterDivider: { width: 1, height: 18, marginHorizontal: 4 },
 });

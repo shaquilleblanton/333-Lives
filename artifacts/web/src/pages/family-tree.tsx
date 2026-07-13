@@ -629,6 +629,7 @@ export default function FamilyTree() {
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [search, setSearch] = useState("");
   const [filterRelation, setFilterRelation] = useState<RelationFilter>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "living" | "deceased">("all");
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
@@ -637,7 +638,8 @@ export default function FamilyTree() {
     const matchSearch = !search || m.name.toLowerCase().includes(search.toLowerCase())
       || m.affiliation?.toLowerCase().includes(search.toLowerCase());
     const matchRel = filterRelation === "all" || m.relation === filterRelation;
-    return matchSearch && matchRel;
+    const matchStatus = filterStatus === "all" || (filterStatus === "deceased" ? !!m.deathDate : !m.deathDate);
+    return matchSearch && matchRel && matchStatus;
   });
 
   async function handleDelete(member: FamilyMember) {
@@ -696,19 +698,37 @@ export default function FamilyTree() {
         </div>
       </div>
 
-      {/* Relation filter pills (list view only) */}
+      {/* Filters (list view only) */}
       {viewMode === "list" && (
-        <div className="flex flex-wrap gap-2">
-          {(["all", ...GENERATION_ORDER] as RelationFilter[]).map(f => (
-            <button key={f} onClick={() => setFilterRelation(f)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-subheading capitalize transition-colors border",
-                filterRelation === f ? "bg-foreground text-background border-foreground" : "bg-card/50 text-muted-foreground border-border/50 hover:bg-muted/50"
-              )}
-            >
-              {f === "all" ? "All" : RELATION_LABELS[f as Relation]}
-            </button>
-          ))}
+        <div className="space-y-2">
+          {/* Status filter */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-subheading uppercase tracking-widest text-muted-foreground/60 mr-1">Status</span>
+            {(["all", "living", "deceased"] as const).map(s => (
+              <button key={s} onClick={() => setFilterStatus(s)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs font-subheading transition-colors border",
+                  filterStatus === s ? "bg-foreground text-background border-foreground" : "bg-card/50 text-muted-foreground border-border/50 hover:bg-muted/50"
+                )}
+              >
+                {s === "all" ? "All" : s === "deceased" ? "In Memory" : "Living"}
+              </button>
+            ))}
+          </div>
+          {/* Relation filter */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-subheading uppercase tracking-widest text-muted-foreground/60 mr-1">Relation</span>
+            {(["all", ...GENERATION_ORDER] as RelationFilter[]).map(f => (
+              <button key={f} onClick={() => setFilterRelation(f)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs font-subheading capitalize transition-colors border",
+                  filterRelation === f ? "bg-foreground text-background border-foreground" : "bg-card/50 text-muted-foreground border-border/50 hover:bg-muted/50"
+                )}
+              >
+                {f === "all" ? "Any" : RELATION_LABELS[f as Relation]}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
