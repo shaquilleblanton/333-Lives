@@ -44,15 +44,10 @@ async function resolveVisibleUserIds(userId: number): Promise<number[]> {
 
   const circleUserIds = circleRows.map((r) => r.memberUserId);
 
-  // Empty-circle fallback: if no circle members are configured yet (e.g. a
-  // single-user install or an existing account before auto-seeding ran), treat
-  // all authenticated users as the circle. This keeps the feature usable on
-  // first launch without requiring an explicit admin seeding step.
-  if (circleUserIds.length === 0) {
-    const allUsers = await db.select({ id: usersTable.id }).from(usersTable);
-    return allUsers.map((u) => u.id);
-  }
-
+  // No fallback to "all users": an empty circle means the current user only
+  // sees their own posts. Circles are seeded bidirectionally when a new user
+  // is provisioned (auth middleware) and at server startup for existing users
+  // (seedPulseCircles in lib/pulseCircle.ts). Self is always included below.
   return [...new Set([userId, ...circleUserIds])];
 }
 

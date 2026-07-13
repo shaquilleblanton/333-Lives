@@ -12,6 +12,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -23,6 +24,8 @@ import {
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
+  useAudioPlayer,
+  useAudioPlayerStatus,
 } from "expo-audio";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -40,6 +43,10 @@ import { useColors } from "@/hooks/useColors";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
+
+function streamUrl(objectPath: string) {
+  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${objectPath}`;
+}
 
 const REACTIONS = [
   { type: "fire",     emoji: "🔥" },
@@ -167,6 +174,37 @@ export default function PulseScreen() {
   );
 }
 
+function VoicePlayer({ objectPath, colors }: { objectPath: string; colors: ReturnType<typeof useColors> }) {
+  const player = useAudioPlayer();
+  const status = useAudioPlayerStatus(player);
+  const [loaded, setLoaded] = useState(false);
+
+  const toggle = async () => {
+    if (!loaded) {
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      player.replace({ uri: streamUrl(objectPath) });
+      player.play();
+      setLoaded(true);
+      return;
+    }
+    if (status.playing) { player.pause(); } else { player.play(); }
+  };
+
+  const pct = (status.duration ?? 0) > 0 ? (status.currentTime ?? 0) / (status.duration ?? 1) : 0;
+
+  return (
+    <Pressable onPress={toggle} style={[styles.voicePlayer, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+      <Feather name={status.playing ? "pause-circle" : "play-circle"} size={22} color={colors.primary} />
+      <View style={[styles.voiceTrack, { backgroundColor: colors.border }]}>
+        <View style={[styles.voiceProgress, { backgroundColor: colors.primary, width: `${Math.round(pct * 100)}%` as any }]} />
+      </View>
+      <Text style={[styles.voiceDuration, { color: colors.mutedForeground }]}>
+        {formatClock(((status.duration ?? 0) - (status.currentTime ?? 0)) * 1000)}
+      </Text>
+    </Pressable>
+  );
+}
+
 function PostCard({ post, colors, onReact, onDelete }: {
   post: PulsePost;
   colors: ReturnType<typeof useColors>;
@@ -207,17 +245,19 @@ function PostCard({ post, colors, onReact, onDelete }: {
       {!!post.content && (
         <Text style={[styles.content, { color: colors.foreground + "E0" }]}>{post.content}</Text>
       )}
-      {post.type === "voice" && post.mediaUrl && (
-        <View style={[styles.voiceIndicator, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-          <Feather name="mic" size={16} color={colors.primary} />
-          <Text style={[styles.voiceLabel, { color: colors.mutedForeground }]}>Voice note</Text>
-        </View>
-      )}
+
+      {/* Photo */}
       {post.type === "photo" && post.mediaUrl && (
-        <View style={[styles.photoIndicator, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-          <Feather name="image" size={16} color={colors.primary} />
-          <Text style={[styles.photoLabel, { color: colors.mutedForeground }]}>Photo</Text>
-        </View>
+        <Image
+          source={{ uri: streamUrl(post.mediaUrl) }}
+          style={styles.postPhoto}
+          resizeMode="cover"
+        />
+      )}
+
+      {/* Voice note */}
+      {post.type === "voice" && post.mediaUrl && (
+        <VoicePlayer objectPath={post.mediaUrl} colors={colors} />
       )}
 
       {/* Reactions */}
@@ -516,6 +556,11 @@ const styles = StyleSheet.create({
   reactorsText: { fontFamily: fonts.sub, fontSize: 11 },
   reactorList: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: 14, paddingVertical: 8, gap: 4 },
   reactorItem: { fontFamily: fonts.sub, fontSize: 12 },
+  postPhoto: { width: "100%", height: 200, backgroundColor: "#111" },
+  voicePlayer: { flexDirection: "row", alignItems: "center", gap: 10, margin: 14, marginTop: 4, padding: 12, borderRadius: 12, borderWidth: 1 },
+  voiceTrack: { flex: 1, height: 4, borderRadius: 2, overflow: "hidden" },
+  voiceProgress: { height: 4, borderRadius: 2 },
+  voiceDuration: { fontFamily: fonts.sub, fontSize: 11, minWidth: 32, textAlign: "right" },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth },
   modalCancel: { fontFamily: fonts.sub, fontSize: 15 },
   modalTitle: { fontFamily: fonts.serifBold, fontSize: 17 },

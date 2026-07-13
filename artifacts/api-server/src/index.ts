@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { seedPulseCircles } from "./lib/pulseCircle";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,7 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Backfill pulse_circle_members for any users provisioned before this feature.
+  seedPulseCircles().catch(() => {});
 });
