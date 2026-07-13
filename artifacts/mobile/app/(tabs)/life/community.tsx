@@ -87,14 +87,19 @@ function EventCard({ event, onRespond }: { event: CommunityEvent; onRespond: (rs
 
       {/* RSVP buttons */}
       <View style={styles.rsvpRow}>
-        {["going", "maybe", "not_going"].map(rsvp => (
+        {(["confirmed", "pending", "declined"] as const).map(rsvp => (
           <Pressable
             key={rsvp}
             onPress={() => onRespond(rsvp)}
-            style={[styles.rsvpBtn, { borderColor: colors.border, backgroundColor: colors.muted + "30" }]}
+            style={[styles.rsvpBtn, {
+              borderColor: rsvp === "confirmed" ? colors.primary + "60" : rsvp === "declined" ? "#f87171" + "60" : colors.border,
+              backgroundColor: colors.muted + "30",
+            }]}
           >
-            <Text style={[styles.rsvpText, { color: colors.mutedForeground }]}>
-              {rsvp === "going" ? "✓ Going" : rsvp === "maybe" ? "? Maybe" : "✗ Can't go"}
+            <Text style={[styles.rsvpText, {
+              color: rsvp === "confirmed" ? colors.primary : rsvp === "declined" ? "#f87171" : colors.mutedForeground,
+            }]}>
+              {rsvp === "confirmed" ? "✓ Confirm" : rsvp === "pending" ? "? Maybe" : "✗ Decline"}
             </Text>
           </Pressable>
         ))}
@@ -114,14 +119,16 @@ function CreateEventModal({ visible, onClose, onSave, isSaving }: {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<EventCategory>("other");
   const [startDate, setStartDate] = useState("");
+  const [isOpenDay, setIsOpenDay] = useState(false);
 
-  function reset() { setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); }
+  function reset() { setTitle(""); setDescription(""); setCategory("other"); setStartDate(""); setIsOpenDay(false); }
 
   function submit() {
     if (!title.trim() || !startDate.trim()) return;
     const dateObj = new Date(startDate + "T12:00:00");
     if (isNaN(dateObj.getTime())) { Alert.alert("Invalid date", "Use YYYY-MM-DD format."); return; }
-    onSave({ title: title.trim(), description: description.trim() || undefined, category, startDate: dateObj.toISOString().split("T")[0], endDate: dateObj.toISOString().split("T")[0], status: "open", isPublic: true });
+    const cat: EventCategory = isOpenDay ? "open_day" : category;
+    onSave({ title: title.trim(), description: description.trim() || undefined, category: cat, startDate: dateObj.toISOString().split("T")[0], endDate: dateObj.toISOString().split("T")[0], status: "open", isPublic: true, isOpenDay });
     reset();
   }
 
@@ -137,15 +144,33 @@ function CreateEventModal({ visible, onClose, onSave, isSaving }: {
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
           <TextInput value={description} onChangeText={setDescription} placeholder="Details (optional)" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={4} textAlignVertical="top"
             style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
-          <View style={styles.pills}>
-            {CATEGORIES.slice(0, 6).map(c => (
-              <Pressable key={c} onPress={() => setCategory(c)}
-                style={[styles.pill, { borderColor: category === c ? colors.primary : colors.border, backgroundColor: category === c ? colors.primary + "1A" : "transparent" }]}>
-                <Text style={[styles.pillText, { color: category === c ? colors.primary : colors.mutedForeground }]}>{CATEGORY_LABELS[c]}</Text>
-              </Pressable>
-            ))}
-          </View>
+          {/* Open Day toggle */}
+          <Pressable
+            onPress={() => setIsOpenDay(v => !v)}
+            style={[styles.openDayToggle, { borderColor: isOpenDay ? colors.primary : colors.border, backgroundColor: isOpenDay ? colors.primary + "1A" : "transparent" }]}
+          >
+            <Feather name="unlock" size={15} color={isOpenDay ? colors.primary : colors.mutedForeground} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.pillText, { color: isOpenDay ? colors.primary : colors.foreground }]}>Open Day</Text>
+              <Text style={[styles.rsvpText, { color: colors.mutedForeground }]}>Anyone in the community can see this event</Text>
+            </View>
+            <View style={[styles.checkBox, { borderColor: isOpenDay ? colors.primary : colors.border, backgroundColor: isOpenDay ? colors.primary : "transparent" }]}>
+              {isOpenDay ? <Feather name="check" size={11} color="#000" /> : null}
+            </View>
+          </Pressable>
+          {!isOpenDay ? (
+            <>
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
+              <View style={styles.pills}>
+                {CATEGORIES.slice(0, 6).map(c => (
+                  <Pressable key={c} onPress={() => setCategory(c)}
+                    style={[styles.pill, { borderColor: category === c ? colors.primary : colors.border, backgroundColor: category === c ? colors.primary + "1A" : "transparent" }]}>
+                    <Text style={[styles.pillText, { color: category === c ? colors.primary : colors.mutedForeground }]}>{CATEGORY_LABELS[c]}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          ) : null}
           <Pressable onPress={submit} disabled={!title.trim() || !startDate.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !startDate.trim() || isSaving ? 0.5 : 1 }]}>
             {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Create Event</Text>}
@@ -156,6 +181,10 @@ function CreateEventModal({ visible, onClose, onSave, isSaving }: {
   );
 }
 
+const FILTERS = ["all", "open_day", "request"] as const;
+type EventFilter = typeof FILTERS[number];
+const FILTER_LABELS: Record<EventFilter, string> = { all: "All Events", open_day: "Open Day", request: "Requests" };
+
 export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -164,6 +193,7 @@ export default function CommunityScreen() {
   const createEvent = useCreateCommunityEvent();
   const respondEvent = useRespondToCommunityEvent();
   const [createOpen, setCreateOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
 
   function invalidate() { qc.invalidateQueries({ queryKey: getGetCommunityEventsQueryKey() }); }
 
@@ -182,7 +212,10 @@ export default function CommunityScreen() {
     } catch { Alert.alert("Couldn't save response", "Please try again."); }
   }
 
-  const sorted = [...(events ?? [])].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+  const allSorted = [...(events ?? [])].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+  const sorted = activeFilter === "all" ? allSorted
+    : activeFilter === "open_day" ? allSorted.filter(e => e.isOpenDay)
+    : allSorted.filter(e => e.category === "request");
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
@@ -195,17 +228,28 @@ export default function CommunityScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
         ListHeaderComponent={
-          <View style={styles.pageHeader}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-              <Feather name="arrow-left" size={22} color={colors.foreground} />
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.pageTitle, { color: colors.foreground }]}>Community</Text>
-              <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>Events & gatherings.</Text>
+          <View style={{ marginBottom: 4 }}>
+            <View style={styles.pageHeader}>
+              <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+                <Feather name="arrow-left" size={22} color={colors.foreground} />
+              </Pressable>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.pageTitle, { color: colors.foreground }]}>Community</Text>
+                <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>Events & gatherings.</Text>
+              </View>
+              <Pressable onPress={() => setCreateOpen(true)} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
+                <Feather name="plus" size={20} color={colors.primaryForeground} />
+              </Pressable>
             </View>
-            <Pressable onPress={() => setCreateOpen(true)} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
-              <Feather name="plus" size={20} color={colors.primaryForeground} />
-            </Pressable>
+            {/* Filter pills */}
+            <View style={[styles.pills, { marginBottom: 12 }]}>
+              {FILTERS.map(f => (
+                <Pressable key={f} onPress={() => setActiveFilter(f)}
+                  style={[styles.pill, { borderColor: activeFilter === f ? colors.primary : colors.border, backgroundColor: activeFilter === f ? colors.primary + "1A" : "transparent" }]}>
+                  <Text style={[styles.pillText, { color: activeFilter === f ? colors.primary : colors.mutedForeground }]}>{FILTER_LABELS[f]}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -241,6 +285,8 @@ const styles = StyleSheet.create({
   rsvpRow: { flexDirection: "row", gap: 8 },
   rsvpBtn: { flex: 1, borderRadius: 10, borderWidth: 1, paddingVertical: 8, alignItems: "center" },
   rsvpText: { fontFamily: fonts.sub, fontSize: 11 },
+  openDayToggle: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12, borderWidth: 1, padding: 12 },
+  checkBox: { width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 20 },
   emptySub: { fontFamily: fonts.sub, fontSize: 14, textAlign: "center" },

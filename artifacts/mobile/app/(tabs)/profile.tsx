@@ -19,6 +19,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -141,6 +142,7 @@ function EditProfileModal({ visible, name: initName, bio: initBio, onClose, onSa
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const scheme = useColorScheme();
   const { signOut } = useClerk();
   const qc = useQueryClient();
   const { data: me, isLoading } = useGetMe();
@@ -219,7 +221,8 @@ export default function ProfileScreen() {
       </Section>
 
       <Section title="APP">
-        <MenuItem icon="moon" label="Appearance" sub="Dark luxury — always" rightLabel="Dark" />
+        <MenuItem icon="moon" label="Appearance" sub="Follows your device setting"
+          rightLabel={scheme === "dark" ? "Dark" : scheme === "light" ? "Light" : "System"} />
         <MenuItem icon="info" label="Version" rightLabel="333 Lives" />
       </Section>
 

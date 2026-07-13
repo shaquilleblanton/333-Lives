@@ -261,6 +261,9 @@ function GroupHeader({ label, count, accent }: { label: string; count: number; a
   );
 }
 
+const CATEGORIES_ALL = ["all", "personal", "work", "health", "finance", "relationships", "other"] as const;
+type CategoryFilter = typeof CATEGORIES_ALL[number];
+
 export default function TasksScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -272,6 +275,7 @@ export default function TasksScreen() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
+  const [catFilter, setCatFilter] = useState<CategoryFilter>("all");
 
   function invalidate() { qc.invalidateQueries({ queryKey: getGetTasksQueryKey() }); }
   function openCreate() { setEditing(null); setModalOpen(true); }
@@ -315,9 +319,10 @@ export default function TasksScreen() {
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
   const tk = todayKey();
-  const all = tasks ?? [];
-  const active = all.filter(t => !t.isCompleted);
-  const completed = all.filter(t => t.isCompleted);
+  const allTasks = tasks ?? [];
+  const filteredByCategory = catFilter === "all" ? allTasks : allTasks.filter(t => (t.category ?? "other") === catFilter);
+  const active = filteredByCategory.filter(t => !t.isCompleted);
+  const completed = filteredByCategory.filter(t => t.isCompleted);
 
   const byPriority = (a: Task, b: Task) =>
     (PRIORITY_ORDER[(a.priority as Priority) ?? "low"] ?? 1) -
@@ -374,12 +379,23 @@ export default function TasksScreen() {
                 </View>
               ))}
             </View>
+            {/* Category filter */}
+            <View style={[styles.filterRow]}>
+              {CATEGORIES_ALL.map(c => (
+                <Pressable key={c} onPress={() => setCatFilter(c)}
+                  style={[styles.filterPill, { borderColor: catFilter === c ? colors.primary : colors.border, backgroundColor: catFilter === c ? colors.primary + "1A" : "transparent" }]}>
+                  <Text style={[styles.filterPillText, { color: catFilter === c ? colors.primary : colors.mutedForeground }]}>
+                    {c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         }
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.empty}><ActivityIndicator color={colors.primary} /></View>
-          ) : all.length === 0 ? (
+          ) : allTasks.length === 0 ? (
             <View style={styles.empty}>
               <Feather name="check-square" size={40} color={colors.mutedForeground + "50"} />
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No tasks yet</Text>
@@ -420,7 +436,10 @@ const styles = StyleSheet.create({
   pageTitle: { fontFamily: fonts.serifBold, fontSize: 28 },
   pageSub: { fontFamily: fonts.sub, fontSize: 13, marginTop: 2 },
   addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  statsRow: { flexDirection: "row", marginBottom: 16 },
+  statsRow: { flexDirection: "row", marginBottom: 12 },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 4 },
+  filterPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1 },
+  filterPillText: { fontFamily: fonts.sub, fontSize: 11 },
   statCard: { borderRadius: 14, borderWidth: 1, padding: 12, alignItems: "center" },
   statValue: { fontFamily: fonts.serifBold, fontSize: 22 },
   statLabel: { fontFamily: fonts.sub, fontSize: 11, marginTop: 2 },
