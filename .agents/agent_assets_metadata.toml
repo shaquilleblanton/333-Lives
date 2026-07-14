@@ -11,3 +11,9 @@ id = "yhSeerbDLljJPU6jiFCGh"
 uri = "file://ios_dist_csr.zip"
 type = "unspecified"
 title = "iOS Certificate Signing Request (.certSigningRequest inside)"
+
+[[outputs]]
+id = "ZIToo-pO4wsBGpmuRVKS1"
+uri = "file://android_keystore.zip"
+type = "unspecified"
+title = "Android Keystore (android.p12 inside)"
