@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "-8kGVTR6i-UNvvRzLNGB-"
 uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "yhSeerbDLljJPU6jiFCGh"
+uri = "file://ios_dist_csr.zip"
+type = "unspecified"
+title = "iOS Certificate Signing Request (.certSigningRequest inside)"
