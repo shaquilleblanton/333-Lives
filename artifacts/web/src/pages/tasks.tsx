@@ -245,7 +245,7 @@ function TaskRow({ task, overdue, onToggle, onEdit, onDelete }: {
         </div>
       </div>
 
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <button onClick={onEdit} className="p-1.5 text-muted-foreground hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
         <button onClick={onDelete} className="p-1.5 text-muted-foreground hover:text-rose-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
       </div>
