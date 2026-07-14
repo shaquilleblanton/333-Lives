@@ -12,7 +12,7 @@ const FEATURES = [
   {
     icon: Lock,
     title: "The Vault",
-    text: "Messages sealed until the moment they matter — for your future self and the people you love.",
+    text: "Your private safe. Wills, passwords, insurance, accounts — everything they'll need, organized and protected.",
   },
   {
     icon: Mail,

@@ -18,13 +18,13 @@ export const requestUploadUrlBodySizeMax = 104857600;
 
 
 
-export const requestUploadUrlBodyContentTypeRegExp = new RegExp('^(audio|video)');
+export const requestUploadUrlBodyContentTypeRegExp = new RegExp('^(audio|video|image)');
 
 
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlBodySizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\*, video\/\*, or image\/\*).')
 })
 
 
@@ -32,7 +32,7 @@ export const requestUploadUrlResponseMetadataSizeMax = 104857600;
 
 
 
-export const requestUploadUrlResponseMetadataContentTypeRegExp = new RegExp('^(audio|video)');
+export const requestUploadUrlResponseMetadataContentTypeRegExp = new RegExp('^(audio|video|image)');
 
 
 export const RequestUploadUrlResponse = zod.object({
@@ -41,7 +41,7 @@ export const RequestUploadUrlResponse = zod.object({
   "metadata": zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlResponseMetadataSizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\*, video\/\*, or image\/\*).')
 }).optional()
 })
 
