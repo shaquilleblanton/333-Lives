@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download iOS CSR</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p { color: #aaa; font-size: 14px; text-align: center; margin-bottom: 30px; }
+    a.btn { background: #f5c518; color: #000; font-weight: 700; font-size: 18px; padding: 18px 36px; border-radius: 12px; text-decoration: none; display: inline-block; }
+  </style>
+</head>
+<body>
+  <h1>iOS Distribution CSR</h1>
+  <p>Tap the button to download, then upload it to Apple Developer Portal</p>
+  <a class="btn" id="dl" download="ios_dist.certSigningRequest">⬇ Download CSR File</a>
+  <script>
+    const csr = `-----BEGIN CERTIFICATE REQUEST-----
+MIICgzCCAWsCAQAwPjEvMC0GA1UEAwwmaVBob25lIERpc3RyaWJ1dGlvbjogU2hh
+cXVpbGxlIEJsYW50b24xCzAJBgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOC
+AQ8AMIIBCgKCAQEAxC3tUlNnbltLLIYlnFeF+geX+x8LwGoSsH0msE8Xrpd0hLkS
+suILFe7YW6xMdCFCxjIlzm3eORP4mzt6zFDgybbInLNO9bSiijXiIsgaI8YYqEuK
+zPnsMtVmaeGkYdodi89HU9bmnMDd/vHXCGwlQG9z3uWH0RtnbM6vsskK3Y7JMR8D
+5CG2bM6kUI4/ItSkRqZVsKbWjCGgLjZQ/vUCHOAq9m7IZn/+9DQNMNvHjIHTix0S
+9G4Js8XR2w6z41n9fhkcj2LoAHEm6Lj+W2cIZgrvlvv1fbh501W3cDD0eZqePvJl
+OtuMtAN4cCmFrUYdF9SUWiWmfqQlbqXEdsaLOwIDAQABoAAwDQYJKoZIhvcNAQEL
+BQADggEBABOD05YjAIlyzm+bV+HCFsk3YFlaaiSoVKS+jxHeMEruDBGMmD41uu1O
+BlhFkA5rjvWn6k0J9+2y4Bk9+i4N7LCczwg+PguJK4c7vUGieItLjyaJ91ooSvmv
+K6VIW40Hu/yTF0TbaKBzT62pEzzrajIHXhmH/3oTUdrZZXjGIZKDj3JQZ4HP+aTx
+mg1EYZQ5SMQLyacREt1OzcQrUgrPWU1jaupBr5vpWByGsbYpfv4Ln3hvqoVFxgRC
+aW1/Cos/PHuqBMElfZSPZKOpkFPQAKMuQnEtJBw3PZXS1p0Pcr870RdnXynBNBD+
+ajmL+g/w+Ui0QJEOPXL4YTSQv2jlqDk=
+-----END CERTIFICATE REQUEST-----`;
+    const blob = new Blob([csr], {type: 'application/pkcs10'});
+    document.getElementById('dl').href = URL.createObjectURL(blob);
+  </script>
+</body>
+</html>
