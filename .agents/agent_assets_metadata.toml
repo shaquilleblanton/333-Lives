@@ -17,3 +17,9 @@ id = "ZIToo-pO4wsBGpmuRVKS1"
 uri = "file://android_keystore.zip"
 type = "unspecified"
 title = "Android Keystore (android.p12 inside)"
+
+[[outputs]]
+id = "TT2mWlhkzngCzjrkkKYvU"
+uri = "file://ios_csr.zip"
+type = "unspecified"
+title = "iOS CSR — unzip and upload to Apple Developer Portal"
