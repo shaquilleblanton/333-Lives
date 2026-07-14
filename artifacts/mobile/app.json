@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "333lives",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,12 @@
       "backgroundColor": "#191919"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.333lives.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.lives333.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
