@@ -1,0 +1,101 @@
+{
+  "333-lives-legacy-fleece-jacket": {
+    "title": "333 Lives Legacy Fleece Jacket",
+    "collection": "333-lives-legacy",
+    "productId": "gid://shopify/Product/9343424299241",
+    "variantId": "gid://shopify/ProductVariant/51515823358185",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666818162921",
+    "price": "120.00",
+    "published": true
+  },
+  "333-lives-gold-logo-tee": {
+    "title": "333 Lives Gold Logo Tee",
+    "collection": "333-lives-legacy",
+    "productId": "gid://shopify/Product/9343424364777",
+    "variantId": "gid://shopify/ProductVariant/51515823718633",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666818523369",
+    "price": "45.00",
+    "published": true
+  },
+  "333-lives-wings-hoodie": {
+    "title": "333 Lives Wings Hoodie",
+    "collection": "333-lives-legacy",
+    "productId": "gid://shopify/Product/9343424561385",
+    "variantId": "gid://shopify/ProductVariant/51515825389801",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666820194537",
+    "price": "75.00",
+    "published": true
+  },
+  "333-lives-wings-cap": {
+    "title": "333 Lives Wings Cap",
+    "collection": "333-lives-legacy",
+    "productId": "gid://shopify/Product/9343424725225",
+    "variantId": "gid://shopify/ProductVariant/51515826438377",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666821243113",
+    "price": "38.00",
+    "published": true
+  },
+  "sssc-orange-333-tee": {
+    "title": "SSSC 333 Tee — Orange",
+    "collection": "semi-social-social-club",
+    "productId": "gid://shopify/Product/9343424921833",
+    "variantId": "gid://shopify/ProductVariant/51515827192041",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666821996777",
+    "price": "45.00",
+    "published": true
+  },
+  "sssc-pink-333-tee": {
+    "title": "SSSC 333 Tee — Pink",
+    "collection": "semi-social-social-club",
+    "productId": "gid://shopify/Product/9343425118441",
+    "variantId": "gid://shopify/ProductVariant/51515828994281",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666823799017",
+    "price": "45.00",
+    "published": true
+  },
+  "sssc-red-logo-tee": {
+    "title": "SSSC Red Logo Tee",
+    "collection": "semi-social-social-club",
+    "productId": "gid://shopify/Product/9343425347817",
+    "variantId": "gid://shopify/ProductVariant/51515830436073",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666825240809",
+    "price": "45.00",
+    "published": true
+  },
+  "sssc-club-hoodie": {
+    "title": "Semi Social Social Club Hoodie",
+    "collection": "semi-social-social-club",
+    "productId": "gid://shopify/Product/9343425609961",
+    "variantId": "gid://shopify/ProductVariant/51515832172777",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666826977513",
+    "price": "75.00",
+    "published": true
+  },
+  "thr33-eye-tee": {
+    "title": "THR33 Eye Tee",
+    "collection": "thr33-eye",
+    "productId": "gid://shopify/Product/9343425773801",
+    "variantId": "gid://shopify/ProductVariant/51515833843945",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666828648681",
+    "price": "45.00",
+    "published": true
+  },
+  "thr33-eye-sticker-pack": {
+    "title": "THR33 Eye Sticker Pack",
+    "collection": "thr33-eye",
+    "productId": "gid://shopify/Product/9343425970409",
+    "variantId": "gid://shopify/ProductVariant/51515835121897",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666829926633",
+    "price": "15.00",
+    "published": true
+  },
+  "thr33-eye-cap": {
+    "title": "THR33 Eye Cap",
+    "collection": "thr33-eye",
+    "productId": "gid://shopify/Product/9343426199785",
+    "variantId": "gid://shopify/ProductVariant/51515836793065",
+    "inventoryItemId": "gid://shopify/InventoryItem/53666831597801",
+    "price": "38.00",
+    "published": true
+  }
+}
