@@ -115,7 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card p-6 gap-8">
         <div className="flex items-center justify-center px-2">
-          <Logo333 size="sm" />
+          <Logo333 size="md" />
         </div>
         
         <nav className="flex-1 flex flex-col gap-2">

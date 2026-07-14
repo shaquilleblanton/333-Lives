@@ -60,7 +60,7 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="flex flex-col items-center text-center px-6 pt-20 md:pt-28 pb-16">
-        <Logo333 size="lg" />
+        <Logo333 size="xl" />
         <h1 className="font-serif text-4xl md:text-6xl leading-tight mt-8 max-w-3xl">
           Three intentions.
           <br />
