@@ -33,3 +33,14 @@ Android keystore is auto-managed by Expo (`Build Credentials _t_WueQSll`). No se
 
 ## Successful Android build
 `fd1d02d6-eb82-47c5-9309-3766e3c82caa` — triggered with `EAS_NO_VCS=1`, platform android, profile production.
+
+## iOS Build Success (July 14 2026)
+- Apple session cached at: /home/runner/.app-store/auth/shadblanton@yahoo.com/cookie
+- Use `setsid` won't work (Replit kills all processes on bash exit)
+- Use Replit WORKFLOW to run persistent Python PTY script (/tmp/eas_worker.py)
+- Python pty.openpty() + subprocess.Popen with slave as stdin/stdout/stderr works great
+- EAS auto-answered via state machine watching PTY output
+- Key: catch ANY `(Y/n)` prompt with generic handler; `Generate a new Apple Provisioning Profile` includes "Apple" — don't miss it
+- Build queued: https://expo.dev/accounts/snipersb/projects/333-lives/builds/76ec3373-c328-430e-b61b-b67bf5ed4972
+- Apple Dist Cert serial: 2C944898AEE642996DD6524C7C0BDC8F (expires Jul 2027)
+- Apple Provisioning Profile ID: 6GC2388NMX
