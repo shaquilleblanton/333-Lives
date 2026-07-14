@@ -13,7 +13,7 @@ import {
   Mail,
   Dumbbell,
   ListChecks,
-  ShoppingBag,
+
   Mic,
   MessageSquare,
   MoreHorizontal,
@@ -39,7 +39,7 @@ const NAV_ITEMS = [
   { href: "/legacy-letters", label: "Legacy Letters", icon: Mail },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/memos", label: "Voice Memos", icon: Mic },
-  { href: "/shop", label: "Shop", icon: ShoppingBag },
+
   { href: "/family-tree", label: "Family Tree", icon: GitBranch },
   { href: "/pulse", label: "What's Good", icon: Zap },
   { href: "/memories", label: "Memories", icon: Images },
