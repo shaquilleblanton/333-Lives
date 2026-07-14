@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "333lives",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",
@@ -15,10 +15,29 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.333lives.app"
+      "bundleIdentifier": "com.lives333.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
+        "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",
+        "NSCameraUsageDescription": "333 Lives uses your camera to capture photos for memories and profiles.",
+        "NSLocationWhenInUseUsageDescription": "333 Lives may use your location to enhance life events and memories.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.lives333.app"
+      "package": "com.lives333.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#191919"
+      },
+      "permissions": [
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -27,16 +46,28 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://333lives.replit.app/"
         }
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "333 Lives uses your photo library to add photos to memories and profiles.",
+          "cameraPermission": "333 Lives uses your camera to capture photos for memories and profiles."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
     }
   }
 }
