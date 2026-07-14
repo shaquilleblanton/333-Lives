@@ -28,7 +28,7 @@
     },
     "android": {
       "package": "com.lives333.app",
-      "versionCode": 2,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#191919"
