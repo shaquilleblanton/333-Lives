@@ -7,3 +7,4 @@
 - [React types pinning](react-types-pinning.md) — keep @types/react on 19.1.x (catalog + overrides) to match pinned react@19.1.0; dual versions break Radix `--radix-*` CSSProperties augmentation
 - [Owner privilege flag](owner-privilege-flag.md) — admin gating via users.is_owner checked per-request; strip privilege/identity fields in profile update or drizzle-zod schemas make them self-assignable
 - [Legacy account linking](legacy-account-linking.md) — link users by clerkId or unlinked email match ONLY; never "first sign-in claims legacy row"; check parent ownership on nested routes (IDOR)
+- [EAS build from Replit](eas-build-replit.md) — EAS_NO_VCS=1 bypasses git lock; iOS cert creation needs expo.dev credentials UI or ASC API key
