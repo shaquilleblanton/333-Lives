@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo333 } from "@/components/logo";
+import { useGetMe } from "@workspace/api-client-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
@@ -53,6 +54,31 @@ const NAV_ITEMS = [
 // The few destinations that live directly in the mobile bottom bar; the rest
 // are reachable through the "More" drawer to avoid a cramped, unreadable nav.
 const MOBILE_PRIMARY = ["/", "/tasks", "/growth", "/people"];
+
+function SidebarUserCard() {
+  const { data: me } = useGetMe();
+  if (!me) return null;
+  return (
+    <Link
+      href="/profile"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted/50 transition-colors group"
+    >
+      <div className="w-9 h-9 rounded-full overflow-hidden border border-border shrink-0 bg-muted/50">
+        {me.avatarUrl ? (
+          <img src={`/api/storage${me.avatarUrl}`} alt={me.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-primary font-serif text-sm">
+            {me.name?.charAt(0)?.toUpperCase() ?? <User className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-subheading text-foreground group-hover:text-primary transition-colors truncate">{me.name}</p>
+        <p className="text-xs text-muted-foreground font-subheading">View profile</p>
+      </div>
+    </Link>
+  );
+}
 
 // Shown during the last few days of each month to nudge members to submit
 // feedback before the owner's end-of-month update pass. Dismissal is
@@ -138,6 +164,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <div className="border-t border-border pt-4">
+          <SidebarUserCard />
+        </div>
       </aside>
 
       {/* Main Content */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, parseISO } from "date-fns";
@@ -17,8 +17,9 @@ import type { Person, RelationshipMoment } from "@workspace/api-client-react";
 import {
   Users, Plus, Heart, Calendar, Mail, Edit3, Loader2,
   MessageSquare, Star, Trophy, Flower2, Handshake, X,
-  ChevronRight, Trash2, Clock, AlertCircle, Cake
+  ChevronRight, Trash2, Clock, AlertCircle, Cake, Camera
 } from "lucide-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,6 +61,30 @@ function getRelationshipColor(rel: string) {
 
 function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function personPhotoSrc(path: string) {
+  return `/api/storage${path}`;
+}
+
+function PersonAvatar({ person, size = "md" }: { person: Person; size?: "sm" | "md" | "lg" }) {
+  const sizeClass = size === "sm" ? "w-12 h-12 text-lg" : size === "lg" ? "w-16 h-16 text-2xl" : "w-12 h-12 text-lg";
+  const ringClass = person.lostDate
+    ? "bg-primary/10 border-primary/30 text-primary"
+    : "bg-muted/50 border-border text-foreground";
+
+  if (person.photoUrl) {
+    return (
+      <div className={`${sizeClass} rounded-full overflow-hidden border shrink-0 ${person.lostDate ? "border-primary/30" : "border-border"}`}>
+        <img src={personPhotoSrc(person.photoUrl)} alt={person.name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className={`${sizeClass} rounded-full flex items-center justify-center font-serif border shrink-0 ${ringClass}`}>
+      {getInitials(person.name)}
+    </div>
+  );
 }
 
 /**
@@ -195,14 +220,7 @@ export default function People() {
 
               <div className="flex items-start gap-4 mb-4">
                 {/* Avatar */}
-                <div className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center font-serif text-lg shrink-0 border",
-                  person.lostDate
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-muted/50 border-border text-foreground group-hover:border-primary/30 group-hover:text-primary"
-                )}>
-                  {getInitials(person.name)}
-                </div>
+                <PersonAvatar person={person} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-xl font-serif text-foreground group-hover:text-primary transition-colors truncate">
@@ -337,12 +355,7 @@ function PersonDetail({ person, onEdit, onMessage, onClose }: {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center font-serif text-2xl border shrink-0",
-              person.lostDate ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/50 border-border text-foreground"
-            )}>
-              {getInitials(person.name)}
-            </div>
+            <PersonAvatar person={person} size="lg" />
             <div>
               <SheetTitle className="text-2xl font-serif text-foreground">{person.name}</SheetTitle>
               {person.lostDate && (
@@ -591,6 +604,8 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
   const queryClient = useQueryClient();
   const createPerson = useCreatePerson();
   const updatePerson = useUpdatePerson();
+  const { uploadFile } = useUpload();
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const bd = parseBirthday(person?.birthday);
 
@@ -604,12 +619,26 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
     note: person?.note || "",
     anniversary: person?.anniversary ? person.anniversary.split("T")[0] : "",
     anniversaryLabel: person?.anniversaryLabel || "",
-    // "none" is the sentinel for "no reminder" (avoids Radix Select empty-value bug)
     reconnectDays: person?.reconnectDays?.toString() || "none",
     customReminders: (person?.customReminders ?? []) as Array<{ date: string; label: string }>,
+    photoUrl: person?.photoUrl ?? null as string | null,
   });
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const set = (patch: Partial<typeof formData>) => setFormData(f => ({ ...f, ...patch }));
+
+  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !file.type.startsWith("image/")) return;
+    setIsUploadingPhoto(true);
+    try {
+      const res = await uploadFile(file);
+      if (res?.objectPath) set({ photoUrl: res.objectPath });
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -628,9 +657,9 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
       note: formData.note || undefined,
       anniversary: formData.anniversary || undefined,
       anniversaryLabel: formData.anniversaryLabel || undefined,
-      // "none" → null to explicitly clear the reconnect reminder in the DB
       reconnectDays: formData.reconnectDays !== "none" ? Number(formData.reconnectDays) : null,
       customReminders: formData.customReminders.filter(cr => cr.date && cr.label),
+      photoUrl: formData.photoUrl ?? undefined,
     };
 
     const onSuccess = () => {
@@ -654,6 +683,31 @@ function PersonFormDialog({ open, onOpenChange, person }: { open: boolean; onOpe
           <DialogTitle className="font-serif text-2xl">{person ? "Update Details" : "Add to My Circle"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          {/* Photo */}
+          <div className="flex items-center gap-4">
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelected} />
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border border-border bg-muted/50 shrink-0">
+              {formData.photoUrl ? (
+                <img src={personPhotoSrc(formData.photoUrl)} alt="Photo" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground font-serif text-xl">
+                  {formData.name ? getInitials(formData.name) : "?"}
+                </div>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-border text-muted-foreground"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={isUploadingPhoto}
+            >
+              {isUploadingPhoto ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Camera className="w-3.5 h-3.5 mr-1.5" />}
+              {formData.photoUrl ? "Change Photo" : "Add Photo"}
+            </Button>
+          </div>
+
           {/* Name */}
           <div className="space-y-2">
             <label className="text-sm font-subheading text-muted-foreground">Name</label>
