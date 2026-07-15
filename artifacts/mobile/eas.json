@@ -23,7 +23,7 @@
     "production": {
       "ios": {
         "appleId": "shadblanton@yahoo.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "ascAppId": "6791305774",
         "appleTeamId": "262X7APXYK"
       },
       "android": {
