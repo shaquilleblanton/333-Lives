@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "333lives",
+    "scheme": "lives333",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.lives333.app",
-      "buildNumber": "13",
+      "buildNumber": "14",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
         "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",
