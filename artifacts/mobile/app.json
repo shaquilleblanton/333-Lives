@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.lives333.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
         "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",
@@ -28,7 +28,7 @@
     },
     "android": {
       "package": "com.lives333.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#191919"

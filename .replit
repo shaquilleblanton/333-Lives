@@ -18,22 +18,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "EAS Android Build Worker"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "EAS iOS Build Worker"
-
-[[workflows.workflow]]
-name = "EAS Android Build Worker"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 /tmp/eas_android_worker.py"
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [[workflows.workflow]]
 name = "EAS iOS Build Worker"
