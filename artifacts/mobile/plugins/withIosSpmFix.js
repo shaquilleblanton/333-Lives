@@ -2,33 +2,76 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const STUBS = {
-  'ClerkExpoModule.swift': `
-import ExpoModulesCore
+const SWIFT_STUBS = {
+  'ClerkExpoModule.swift': `import ExpoModulesCore
 import Foundation
 
 public class ClerkExpoModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ClerkExpo")
   }
-}
-`.trim(),
+}`,
   'ClerkNativeBridge.swift': `import Foundation`,
   'ClerkAuthNativeView.swift': `import Foundation`,
   'ClerkNativeViewHost.swift': `import Foundation`,
   'ClerkUserButtonNativeView.swift': `import Foundation`,
   'ClerkUserProfileNativeView.swift': `import Foundation`,
-  'ClerkGoogleSignInModule.swift': `
-import ExpoModulesCore
+  'ClerkGoogleSignInModule.swift': `import ExpoModulesCore
 import Foundation
 
 public class ClerkGoogleSignInModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ClerkGoogleSignIn")
   }
-}
-`.trim(),
+}`,
 };
+
+// Complete replacement podspec — no SPM dependencies, no static_framework
+const CLEAN_PODSPEC = `require 'json'
+
+package_json_path = File.join(__dir__, '..', 'package.json')
+package_json_path = File.join(File.readlink(__dir__), '..', 'package.json') if File.symlink?(__dir__)
+
+if File.exist?(package_json_path)
+  package = JSON.parse(File.read(package_json_path))
+else
+  package = {
+    'version' => '0.0.0-FALLBACK',
+    'description' => 'Clerk React Native/Expo library',
+    'license' => 'MIT',
+    'author' => 'Clerk',
+    'homepage' => 'https://clerk.com/'
+  }
+end
+
+Pod::Spec.new do |s|
+  s.name           = 'ClerkExpo'
+  s.version        = package['version']
+  s.summary        = package['description']
+  s.license        = package['license']
+  s.author         = package['author']
+  s.homepage       = package['homepage']
+  s.platforms      = { :ios => '17.0' }
+  s.swift_version  = '5.10'
+  s.source         = { git: 'https://github.com/clerk/javascript' }
+
+  s.dependency 'ExpoModulesCore'
+
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'SWIFT_COMPILATION_MODE' => 'wholemodule'
+  }
+
+  s.source_files = "ClerkNativeBridge.swift",
+                   "ClerkExpoModule.swift",
+                   "ClerkNativeViewHost.swift",
+                   "ClerkAuthNativeView.swift",
+                   "ClerkUserProfileNativeView.swift",
+                   "ClerkUserButtonNativeView.swift"
+
+  install_modules_dependencies(s)
+end
+`;
 
 const withIosSpmFix = (config) => {
   return withDangerousMod(config, [
@@ -40,7 +83,8 @@ const withIosSpmFix = (config) => {
         });
         const iosDir = path.join(path.dirname(clerkExpoPkg), 'ios');
 
-        for (const [file, stub] of Object.entries(STUBS)) {
+        // Stub Swift source files
+        for (const [file, stub] of Object.entries(SWIFT_STUBS)) {
           const filePath = path.join(iosDir, file);
           if (fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, stub + '\n');
@@ -48,22 +92,17 @@ const withIosSpmFix = (config) => {
           }
         }
 
+        // Replace podspec entirely with clean version (no SPM, no static_framework)
         const podspecPath = path.join(iosDir, 'ClerkExpo.podspec');
         if (fs.existsSync(podspecPath)) {
-          let spec = fs.readFileSync(podspecPath, 'utf8');
-          if (!spec.includes('# [withIosSpmFix]')) {
-            spec = spec
-              .replace(/s\.static_framework\s*=\s*true/, '# s.static_framework = true # [withIosSpmFix]')
-              .replace(/if defined\?\(spm_dependency\)[\s\S]*?end/m,
-                '# spm_dependency removed by withIosSpmFix');
-            fs.writeFileSync(podspecPath, spec);
-            console.log('[withIosSpmFix] Patched ClerkExpo.podspec');
-          }
+          fs.writeFileSync(podspecPath, CLEAN_PODSPEC);
+          console.log('[withIosSpmFix] Replaced ClerkExpo.podspec');
         }
       } catch (e) {
-        console.warn('[withIosSpmFix] Error:', e.message);
+        console.warn('[withIosSpmFix] ClerkExpo patch error:', e.message);
       }
 
+      // Keep spm.rb nil-guard patch as safety net
       try {
         const rnPkg = require.resolve('react-native/package.json', {
           paths: [config.modRequest.projectRoot],
@@ -86,7 +125,7 @@ const withIosSpmFix = (config) => {
           }
         }
       } catch (e) {
-        console.warn('[withIosSpmFix] spm.rb patch failed:', e.message);
+        console.warn('[withIosSpmFix] spm.rb patch error:', e.message);
       }
 
       return config;
