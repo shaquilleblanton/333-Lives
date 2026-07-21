@@ -40,6 +40,7 @@ import Timeline from "@/pages/timeline";
 import Pulse from "@/pages/pulse";
 import Memories from "@/pages/memories";
 import Review from "@/pages/review";
+import PrivacyPolicy from "@/pages/privacy-policy";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +136,7 @@ function Router() {
           sub-paths (sso-callback, factor-one) match too. */}
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
       {APP_ROUTES.map(({ path, component }) => (
         <Route key={path} path={path}>
           <ProtectedPage component={component} />
