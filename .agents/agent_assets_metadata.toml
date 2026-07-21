@@ -6,6 +6,42 @@ uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "dChQL2yZKlFapv-sAWxFS"
+uri = "file://attached_assets/store_assets/feature_graphic.png"
+type = "image"
+title = "333lives feature graphic"
+
+[[generated]]
+id = "PzJ9gmD8OGRHtkHLiT1L6"
+uri = "file://attached_assets/store_assets/phone_screenshot_1.png"
+type = "image"
+title = "phone screenshot intentions"
+
+[[generated]]
+id = "8APpiM8cmr375c5RZaqzT"
+uri = "file://attached_assets/store_assets/phone_screenshot_2.png"
+type = "image"
+title = "phone screenshot journal"
+
+[[generated]]
+id = "9uszo7wlnExg07N6dN3yE"
+uri = "file://attached_assets/store_assets/phone_screenshot_3.png"
+type = "image"
+title = "phone screenshot reflection"
+
+[[generated]]
+id = "PTmcl7M1NUki8r40j-W9V"
+uri = "file://attached_assets/store_assets/tablet_screenshot_1.png"
+type = "image"
+title = "tablet screenshot dashboard"
+
+[[generated]]
+id = "vhMwCfjSEdLdnj1BOOLMi"
+uri = "file://attached_assets/store_assets/tablet_screenshot_2.png"
+type = "image"
+title = "tablet screenshot people goals"
+
 [[outputs]]
 id = "yhSeerbDLljJPU6jiFCGh"
 uri = "file://ios_dist_csr.zip"
@@ -23,3 +59,39 @@ id = "TT2mWlhkzngCzjrkkKYvU"
 uri = "file://ios_csr.zip"
 type = "unspecified"
 title = "iOS CSR — unzip and upload to Apple Developer Portal"
+
+[[outputs]]
+id = "OrQRewAKkwzC_ttTPek2H"
+uri = "file://attached_assets/store_assets/feature_graphic.png"
+type = "image"
+title = "Feature Graphic (1024×500) — Upload to Play Console → Store listing → Feature graphic"
+
+[[outputs]]
+id = "Ues3pNoMqzaP6rE021gRW"
+uri = "file://attached_assets/store_assets/phone_screenshot_1.png"
+type = "image"
+title = "Phone Screenshot 1 — Today's Intentions"
+
+[[outputs]]
+id = "A6hdhVeqeovOTSvTrBciv"
+uri = "file://attached_assets/store_assets/phone_screenshot_2.png"
+type = "image"
+title = "Phone Screenshot 2 — Gratitude Journal"
+
+[[outputs]]
+id = "d9UHTcyndCariXD3fikoh"
+uri = "file://attached_assets/store_assets/phone_screenshot_3.png"
+type = "image"
+title = "Phone Screenshot 3 — Daily Reflection"
+
+[[outputs]]
+id = "P97v7OF5Fpdh7p7kgc-ae"
+uri = "file://attached_assets/store_assets/tablet_screenshot_1.png"
+type = "image"
+title = "7-inch Tablet Screenshot — Dashboard"
+
+[[outputs]]
+id = "Am9lQfphfEpXub51fPLO5"
+uri = "file://attached_assets/store_assets/tablet_screenshot_2.png"
+type = "image"
+title = "10-inch Tablet Screenshot — People & Goals"
