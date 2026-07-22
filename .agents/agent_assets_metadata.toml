@@ -95,3 +95,9 @@ id = "Am9lQfphfEpXub51fPLO5"
 uri = "file://attached_assets/store_assets/tablet_screenshot_2.png"
 type = "image"
 title = "Tablet Screenshot 2 — Reflection & Stats"
+
+[[outputs]]
+id = "-pYQ5wDCYPOZ5qpeTrCa9"
+uri = "file://attached_assets/A3723975-BCF9-4735-B4BA-5FF8121CF538_1784738140883_compressed.png"
+type = "image"
+title = "333 Lives Logo — compressed (840KB)"
