@@ -107,3 +107,21 @@ id = "gH8NehpcBt6QzOsWHUQQ9"
 uri = "file://attached_assets/333lives_testers.csv"
 type = "table"
 title = "333 Lives Testers"
+
+[[outputs]]
+id = "4hmX450Pv7Q3UUMo-6NRq"
+uri = "file://attached_assets/store_assets/ios_screenshot_1.png"
+type = "image"
+title = "iOS Screenshot 1 — Today's Intentions"
+
+[[outputs]]
+id = "cqqPWwNOolC0gQ8vO_ftU"
+uri = "file://attached_assets/store_assets/ios_screenshot_2.png"
+type = "image"
+title = "iOS Screenshot 2 — Gratitude Journal"
+
+[[outputs]]
+id = "6rPzPplJF_ju0Od6EmHFu"
+uri = "file://attached_assets/store_assets/ios_screenshot_3.png"
+type = "image"
+title = "iOS Screenshot 3 — My People"
