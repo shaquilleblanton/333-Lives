@@ -1,10 +1,11 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.lives333.app",
-    "sha256_cert_fingerprints": [
-      "4B:64:37:D2:7F:13:86:E1:4E:D8:45:41:48:DC:54:C3:E9:04:A4:5A:4B:96:47:3A:BE:BD:F8:EF:EE:09:0B:A1"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.lives333.app",
+      "sha256_cert_fingerprints":
+        ["4B:64:37:D2:7F:13:86:E1:4E:D8:45:41:48:DC:54:C3:E9:04:A4:5A:4B:96:47:3A:BE:BD:F8:EF:EE:09:0B:A1"]
+    }
   }
-}]
+]
