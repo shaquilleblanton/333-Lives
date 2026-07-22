@@ -101,3 +101,9 @@ id = "-pYQ5wDCYPOZ5qpeTrCa9"
 uri = "file://attached_assets/A3723975-BCF9-4735-B4BA-5FF8121CF538_1784738140883_compressed.png"
 type = "image"
 title = "333 Lives Logo — compressed (840KB)"
+
+[[outputs]]
+id = "gH8NehpcBt6QzOsWHUQQ9"
+uri = "file://attached_assets/333lives_testers.csv"
+type = "table"
+title = "333 Lives Testers"
