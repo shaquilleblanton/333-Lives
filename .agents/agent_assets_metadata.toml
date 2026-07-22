@@ -125,3 +125,15 @@ id = "6rPzPplJF_ju0Od6EmHFu"
 uri = "file://attached_assets/store_assets/ios_screenshot_3.png"
 type = "image"
 title = "iOS Screenshot 3 — My People"
+
+[[outputs]]
+id = "y_ynq5DfZr-x8a51Vx08a"
+uri = "file://attached_assets/store_assets/ipad_screenshot_1.png"
+type = "image"
+title = "iPad Screenshot 1 — Dashboard"
+
+[[outputs]]
+id = "m7eHQv3lf20EI_3PYiKDo"
+uri = "file://attached_assets/store_assets/ipad_screenshot_2.png"
+type = "image"
+title = "iPad Screenshot 2 — Reflection & Stats"
