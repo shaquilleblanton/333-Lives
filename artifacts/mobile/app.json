@@ -49,7 +49,7 @@
       [
         "expo-router",
         {
-          "origin": "https://333lives.replit.app/"
+          "origin": "https://333lives.app"
         }
       ],
       "expo-font",
