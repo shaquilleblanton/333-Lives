@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Testers CSV</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #111; color: #fff; text-align: center; padding: 20px; box-sizing: border-box; }
+    button { background: #f5c518; color: #000; font-size: 22px; font-weight: bold; padding: 20px 48px; border-radius: 14px; border: none; margin-top: 24px; cursor: pointer; }
+    p { color: #999; font-size: 15px; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <h2>TestFlight Testers CSV</h2>
+  <button onclick="download()">⬇ Download CSV</button>
+  <p>Tap the button → Share → Save to Files</p>
+  <script>
+    function download() {
+      var csv = "First Name,Last Name,Email\nMama,,blantonmary71@yahoo.com\nBobbi,,bobbiboykins@gmail.com\nDevince,,Boykinsdevince@ymail.com\nDrake,,Drake.wells@yahoo.com\nDevonte,,Dboykins828@gmail.com\nTajae,,Tajaemcmullens94@gmail.com\nBoobie,,Jatarrio@icloud.com\nRuti,,Planetrutimgmt@gmail.com\nPave,,Pavemusic108@gmail.com\nGlenn,,rectorglenn07@gmail.com\nJonah,,Jonah@jbfitzgerald.com\nTaryn,,tarzann202@yahoo.com\nDarius,,Gardnersdarius@gmail.com\nJalen,,Mvw96@aol.com\nTone,,antoniohughes26@gmail.com\nEj,,Ericmreed30@gmail.com\nMarc,,Marckingjr@icloud.com";
+      var blob = new Blob([csv], {type: "text/csv"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "testflight_testers.csv";
+      a.click();
+    }
+  </script>
+</body>
+</html>
