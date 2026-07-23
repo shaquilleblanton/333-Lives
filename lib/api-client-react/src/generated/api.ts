@@ -47,6 +47,7 @@ import type {
   CreateRelationshipMomentBody,
   CreateShopCheckoutBody,
   CreateTaskBody,
+  CreateVaultContactBody,
   CreateVaultItemBody,
   CreateVoiceMemoBody,
   CreateWorkoutBlockBody,
@@ -113,6 +114,7 @@ import type {
   UpdatePersonBody,
   UpdateTaskBody,
   UpdateUserBody,
+  UpdateVaultContactBody,
   UpdateVaultItemBody,
   UpdateVoiceMemoBody,
   UpdateWorkoutBlockBody,
@@ -121,6 +123,7 @@ import type {
   UploadUrlResponse,
   UpsertStoryAnswerBody,
   User,
+  VaultContact,
   VaultItem,
   VoiceMemo,
   WorkoutSession
@@ -1130,6 +1133,294 @@ export const useCreateVaultItem = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateVaultItemMutationOptions(options));
+    }
+
+export const getGetVaultContactsUrl = () => {
+
+
+
+
+  return `/api/vault-contacts`
+}
+
+/**
+ * @summary List trusted estate contacts
+ */
+export const getVaultContacts = async ( options?: RequestInit): Promise<VaultContact[]> => {
+
+  return customFetch<VaultContact[]>(getGetVaultContactsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVaultContactsQueryKey = () => {
+    return [
+    `/api/vault-contacts`
+    ] as const;
+    }
+
+
+export const getGetVaultContactsQueryOptions = <TData = Awaited<ReturnType<typeof getVaultContacts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultContacts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVaultContactsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVaultContacts>>> = ({ signal }) => getVaultContacts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVaultContacts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVaultContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getVaultContacts>>>
+export type GetVaultContactsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List trusted estate contacts
+ */
+
+export function useGetVaultContacts<TData = Awaited<ReturnType<typeof getVaultContacts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultContacts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVaultContactsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVaultContactUrl = () => {
+
+
+
+
+  return `/api/vault-contacts`
+}
+
+/**
+ * @summary Create or replace a trusted contact (upserts by priority)
+ */
+export const createVaultContact = async (createVaultContactBody: CreateVaultContactBody, options?: RequestInit): Promise<VaultContact> => {
+
+  return customFetch<VaultContact>(getCreateVaultContactUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createVaultContactBody)
+  }
+);}
+
+
+
+
+export const getCreateVaultContactMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVaultContact>>, TError,{data: BodyType<CreateVaultContactBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVaultContact>>, TError,{data: BodyType<CreateVaultContactBody>}, TContext> => {
+
+const mutationKey = ['createVaultContact'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVaultContact>>, {data: BodyType<CreateVaultContactBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVaultContact(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVaultContactMutationResult = NonNullable<Awaited<ReturnType<typeof createVaultContact>>>
+    export type CreateVaultContactMutationBody = BodyType<CreateVaultContactBody>
+    export type CreateVaultContactMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create or replace a trusted contact (upserts by priority)
+ */
+export const useCreateVaultContact = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVaultContact>>, TError,{data: BodyType<CreateVaultContactBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVaultContact>>,
+        TError,
+        {data: BodyType<CreateVaultContactBody>},
+        TContext
+      > => {
+      return useMutation(getCreateVaultContactMutationOptions(options));
+    }
+
+export const getUpdateVaultContactUrl = (id: number,) => {
+
+
+
+
+  return `/api/vault-contacts/${id}`
+}
+
+/**
+ * @summary Update a trusted contact
+ */
+export const updateVaultContact = async (id: number,
+    updateVaultContactBody: UpdateVaultContactBody, options?: RequestInit): Promise<VaultContact> => {
+
+  return customFetch<VaultContact>(getUpdateVaultContactUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateVaultContactBody)
+  }
+);}
+
+
+
+
+export const getUpdateVaultContactMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVaultContact>>, TError,{id: number;data: BodyType<UpdateVaultContactBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVaultContact>>, TError,{id: number;data: BodyType<UpdateVaultContactBody>}, TContext> => {
+
+const mutationKey = ['updateVaultContact'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVaultContact>>, {id: number;data: BodyType<UpdateVaultContactBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateVaultContact(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVaultContactMutationResult = NonNullable<Awaited<ReturnType<typeof updateVaultContact>>>
+    export type UpdateVaultContactMutationBody = BodyType<UpdateVaultContactBody>
+    export type UpdateVaultContactMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a trusted contact
+ */
+export const useUpdateVaultContact = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVaultContact>>, TError,{id: number;data: BodyType<UpdateVaultContactBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVaultContact>>,
+        TError,
+        {id: number;data: BodyType<UpdateVaultContactBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateVaultContactMutationOptions(options));
+    }
+
+export const getDeleteVaultContactUrl = (id: number,) => {
+
+
+
+
+  return `/api/vault-contacts/${id}`
+}
+
+/**
+ * @summary Delete a trusted contact
+ */
+export const deleteVaultContact = async (id: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteVaultContactUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVaultContactMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVaultContact>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVaultContact>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteVaultContact'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVaultContact>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteVaultContact(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVaultContactMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVaultContact>>>
+
+    export type DeleteVaultContactMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a trusted contact
+ */
+export const useDeleteVaultContact = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVaultContact>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVaultContact>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVaultContactMutationOptions(options));
     }
 
 export const getGetVaultItemUrl = (id: number,) => {

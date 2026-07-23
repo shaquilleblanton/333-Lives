@@ -18,13 +18,13 @@ export const requestUploadUrlBodySizeMax = 104857600;
 
 
 
-export const requestUploadUrlBodyContentTypeRegExp = new RegExp('^(audio|video|image)');
+export const requestUploadUrlBodyContentTypeRegExp = new RegExp('^(audio|video)');
 
 
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlBodySizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\*, video\/\*, or image\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
 })
 
 
@@ -32,7 +32,7 @@ export const requestUploadUrlResponseMetadataSizeMax = 104857600;
 
 
 
-export const requestUploadUrlResponseMetadataContentTypeRegExp = new RegExp('^(audio|video|image)');
+export const requestUploadUrlResponseMetadataContentTypeRegExp = new RegExp('^(audio|video)');
 
 
 export const RequestUploadUrlResponse = zod.object({
@@ -41,7 +41,7 @@ export const RequestUploadUrlResponse = zod.object({
   "metadata": zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlResponseMetadataSizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\*, video\/\*, or image\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
 }).optional()
 })
 
@@ -231,13 +231,13 @@ export const UnlockMessageResponse = zod.object({
  * @summary List all vault items
  */
 export const GetVaultItemsQueryParams = zod.object({
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']).optional()
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']).optional()
 })
 
 export const GetVaultItemsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
@@ -252,7 +252,7 @@ export const GetVaultItemsResponse = zod.array(GetVaultItemsResponseItem)
  */
 export const CreateVaultItemBody = zod.object({
   "name": zod.string(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "fileUrl": zod.string().optional(),
   "content": zod.string().optional(),
   "mimeType": zod.string().optional(),
@@ -262,12 +262,108 @@ export const CreateVaultItemBody = zod.object({
 export const CreateVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
   "sizeBytes": zod.number().nullish(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List trusted estate contacts
+ */
+export const GetVaultContactsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "priority": zod.number().describe('1 = first contact, 2 = second contact'),
+  "type": zod.enum(['person', 'attorney', 'executor']),
+  "name": zod.string(),
+  "relationship": zod.string().nullish(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "firmName": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetVaultContactsResponse = zod.array(GetVaultContactsResponseItem)
+
+
+/**
+ * @summary Create or replace a trusted contact (upserts by priority)
+ */
+export const CreateVaultContactBody = zod.object({
+  "priority": zod.number(),
+  "type": zod.enum(['person', 'attorney', 'executor']),
+  "name": zod.string(),
+  "relationship": zod.string().optional(),
+  "email": zod.string(),
+  "phone": zod.string().optional(),
+  "firmName": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const CreateVaultContactResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "priority": zod.number().describe('1 = first contact, 2 = second contact'),
+  "type": zod.enum(['person', 'attorney', 'executor']),
+  "name": zod.string(),
+  "relationship": zod.string().nullish(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "firmName": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a trusted contact
+ */
+export const UpdateVaultContactParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateVaultContactBody = zod.object({
+  "priority": zod.number().optional(),
+  "type": zod.enum(['person', 'attorney', 'executor']).optional(),
+  "name": zod.string().optional(),
+  "relationship": zod.string().optional(),
+  "email": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "firmName": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateVaultContactResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "priority": zod.number().describe('1 = first contact, 2 = second contact'),
+  "type": zod.enum(['person', 'attorney', 'executor']),
+  "name": zod.string(),
+  "relationship": zod.string().nullish(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "firmName": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a trusted contact
+ */
+export const DeleteVaultContactParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteVaultContactResponse = zod.object({
+  "success": zod.boolean()
 })
 
 
@@ -281,7 +377,7 @@ export const GetVaultItemParams = zod.object({
 export const GetVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
@@ -299,7 +395,7 @@ export const UpdateVaultItemParams = zod.object({
 
 export const UpdateVaultItemBody = zod.object({
   "name": zod.string().optional(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']).optional(),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']).optional(),
   "fileUrl": zod.string().optional(),
   "content": zod.string().optional(),
   "mimeType": zod.string().optional(),
@@ -309,7 +405,7 @@ export const UpdateVaultItemBody = zod.object({
 export const UpdateVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info']),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),

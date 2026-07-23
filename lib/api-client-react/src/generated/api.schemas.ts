@@ -117,6 +117,12 @@ export const VaultItemCategory = {
   journal: 'journal',
   voice_note: 'voice_note',
   important_info: 'important_info',
+  final_letter: 'final_letter',
+  will: 'will',
+  insurance: 'insurance',
+  medical_directive: 'medical_directive',
+  funeral_wishes: 'funeral_wishes',
+  digital_assets: 'digital_assets',
 } as const;
 
 export interface VaultItem {
@@ -139,6 +145,12 @@ export const CreateVaultItemBodyCategory = {
   journal: 'journal',
   voice_note: 'voice_note',
   important_info: 'important_info',
+  final_letter: 'final_letter',
+  will: 'will',
+  insurance: 'insurance',
+  medical_directive: 'medical_directive',
+  funeral_wishes: 'funeral_wishes',
+  digital_assets: 'digital_assets',
 } as const;
 
 export interface CreateVaultItemBody {
@@ -159,6 +171,12 @@ export const UpdateVaultItemBodyCategory = {
   journal: 'journal',
   voice_note: 'voice_note',
   important_info: 'important_info',
+  final_letter: 'final_letter',
+  will: 'will',
+  insurance: 'insurance',
+  medical_directive: 'medical_directive',
+  funeral_wishes: 'funeral_wishes',
+  digital_assets: 'digital_assets',
 } as const;
 
 export interface UpdateVaultItemBody {
@@ -168,6 +186,71 @@ export interface UpdateVaultItemBody {
   content?: string;
   mimeType?: string;
   sizeBytes?: number;
+}
+
+export type VaultContactType = typeof VaultContactType[keyof typeof VaultContactType];
+
+
+export const VaultContactType = {
+  person: 'person',
+  attorney: 'attorney',
+  executor: 'executor',
+} as const;
+
+export interface VaultContact {
+  id: number;
+  userId: number;
+  /** 1 = first contact, 2 = second contact */
+  priority: number;
+  type: VaultContactType;
+  name: string;
+  relationship?: string | null;
+  email: string;
+  phone?: string | null;
+  firmName?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateVaultContactBodyType = typeof CreateVaultContactBodyType[keyof typeof CreateVaultContactBodyType];
+
+
+export const CreateVaultContactBodyType = {
+  person: 'person',
+  attorney: 'attorney',
+  executor: 'executor',
+} as const;
+
+export interface CreateVaultContactBody {
+  priority: number;
+  type: CreateVaultContactBodyType;
+  name: string;
+  relationship?: string;
+  email: string;
+  phone?: string;
+  firmName?: string;
+  notes?: string;
+}
+
+export type UpdateVaultContactBodyType = typeof UpdateVaultContactBodyType[keyof typeof UpdateVaultContactBodyType];
+
+
+export const UpdateVaultContactBodyType = {
+  person: 'person',
+  attorney: 'attorney',
+  executor: 'executor',
+} as const;
+
+export interface UpdateVaultContactBody {
+  priority?: number;
+  type?: UpdateVaultContactBodyType;
+  name?: string;
+  relationship?: string;
+  email?: string;
+  phone?: string;
+  firmName?: string;
+  notes?: string;
 }
 
 export type CalendarEventType = typeof CalendarEventType[keyof typeof CalendarEventType];
@@ -1894,6 +1977,12 @@ export const GetVaultItemsCategory = {
   journal: 'journal',
   voice_note: 'voice_note',
   important_info: 'important_info',
+  final_letter: 'final_letter',
+  will: 'will',
+  insurance: 'insurance',
+  medical_directive: 'medical_directive',
+  funeral_wishes: 'funeral_wishes',
+  digital_assets: 'digital_assets',
 } as const;
 
 export type GetEventsParams = {

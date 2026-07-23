@@ -338,7 +338,7 @@ paths:
           name: category
           schema:
             type: string
-            enum: [document, photo, journal, voice_note, important_info]
+            enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
       responses:
         "200":
           description: List of vault items
@@ -365,6 +365,80 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VaultItem"
+
+  /vault-contacts:
+    get:
+      operationId: getVaultContacts
+      tags: [vault]
+      summary: List trusted estate contacts
+      responses:
+        "200":
+          description: List of vault contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultContact"
+    post:
+      operationId: createVaultContact
+      tags: [vault]
+      summary: Create or replace a trusted contact (upserts by priority)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVaultContactBody"
+      responses:
+        "201":
+          description: Created or updated vault contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultContact"
+
+  /vault-contacts/{id}:
+    patch:
+      operationId: updateVaultContact
+      tags: [vault]
+      summary: Update a trusted contact
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVaultContactBody"
+      responses:
+        "200":
+          description: Updated vault contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultContact"
+    delete:
+      operationId: deleteVaultContact
+      tags: [vault]
+      summary: Delete a trusted contact
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
   /vault/{id}:
     get:
@@ -2938,7 +3012,7 @@ components:
           type: string
         category:
           type: string
-          enum: [document, photo, journal, voice_note, important_info]
+          enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
         fileUrl:
           type: string
           nullable: true
@@ -2963,7 +3037,7 @@ components:
           type: string
         category:
           type: string
-          enum: [document, photo, journal, voice_note, important_info]
+          enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
         fileUrl:
           type: string
         content:
@@ -2981,7 +3055,7 @@ components:
           type: string
         category:
           type: string
-          enum: [document, photo, journal, voice_note, important_info]
+          enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
         fileUrl:
           type: string
         content:
@@ -2990,6 +3064,86 @@ components:
           type: string
         sizeBytes:
           type: integer
+
+    VaultContact:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        priority:
+          type: integer
+          description: 1 = first contact, 2 = second contact
+        type:
+          type: string
+          enum: [person, attorney, executor]
+        name:
+          type: string
+        relationship:
+          type: string
+          nullable: true
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        firmName:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, userId, priority, type, name, email, createdAt, updatedAt]
+
+    CreateVaultContactBody:
+      type: object
+      properties:
+        priority:
+          type: integer
+        type:
+          type: string
+          enum: [person, attorney, executor]
+        name:
+          type: string
+        relationship:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        firmName:
+          type: string
+        notes:
+          type: string
+      required: [priority, type, name, email]
+
+    UpdateVaultContactBody:
+      type: object
+      properties:
+        priority:
+          type: integer
+        type:
+          type: string
+          enum: [person, attorney, executor]
+        name:
+          type: string
+        relationship:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        firmName:
+          type: string
+        notes:
+          type: string
 
     CalendarEvent:
       type: object
