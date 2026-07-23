@@ -57,14 +57,17 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     email.split("@")[0];
 
-  // Link by matching email — only claim a row that is not yet linked to a
-  // different Clerk account.
+  // Link by matching email.
+  // Case 1: row has no Clerk id yet (legacy account) — link it.
+  // Case 2: row already has a Clerk id (e.g. account re-created in Clerk,
+  //         or dev/prod mismatch) — re-link it to the current Clerk id so
+  //         the user's existing data is preserved rather than crashing.
   const byEmail = await db
     .select({ id: usersTable.id, clerkId: usersTable.clerkId })
     .from(usersTable)
     .where(eq(usersTable.email, email))
     .limit(1);
-  if (byEmail.length > 0 && byEmail[0].clerkId === null) {
+  if (byEmail.length > 0) {
     const updated = await db
       .update(usersTable)
       .set({ clerkId: clerkUserId, name })
