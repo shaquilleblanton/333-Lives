@@ -28,18 +28,19 @@ export function getUserId(req: Request): number {
  * Resolves the local users row for a Clerk user, creating or linking one on
  * first sign-in (just-in-time provisioning).
  *
- * Linking strategy, in order:
- * 1. Row already linked to this Clerk id — use it.
- * 2. A row exists with the same email and no Clerk id — link it. This is how
- *    the legacy (pre-auth) account's data is migrated: set that row's email
- *    to the owner's real sign-in email and the link happens on first sign-in.
- * 3. Otherwise create a fresh row.
+ * Linking strategy:
+ * 1. Fast path — row already linked to this Clerk id (cached + DB check).
+ * 2. Single atomic upsert on email:
+ *    - No row with that email → INSERT a fresh row.
+ *    - Row exists (legacy account, stale clerk_id, or concurrent race) →
+ *      UPDATE clerk_id in place so all existing data is preserved.
  *
- * NOTE: there is deliberately NO "first sign-in claims the unlinked legacy
- * row" rule — that would hand the original owner's data to whichever
- * stranger signs in first.
+ * Using ON CONFLICT (email) DO UPDATE makes this crash-proof: the email
+ * uniqueness constraint can never fire because we handle it explicitly, and
+ * there is no window between a SELECT and an INSERT where a race can sneak in.
  */
 async function resolveLocalUser(clerkUserId: string): Promise<number> {
+  // Fast path: already linked.
   const linked = await db
     .select({ id: usersTable.id })
     .from(usersTable)
@@ -47,6 +48,7 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
     .limit(1);
   if (linked.length > 0) return linked[0].id;
 
+  // Fetch the Clerk user's display name and primary email.
   const clerkUser = await clerkClient.users.getUser(clerkUserId);
   const email = (
     clerkUser.primaryEmailAddress?.emailAddress ??
@@ -57,40 +59,23 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     email.split("@")[0];
 
-  // Link by matching email.
-  // Case 1: row has no Clerk id yet (legacy account) — link it.
-  // Case 2: row already has a Clerk id (e.g. account re-created in Clerk,
-  //         or dev/prod mismatch) — re-link it to the current Clerk id so
-  //         the user's existing data is preserved rather than crashing.
-  const byEmail = await db
-    .select({ id: usersTable.id, clerkId: usersTable.clerkId })
-    .from(usersTable)
-    .where(eq(usersTable.email, email))
-    .limit(1);
-  if (byEmail.length > 0) {
-    const updated = await db
-      .update(usersTable)
-      .set({ clerkId: clerkUserId, name })
-      .where(eq(usersTable.id, byEmail[0].id))
-      .returning({ id: usersTable.id });
-    if (updated.length > 0) return updated[0].id;
-  }
-
-  const inserted = await db
+  // Atomic upsert: insert or re-link by email.
+  // ON CONFLICT (email) DO UPDATE means:
+  //   • New user  → row is inserted, id returned.
+  //   • Existing row (any clerk_id) → clerk_id is updated, same id returned.
+  // This handles legacy accounts, stale Clerk ids (dev/prod mismatch),
+  // and concurrent first-login races in one safe statement.
+  const upserted = await db
     .insert(usersTable)
     .values({ clerkId: clerkUserId, email, name })
-    .onConflictDoNothing({ target: usersTable.clerkId })
+    .onConflictDoUpdate({
+      target: usersTable.email,
+      set: { clerkId: clerkUserId, name },
+    })
     .returning({ id: usersTable.id });
-  if (inserted.length > 0) return inserted[0].id;
 
-  // Concurrent request created the row first — read it back.
-  const raced = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.clerkId, clerkUserId))
-    .limit(1);
-  if (raced.length > 0) return raced[0].id;
-  throw new Error("Failed to provision local user");
+  if (upserted.length > 0) return upserted[0].id;
+  throw new Error("Failed to provision local user for Clerk id: " + clerkUserId);
 }
 
 // Small in-process cache so we do not hit the users table on every request.
