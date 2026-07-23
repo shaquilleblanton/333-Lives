@@ -1,0 +1,407 @@
+{
+  "fluoride-free-charcoal-toothpaste": {
+    "title": "Activated Charcoal Toothpaste — Fluoride Free",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352875671785",
+    "variantId": "gid://shopify/ProductVariant/51572297498857",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723775402217",
+    "price": "14.99",
+    "published": true
+  },
+  "bamboo-toothbrush": {
+    "title": "Bamboo Toothbrush — Soft Bristle",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352875704553",
+    "variantId": "gid://shopify/ProductVariant/51572297531625",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723775434985",
+    "price": "8.99",
+    "published": true
+  },
+  "silk-dental-floss": {
+    "title": "Silk Dental Floss — Natural Mint",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352875802857",
+    "variantId": "gid://shopify/ProductVariant/51572297761001",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723775664361",
+    "price": "11.99",
+    "published": true
+  },
+  "alcohol-free-mouthwash": {
+    "title": "Alcohol-Free Herbal Mouthwash",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352875901161",
+    "variantId": "gid://shopify/ProductVariant/51572297990377",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723775893737",
+    "price": "16.99",
+    "published": true
+  },
+  "copper-tongue-scraper": {
+    "title": "Copper Tongue Scraper",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352875966697",
+    "variantId": "gid://shopify/ProductVariant/51572298055913",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723775959273",
+    "price": "12.99",
+    "published": true
+  },
+  "coconut-oil-pulling": {
+    "title": "Organic Coconut Oil for Oil Pulling — 16oz",
+    "collection": "oral-care",
+    "productId": "gid://shopify/Product/9352876065001",
+    "variantId": "gid://shopify/ProductVariant/51572298154217",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776057577",
+    "price": "18.99",
+    "published": true
+  },
+  "organic-cotton-shower-curtain": {
+    "title": "Organic Cotton Shower Curtain — No PVC",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876130537",
+    "variantId": "gid://shopify/ProductVariant/51572298219753",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776123113",
+    "price": "54.99",
+    "published": true
+  },
+  "shower-filter-chlorine": {
+    "title": "Shower Filter — Removes Chlorine, Fluoride & Heavy Metals",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876196073",
+    "variantId": "gid://shopify/ProductVariant/51572298285289",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776188649",
+    "price": "49.99",
+    "published": true
+  },
+  "sink-faucet-filter": {
+    "title": "Sink Faucet Filter — 3-Stage",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876261609",
+    "variantId": "gid://shopify/ProductVariant/51572298350825",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776254185",
+    "price": "39.99",
+    "published": true
+  },
+  "organic-cotton-towel-set": {
+    "title": "Organic Cotton Towel Set — 2 Bath + 2 Hand",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876359913",
+    "variantId": "gid://shopify/ProductVariant/51572298481897",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776385257",
+    "price": "64.99",
+    "published": true
+  },
+  "coconut-fiber-body-scrubber": {
+    "title": "Coconut Fiber Body Scrubber",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876425449",
+    "variantId": "gid://shopify/ProductVariant/51572298547433",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776450793",
+    "price": "12.99",
+    "published": true
+  },
+  "bamboo-back-brush": {
+    "title": "Long Bamboo Back Brush — Natural Bristle",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876490985",
+    "variantId": "gid://shopify/ProductVariant/51572298612969",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776516329",
+    "price": "19.99",
+    "published": true
+  },
+  "natural-bar-soap-set": {
+    "title": "Organic Bar Soap Set — 3 Bars",
+    "collection": "shower-and-bath",
+    "productId": "gid://shopify/Product/9352876589289",
+    "variantId": "gid://shopify/ProductVariant/51572298711273",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723776614633",
+    "price": "24.99",
+    "published": true
+  },
+  "organic-coconut-oil-body": {
+    "title": "Organic Virgin Coconut Oil — 16oz (Body + Oral)",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352876720361",
+    "variantId": "gid://shopify/ProductVariant/51572299694313",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723777597673",
+    "price": "21.99",
+    "published": true
+  },
+  "mct-oil-coconut": {
+    "title": "MCT Oil — Coconut-Derived, 16oz",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352876785897",
+    "variantId": "gid://shopify/ProductVariant/51572299759849",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723777663209",
+    "price": "24.99",
+    "published": true
+  },
+  "natural-aluminum-free-deodorant": {
+    "title": "Aluminum-Free Natural Deodorant",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352876818665",
+    "variantId": "gid://shopify/ProductVariant/51572299792617",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723777695977",
+    "price": "16.99",
+    "published": true
+  },
+  "dry-skin-body-brush": {
+    "title": "Natural Bristle Dry Body Brush",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352876884201",
+    "variantId": "gid://shopify/ProductVariant/51572299858153",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723777761513",
+    "price": "22.99",
+    "published": true
+  },
+  "foot-detox-scrub": {
+    "title": "Magnesium Foot Detox Soak + Pumice Scrub Set",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352876949737",
+    "variantId": "gid://shopify/ProductVariant/51572299923689",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723777827049",
+    "price": "28.99",
+    "published": true
+  },
+  "organic-shea-butter": {
+    "title": "Raw Unrefined Shea Butter — 8oz",
+    "collection": "skin-and-body-care",
+    "productId": "gid://shopify/Product/9352877572329",
+    "variantId": "gid://shopify/ProductVariant/51572302381289",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780284649",
+    "price": "18.99",
+    "published": true
+  },
+  "silk-hair-ties": {
+    "title": "Silk Hair Ties — Set of 10",
+    "collection": "hair-care",
+    "productId": "gid://shopify/Product/9352877637865",
+    "variantId": "gid://shopify/ProductVariant/51572302545129",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780448489",
+    "price": "19.99",
+    "published": true
+  },
+  "organic-cotton-scrunchies": {
+    "title": "Organic Cotton Scrunchies — Set of 6",
+    "collection": "hair-care",
+    "productId": "gid://shopify/Product/9352877703401",
+    "variantId": "gid://shopify/ProductVariant/51572302610665",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780514025",
+    "price": "14.99",
+    "published": true
+  },
+  "silk-pillowcase": {
+    "title": "Mulberry Silk Pillowcase — Standard/Queen",
+    "collection": "hair-care",
+    "productId": "gid://shopify/Product/9352877801705",
+    "variantId": "gid://shopify/ProductVariant/51572302708969",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780612329",
+    "price": "44.99",
+    "published": true
+  },
+  "organic-castor-oil-hair": {
+    "title": "Organic Black Castor Oil — Hair Growth, 4oz",
+    "collection": "hair-care",
+    "productId": "gid://shopify/Product/9352877900009",
+    "variantId": "gid://shopify/ProductVariant/51572302807273",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780710633",
+    "price": "16.99",
+    "published": true
+  },
+  "sulfate-free-shampoo-bar": {
+    "title": "Sulfate-Free Organic Shampoo Bar",
+    "collection": "hair-care",
+    "productId": "gid://shopify/Product/9352877965545",
+    "variantId": "gid://shopify/ProductVariant/51572302872809",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723780776169",
+    "price": "18.99",
+    "published": true
+  },
+  "organic-cotton-tampons": {
+    "title": "Organic Cotton Tampons — Unbleached, 36 Count",
+    "collection": "feminine-care",
+    "productId": "gid://shopify/Product/9352878129385",
+    "variantId": "gid://shopify/ProductVariant/51572303200489",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781071081",
+    "price": "14.99",
+    "published": true
+  },
+  "organic-cotton-pads": {
+    "title": "Organic Cotton Pads + Liners — 40 Count",
+    "collection": "feminine-care",
+    "productId": "gid://shopify/Product/9352878162153",
+    "variantId": "gid://shopify/ProductVariant/51572303233257",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781136617",
+    "price": "12.99",
+    "published": true
+  },
+  "menstrual-cup": {
+    "title": "Medical-Grade Silicone Menstrual Cup",
+    "collection": "feminine-care",
+    "productId": "gid://shopify/Product/9352878260457",
+    "variantId": "gid://shopify/ProductVariant/51572303495401",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781398761",
+    "price": "34.99",
+    "published": true
+  },
+  "cast-iron-skillet-10inch": {
+    "title": "Pre-Seasoned Cast Iron Skillet — 10\"",
+    "collection": "kitchen-and-cooking",
+    "productId": "gid://shopify/Product/9352878325993",
+    "variantId": "gid://shopify/ProductVariant/51572303560937",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781464297",
+    "price": "44.99",
+    "published": true
+  },
+  "bamboo-utensil-set": {
+    "title": "Bamboo Kitchen Utensil Set — 6 Piece",
+    "collection": "kitchen-and-cooking",
+    "productId": "gid://shopify/Product/9352878424297",
+    "variantId": "gid://shopify/ProductVariant/51572303823081",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781726441",
+    "price": "32.99",
+    "published": true
+  },
+  "beeswax-food-wraps": {
+    "title": "Beeswax Food Wraps — Set of 6",
+    "collection": "kitchen-and-cooking",
+    "productId": "gid://shopify/Product/9352878489833",
+    "variantId": "gid://shopify/ProductVariant/51572303888617",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781791977",
+    "price": "22.99",
+    "published": true
+  },
+  "glass-food-storage-set": {
+    "title": "Glass Food Storage Container Set — 10 Piece",
+    "collection": "kitchen-and-cooking",
+    "productId": "gid://shopify/Product/9352878522601",
+    "variantId": "gid://shopify/ProductVariant/51572303921385",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723781824745",
+    "price": "54.99",
+    "published": true
+  },
+  "stainless-water-bottle": {
+    "title": "Stainless Steel Water Bottle — 32oz",
+    "collection": "kitchen-and-cooking",
+    "productId": "gid://shopify/Product/9352878620905",
+    "variantId": "gid://shopify/ProductVariant/51572304183529",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782086889",
+    "price": "34.99",
+    "published": true
+  },
+  "plant-based-laundry-detergent": {
+    "title": "Plant-Based Laundry Detergent — 64 Loads",
+    "collection": "laundry-and-home-cleaning",
+    "productId": "gid://shopify/Product/9352878719209",
+    "variantId": "gid://shopify/ProductVariant/51572304347369",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782250729",
+    "price": "28.99",
+    "published": true
+  },
+  "wool-dryer-balls": {
+    "title": "Organic Wool Dryer Balls — Set of 6",
+    "collection": "laundry-and-home-cleaning",
+    "productId": "gid://shopify/Product/9352878817513",
+    "variantId": "gid://shopify/ProductVariant/51572304445673",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782349033",
+    "price": "24.99",
+    "published": true
+  },
+  "microfiber-laundry-bag": {
+    "title": "Microfiber Capture Laundry Bag",
+    "collection": "laundry-and-home-cleaning",
+    "productId": "gid://shopify/Product/9352878883049",
+    "variantId": "gid://shopify/ProductVariant/51572304511209",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782414569",
+    "price": "32.99",
+    "published": true
+  },
+  "plant-based-all-purpose-cleaner": {
+    "title": "Plant-Based All-Purpose Cleaner Concentrate",
+    "collection": "laundry-and-home-cleaning",
+    "productId": "gid://shopify/Product/9352878948585",
+    "variantId": "gid://shopify/ProductVariant/51572304576745",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782480105",
+    "price": "19.99",
+    "published": true
+  },
+  "organic-cotton-cleaning-cloths": {
+    "title": "Organic Cotton Reusable Cleaning Cloths — 12 Pack",
+    "collection": "laundry-and-home-cleaning",
+    "productId": "gid://shopify/Product/9352879014121",
+    "variantId": "gid://shopify/ProductVariant/51572304642281",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782545641",
+    "price": "26.99",
+    "published": true
+  },
+  "organic-sea-moss-gel": {
+    "title": "Organic Sea Moss Gel — 16oz",
+    "collection": "wellness-and-supplements",
+    "productId": "gid://shopify/Product/9352879079657",
+    "variantId": "gid://shopify/ProductVariant/51572304707817",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782611177",
+    "price": "29.99",
+    "published": true
+  },
+  "shilajit-resin": {
+    "title": "Himalayan Shilajit Resin — 20g",
+    "collection": "wellness-and-supplements",
+    "productId": "gid://shopify/Product/9352879145193",
+    "variantId": "gid://shopify/ProductVariant/51572304773353",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782676713",
+    "price": "44.99",
+    "published": true
+  },
+  "magnesium-glycinate": {
+    "title": "Magnesium Glycinate — 120 Capsules",
+    "collection": "wellness-and-supplements",
+    "productId": "gid://shopify/Product/9352879210729",
+    "variantId": "gid://shopify/ProductVariant/51572304838889",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782742249",
+    "price": "32.99",
+    "published": true
+  },
+  "organic-apple-cider-vinegar": {
+    "title": "Organic Apple Cider Vinegar with Mother — 32oz",
+    "collection": "wellness-and-supplements",
+    "productId": "gid://shopify/Product/9352879374569",
+    "variantId": "gid://shopify/ProductVariant/51572305002729",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782906089",
+    "price": "14.99",
+    "published": true
+  },
+  "subscription-box-starter-3": {
+    "title": "Starter Detox Box — 3 Products (Monthly)",
+    "collection": "subscription-boxes",
+    "productId": "gid://shopify/Product/9352879440105",
+    "variantId": "gid://shopify/ProductVariant/51572305068265",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723782971625",
+    "price": "34.99",
+    "published": true
+  },
+  "subscription-box-core-6": {
+    "title": "Core Detox Box — 6 Products (Monthly)",
+    "collection": "subscription-boxes",
+    "productId": "gid://shopify/Product/9352879505641",
+    "variantId": "gid://shopify/ProductVariant/51572305133801",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723783037161",
+    "price": "64.99",
+    "published": true
+  },
+  "subscription-box-complete-9": {
+    "title": "Complete Detox Box — 9 Products (Monthly)",
+    "collection": "subscription-boxes",
+    "productId": "gid://shopify/Product/9352879571177",
+    "variantId": "gid://shopify/ProductVariant/51572305166569",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723783069929",
+    "price": "99.99",
+    "published": true
+  },
+  "subscription-box-total-detox-12": {
+    "title": "Total Detox Box — 12 Products (Monthly)",
+    "collection": "subscription-boxes",
+    "productId": "gid://shopify/Product/9352879603945",
+    "variantId": "gid://shopify/ProductVariant/51572305232105",
+    "inventoryItemId": "gid://shopify/InventoryItem/53723783135465",
+    "price": "149.99",
+    "published": true
+  }
+}
