@@ -16,7 +16,11 @@
     "production": {
       "autoIncrement": true,
       "ios": { "buildConfiguration": "Release" },
-      "android": { "buildType": "app-bundle" }
+      "android": { "buildType": "app-bundle" },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "333lives.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZW5hYmxpbmctaGF3ay0xMC5jbGVyay5hY2NvdW50cy5kZXYk"
+      }
     }
   },
   "submit": {
