@@ -4,6 +4,8 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 
+import { logger } from "../lib/logger";
+
 declare global {
   namespace Express {
     interface Request {
@@ -63,19 +65,65 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
   // ON CONFLICT (email) DO UPDATE means:
   //   • New user  → row is inserted, id returned.
   //   • Existing row (any clerk_id) → clerk_id is updated, same id returned.
-  // This handles legacy accounts, stale Clerk ids (dev/prod mismatch),
-  // and concurrent first-login races in one safe statement.
-  const upserted = await db
-    .insert(usersTable)
-    .values({ clerkId: clerkUserId, email, name })
-    .onConflictDoUpdate({
-      target: usersTable.email,
-      set: { clerkId: clerkUserId, name },
-    })
-    .returning({ id: usersTable.id });
+  // This handles legacy accounts and stale Clerk ids (dev/prod mismatch).
+  //
+  // NOTE: the email arbiter does NOT cover a concurrent first-login race.
+  // A brand-new user's first app launch fires several API calls in parallel;
+  // each misses the fast path and tries this INSERT. The first wins, and the
+  // second dies on users_clerk_id_unique — a different constraint than the
+  // ON CONFLICT target, so Postgres raises instead of updating. When that
+  // happens the row we want now exists, so re-read it by clerk_id.
+  try {
+    const upserted = await db
+      .insert(usersTable)
+      .values({ clerkId: clerkUserId, email, name })
+      .onConflictDoUpdate({
+        target: usersTable.email,
+        set: { clerkId: clerkUserId, name },
+      })
+      .returning({ id: usersTable.id });
 
-  if (upserted.length > 0) return upserted[0].id;
+    if (upserted.length > 0) return upserted[0].id;
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      logger.warn(
+        { clerkUserId, constraint: constraintName(error) },
+        "resolveLocalUser: concurrent first-login race — re-reading winner row",
+      );
+      const winner = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.clerkId, clerkUserId))
+        .limit(1);
+      if (winner.length > 0) return winner[0].id;
+      logger.error(
+        { clerkUserId, constraint: constraintName(error) },
+        "resolveLocalUser: unique violation but no winner row found — rethrowing",
+      );
+    }
+    throw error;
+  }
   throw new Error("Failed to provision local user for Clerk id: " + clerkUserId);
+}
+
+/**
+ * True when the error (or its cause, for drizzle-wrapped errors) is a
+ * Postgres unique-constraint violation (SQLSTATE 23505).
+ */
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  if (code === "23505") return true;
+  const cause = (error as { cause?: unknown }).cause;
+  return isUniqueViolation(cause);
+}
+
+/** Extracts the violated constraint name from a (possibly wrapped) PG error. */
+function constraintName(error: unknown): string | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const constraint = (error as { constraint?: unknown }).constraint;
+  if (typeof constraint === "string") return constraint;
+  return constraintName((error as { cause?: unknown }).cause);
 }
 
 // Small in-process cache so we do not hit the users table on every request.

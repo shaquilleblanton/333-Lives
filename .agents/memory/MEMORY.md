@@ -8,3 +8,5 @@
 - [Owner privilege flag](owner-privilege-flag.md) — admin gating via users.is_owner checked per-request; strip privilege/identity fields in profile update or drizzle-zod schemas make them self-assignable
 - [Legacy account linking](legacy-account-linking.md) — link users by clerkId or unlinked email match ONLY; never "first sign-in claims legacy row"; check parent ownership on nested routes (IDOR)
 - [EAS build from Replit](eas-build-replit.md) — EAS_NO_VCS=1 bypasses git lock; iOS cert creation needs expo.dev credentials UI or ASC API key
+- [First-login provisioning race](first-login-provisioning-race.md) — JIT user provisioning must catch 23505 and re-read by clerk_id; ON CONFLICT only guards its target constraint
+- [E2E auth for Clerk proxy mode](e2e-clerk-auth.md) — programmatic Clerk login fails with proxyUrl; use backend sign-in tokens via /sign-in?__clerk_ticket=; RN-web forms need real keystrokes
