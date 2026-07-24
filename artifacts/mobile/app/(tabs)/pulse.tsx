@@ -59,7 +59,7 @@ type ReactionType = "fire" | "pray" | "love" | "strength";
 type PostType = "text" | "photo" | "voice";
 
 function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  return name.split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
 function timeAgo(iso: string) {
@@ -106,16 +106,16 @@ export default function PulseScreen() {
 
   const handleReact = (postId: number, type: ReactionType, myReaction: string | null | undefined) => {
     if (myReaction === type) {
-      unreactMutation.mutate({ id: postId }, { onSuccess: invalidate });
+      unreactMutation.mutate({ id: postId }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't remove your reaction. Please try again.") });
     } else {
-      reactMutation.mutate({ id: postId, data: { type } }, { onSuccess: invalidate });
+      reactMutation.mutate({ id: postId, data: { type } }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't add your reaction. Please try again.") });
     }
   };
 
   const confirmDelete = (id: number) => {
     Alert.alert("Delete post", "Remove this post from the feed?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deletePost.mutate({ id }, { onSuccess: invalidate }) },
+      { text: "Delete", style: "destructive", onPress: () => deletePost.mutate({ id }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't delete this post. Please try again.") }) },
     ]);
   };
 

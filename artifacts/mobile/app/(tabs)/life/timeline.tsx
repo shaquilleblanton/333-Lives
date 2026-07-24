@@ -132,7 +132,7 @@ export default function TimelineScreen() {
   const confirmDelete = (id: number) => {
     Alert.alert("Delete Event", "Remove this life event?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteEvent.mutate({ id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetLifeEventsQueryKey() }) }) },
+      { text: "Delete", style: "destructive", onPress: () => deleteEvent.mutate({ id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetLifeEventsQueryKey() }), onError: () => Alert.alert("Error", "Couldn't delete this event. Please try again.") }) },
     ]);
   };
 
@@ -452,10 +452,11 @@ function EventFormModal({ visible, onClose, editingEvent }: {
     if (!title.trim() || !date.trim()) return;
     const data = { title: title.trim(), date: date.trim(), approximateDate: approx, category, description: description.trim() || undefined, mediaUrls };
     const onSuccess = () => { queryClient.invalidateQueries({ queryKey: getGetLifeEventsQueryKey() }); onClose(); };
+    const onError = () => Alert.alert("Error", "Couldn't save this event. Please try again.");
     if (isEditing && editingEvent) {
-      updateEvent.mutate({ id: editingEvent.id, data }, { onSuccess });
+      updateEvent.mutate({ id: editingEvent.id, data }, { onSuccess, onError });
     } else {
-      createEvent.mutate({ data }, { onSuccess });
+      createEvent.mutate({ data }, { onSuccess, onError });
     }
   };
 

@@ -495,7 +495,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
                           {m.description ? <Text style={[styles.momentDesc, { color: colors.mutedForeground }]}>{m.description}</Text> : null}
                         </View>
                         <Pressable hitSlop={8} style={{ padding: 4 }}
-                          onPress={() => deleteMoment.mutate({ memberId, id: m.id }, { onSuccess: invalidate })}
+                          onPress={() => deleteMoment.mutate({ memberId, id: m.id }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't delete this moment. Please try again.") })}
                         >
                           <Feather name="trash-2" size={14} color={colors.mutedForeground + "60"} />
                         </Pressable>

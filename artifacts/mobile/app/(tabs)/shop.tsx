@@ -59,8 +59,9 @@ export default function ShopScreen() {
       return;
     }
     setExpandedId(product.id);
+    const variants = product.variants ?? [];
     const firstAvailable =
-      product.variants.find((v) => v.availableForSale) ?? product.variants[0];
+      variants.find((v) => v.availableForSale) ?? variants[0];
     setVariantId(firstAvailable?.id ?? null);
     setQuantity(1);
   };

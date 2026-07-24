@@ -48,7 +48,7 @@ export default function StreakScreen() {
   }
 
   const completedSet = new Set(data?.completedDays ?? []);
-  const hasHistory = (data?.completedDays.length ?? 0) > 0;
+  const hasHistory = (data?.completedDays?.length ?? 0) > 0;
 
   // Build a grid of the last WEEKS weeks, columns = weeks (Sun→Sat).
   const today = new Date();

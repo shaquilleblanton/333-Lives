@@ -279,7 +279,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
       {
         text: "Remove",
         style: "destructive",
-        onPress: () => deleteItem.mutate({ id: collection.id, itemId: id }, { onSuccess: invalidate }),
+        onPress: () => deleteItem.mutate({ id: collection.id, itemId: id }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't remove this photo. Please try again.") }),
       },
     ]);
   };
@@ -288,7 +288,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
     if (!captionEdit) return;
     updateItem.mutate(
       { id: collection.id, itemId: captionEdit.id, data: { caption: captionEdit.value || null } },
-      { onSuccess: () => { invalidate(); setCaptionEdit(null); } }
+      { onSuccess: () => { invalidate(); setCaptionEdit(null); }, onError: () => Alert.alert("Error", "Couldn't save the caption. Please try again.") }
     );
   };
 
