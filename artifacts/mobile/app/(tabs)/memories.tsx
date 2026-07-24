@@ -45,8 +45,7 @@ const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 function storageUrl(objectPath: string) {
-  const base = process.env.EXPO_PUBLIC_API_URL ?? "";
-  return `${base}/api/storage${objectPath}`;
+  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${objectPath}`;
 }
 
 async function uploadFileFromUri(uri: string, contentType: string): Promise<string | null> {

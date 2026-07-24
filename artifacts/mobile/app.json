@@ -5,6 +5,7 @@
     "owner": "snipersb",
     "version": "1.0.0",
     "orientation": "portrait",
+    "description": "333 Lives is your personal legacy and life management app — built for the people who want to live intentionally, remember everything, and leave something meaningful behind.\n\nSet daily intentions, build unbreakable habits, and track your streaks. Capture life events, record voice memos, and build a rich memory library organized by the people and moments that matter most. Write your story — chapter by chapter — so the ones you love can read it one day.\n\nStay connected to family and friends through the Pulse feed, celebrate milestones together, and never forget a birthday or anniversary. Manage your digital legacy with the Estate Vault: store your final letter, will, insurance details, medical directives, and trusted contacts — all in one secure place.\n\nThis is not just another productivity app. 333 Lives is the space where your everyday actions become your life's story.",
     "icon": "./assets/images/icon.png",
     "scheme": "lives333",
     "userInterfaceStyle": "dark",
@@ -17,7 +18,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.lives333.app",
-      "buildNumber": "21",
+      "buildNumber": "22",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
         "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",

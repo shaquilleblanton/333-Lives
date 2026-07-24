@@ -9,11 +9,6 @@ import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
-// NativeTabLayout (expo-router/unstable-native-tabs + expo-glass-effect) is
-// intentionally disabled — those experimental native modules caused a startup
-// crash on iOS 17 and below. Re-enable once the packages are stable and
-// the build has been verified on all TestFlight devices.
-
 function ClassicTabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();

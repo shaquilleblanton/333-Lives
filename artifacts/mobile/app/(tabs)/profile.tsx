@@ -194,6 +194,7 @@ export default function ProfileScreen() {
   const bio = me?.bio ?? "";
   const initials = displayName
     .split(" ")
+    .filter(Boolean)
     .map((n: string) => n[0])
     .join("")
     .slice(0, 2)

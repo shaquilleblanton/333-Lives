@@ -42,7 +42,7 @@ const MOMENT_TYPES = ["memory", "conversation", "promise", "milestone", "birthda
 type MomentType = typeof MOMENT_TYPES[number];
 
 function getInitials(name: string) {
-  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  return name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
 function RelationshipBadge({ rel }: { rel: string }) {

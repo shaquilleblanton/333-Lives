@@ -68,11 +68,11 @@ const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 function getInitials(name: string) {
-  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  return name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
 function photoSrc(path: string) {
-  return `/api/storage${path}`;
+  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${path}`;
 }
 
 function MemberCard({ member, onPress, onEdit, onDelete }: {
@@ -356,9 +356,13 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
 
   async function handleAddMoment() {
     if (!mTitle.trim()) return;
-    await createMoment.mutateAsync({ memberId, data: { date: mDate, type: mType, title: mTitle.trim(), description: mDesc.trim() || undefined } as any });
-    invalidate();
-    setShowAddMoment(false); setMTitle(""); setMDate(new Date().toISOString().split("T")[0]); setMType("memory"); setMDesc("");
+    try {
+      await createMoment.mutateAsync({ memberId, data: { date: mDate, type: mType, title: mTitle.trim(), description: mDesc.trim() || undefined } as any });
+      invalidate();
+      setShowAddMoment(false); setMTitle(""); setMDate(new Date().toISOString().split("T")[0]); setMType("memory"); setMDesc("");
+    } catch {
+      Alert.alert("Couldn't save moment", "Please check your connection and try again.");
+    }
   }
 
   return (
