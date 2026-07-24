@@ -1,9 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Redirect, Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
@@ -11,44 +9,10 @@ import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "sun.max", selected: "sun.max.fill" }} />
-        <Label>Today</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="life">
-        <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
-        <Label>Life</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="pulse">
-        <Icon sf={{ default: "bolt", selected: "bolt.fill" }} />
-        <Label>Pulse</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="growth">
-        <Icon sf={{ default: "leaf", selected: "leaf.fill" }} />
-        <Label>Growth</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="memories">
-        <Icon sf={{ default: "photo.on.rectangle", selected: "photo.fill.on.rectangle.fill" }} />
-        <Label>Memories</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="memos">
-        <Icon sf={{ default: "mic", selected: "mic.fill" }} />
-        <Label>Memos</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="shop">
-        <Icon sf={{ default: "bag", selected: "bag.fill" }} />
-        <Label>Shop</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
+// NativeTabLayout (expo-router/unstable-native-tabs + expo-glass-effect) is
+// intentionally disabled — those experimental native modules caused a startup
+// crash on iOS 17 and below. Re-enable once the packages are stable and
+// the build has been verified on all TestFlight devices.
 
 function ClassicTabLayout() {
   const colors = useColors();
@@ -206,8 +170,5 @@ export default function TabLayout() {
   if (!isLoaded) return null;
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
   return <ClassicTabLayout />;
 }
