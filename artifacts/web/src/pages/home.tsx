@@ -38,6 +38,11 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  STREAK_MILESTONES,
+  highestMilestoneAtOrBelow,
+  decideCelebration,
+} from "@/lib/streak-celebrations";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -310,14 +315,6 @@ function TasksSummary() {
 const RECORD_CELEBRATED_KEY = "333:intentionRecordCelebrated";
 const MILESTONE_CELEBRATED_KEY = "333:intentionMilestoneCelebrated";
 
-// Round-number streak milestones worth celebrating on the way up, even when
-// they aren't a new personal best. Kept ascending so the "highest reached"
-// helpers stay simple.
-const STREAK_MILESTONES = [7, 30, 100, 365];
-
-const highestMilestoneAtOrBelow = (streak: number) =>
-  STREAK_MILESTONES.reduce((acc, m) => (streak >= m ? m : acc), 0);
-
 type Celebration = { type: "record" | "milestone"; value: number };
 
 const CONFETTI_COLORS = ["#BB734A", "#8FA67A", "#C8B57C", "#F7F4EF"];
@@ -392,54 +389,37 @@ function IntentionStreakHistory() {
       }
     };
 
-    const lastRecord = readNumber(RECORD_CELEBRATED_KEY);
-    const lastMilestone = readNumber(MILESTONE_CELEBRATED_KEY);
+    const decision = decideCelebration({
+      currentStreak,
+      longestStreak,
+      storedState: {
+        lastRecord: readNumber(RECORD_CELEBRATED_KEY),
+        lastMilestone: readNumber(MILESTONE_CELEBRATED_KEY),
+      },
+    });
 
-    // First observation on this device: set both baselines to what the user has
-    // already achieved so we never celebrate a record or milestone earned before
-    // this moment. Bail this cycle once we've established the baselines.
-    const recordUninitialized = lastRecord === null || Number.isNaN(lastRecord);
-    const milestoneUninitialized =
-      lastMilestone === null || Number.isNaN(lastMilestone);
-    if (recordUninitialized) writeNumber(RECORD_CELEBRATED_KEY, longestStreak);
-    if (milestoneUninitialized) {
-      writeNumber(MILESTONE_CELEBRATED_KEY, highestMilestoneAtOrBelow(currentStreak));
-    }
-    if (recordUninitialized || milestoneUninitialized) return;
+    // Always persist the decided next state.
+    writeNumber(RECORD_CELEBRATED_KEY, decision.nextState.lastRecord!);
+    writeNumber(MILESTONE_CELEBRATED_KEY, decision.nextState.lastMilestone!);
 
-    // The current run is the all-time best when it equals the longest streak.
-    // Celebrate only when that best value has grown beyond what we last cheered
-    // for — i.e. the transition to a new record, not every completion or reload.
-    const isRecordRun = currentStreak > 0 && currentStreak === longestStreak;
-    const isNewRecord = isRecordRun && currentStreak > lastRecord;
+    if (decision.kind === "baseline" || decision.kind === "none") return;
 
-    // The highest round-number milestone the current streak has now crossed but
-    // that we haven't celebrated yet. Only fires on the crossing transition.
-    const crossedMilestone = highestMilestoneAtOrBelow(currentStreak);
-    const isNewMilestone = crossedMilestone > lastMilestone;
-
-    // A new record wins when both would fire on the same day, so we never
-    // stack two celebrations. Still advance the milestone marker so the
-    // coincident milestone isn't cheered again later.
-    if (isNewRecord) {
-      writeNumber(RECORD_CELEBRATED_KEY, currentStreak);
-      if (isNewMilestone) writeNumber(MILESTONE_CELEBRATED_KEY, crossedMilestone);
-      setCelebration({ type: "record", value: currentStreak });
+    if (decision.kind === "record") {
+      setCelebration({ type: "record", value: decision.value! });
       setShowConfetti(true);
       toast({
         title: "New record! 🎉",
-        description: `${currentStreak} days of completing all three intentions — your best run yet.`,
+        description: `${decision.value} days of completing all three intentions — your best run yet.`,
       });
       return;
     }
 
-    if (isNewMilestone) {
-      writeNumber(MILESTONE_CELEBRATED_KEY, crossedMilestone);
-      setCelebration({ type: "milestone", value: crossedMilestone });
+    if (decision.kind === "milestone") {
+      setCelebration({ type: "milestone", value: decision.value! });
       setShowConfetti(true);
       toast({
-        title: `${crossedMilestone}-day milestone! 🔥`,
-        description: `${crossedMilestone} straight days of completing all three intentions. Keep the momentum.`,
+        title: `${decision.value}-day milestone! 🔥`,
+        description: `${decision.value} straight days of completing all three intentions. Keep the momentum.`,
       });
     }
   }, [data, toast]);
