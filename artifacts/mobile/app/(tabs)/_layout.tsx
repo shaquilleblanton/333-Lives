@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/expo";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { BlurView } from "expo-blur";
+
 import { Redirect, Tabs } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
@@ -152,15 +152,7 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-
-  if (isSignedIn) {
-    setAuthTokenGetter(() => getToken());
-  }
-
-  React.useEffect(() => {
-    return () => setAuthTokenGetter(null);
-  }, []);
+  const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) return null;
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;

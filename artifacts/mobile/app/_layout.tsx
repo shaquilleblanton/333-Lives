@@ -16,10 +16,10 @@ import {
   PlayfairDisplay_700Bold,
   PlayfairDisplay_500Medium_Italic,
 } from "@expo-google-fonts/playfair-display";
-import { ClerkLoaded, ClerkProvider } from "@clerk/expo";
+import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setBaseUrl } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -38,6 +38,26 @@ setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+/**
+ * Keeps the API client's auth token getter in sync with Clerk's session for
+ * the entire lifetime of the app. Mounted inside ClerkLoaded so getToken is
+ * always available; never unmounts during normal navigation so there's no
+ * window where the getter is null while React Query retries in the background.
+ */
+function AuthTokenBridge() {
+  const { getToken, isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      setAuthTokenGetter(getToken);
+    } else {
+      setAuthTokenGetter(null);
+    }
+  }, [isSignedIn, getToken]);
+
+  return null;
+}
 
 function RootLayoutNav() {
   return (
@@ -80,6 +100,7 @@ export default function RootLayout() {
           publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
         >
           <ClerkLoaded>
+            <AuthTokenBridge />
             <QueryClientProvider client={queryClient}>
               <GestureHandlerRootView>
                 <KeyboardProvider>

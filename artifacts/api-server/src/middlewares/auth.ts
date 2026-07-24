@@ -118,6 +118,14 @@ export async function requireAuth(
     const auth = getAuth(req);
     const clerkUserId = auth?.userId;
     if (!clerkUserId) {
+      const hasAuthHeader = !!req.headers["authorization"];
+      const authPrefix = hasAuthHeader
+        ? (req.headers["authorization"] as string).slice(0, 20) + "…"
+        : "(none)";
+      req.log.warn(
+        { hasAuthHeader, authPrefix, path: req.path },
+        "requireAuth: no userId — auth header present?",
+      );
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
