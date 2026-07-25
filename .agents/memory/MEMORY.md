@@ -10,3 +10,4 @@
 - [EAS build from Replit](eas-build-replit.md) — EAS_NO_VCS=1 bypasses git lock; iOS cert creation needs expo.dev credentials UI or ASC API key
 - [First-login provisioning race](first-login-provisioning-race.md) — JIT user provisioning must catch 23505 and re-read by clerk_id; ON CONFLICT only guards its target constraint
 - [E2E auth for Clerk proxy mode](e2e-clerk-auth.md) — programmatic Clerk login fails with proxyUrl; use backend sign-in tokens via /sign-in?__clerk_ticket=; RN-web forms need real keystrokes
+- [Mobile builds need live Clerk keys](mobile-clerk-live-keys.md) — store builds must bake pk_live in eas.json; pk_test + live API = signup works, then every call 401s (the "broken app" tester bug)

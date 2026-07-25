@@ -19,7 +19,8 @@
       "android": { "buildType": "app-bundle" },
       "env": {
         "EXPO_PUBLIC_DOMAIN": "333lives.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZW5hYmxpbmctaGF3ay0xMC5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuMzMzbGl2ZXMuYXBwJA",
+        "EXPO_PUBLIC_CLERK_PROXY_URL": "https://333lives.app/api/__clerk"
       }
     }
   },

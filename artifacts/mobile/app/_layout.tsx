@@ -98,6 +98,7 @@ export default function RootLayout() {
         <ClerkProvider
           tokenCache={tokenCache}
           publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+          proxyUrl={process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined}
         >
           <ClerkLoaded>
             <AuthTokenBridge />
