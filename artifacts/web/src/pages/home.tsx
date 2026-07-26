@@ -12,6 +12,7 @@ import {
   useGetAffirmations,
   useGetTasks,
   useGetPeopleReminders,
+  useClaimIntentionCelebration,
   getGetDashboardQueryKey,
   getGetIntentionHistoryQueryKey,
   getGetIntentionsQueryKey,
@@ -38,11 +39,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import {
-  STREAK_MILESTONES,
-  highestMilestoneAtOrBelow,
-  decideCelebration,
-} from "@/lib/streak-celebrations";
 import { Link } from "wouter";
 
 export default function Home() {
@@ -312,9 +308,6 @@ function TasksSummary() {
   );
 }
 
-const RECORD_CELEBRATED_KEY = "333:intentionRecordCelebrated";
-const MILESTONE_CELEBRATED_KEY = "333:intentionMilestoneCelebrated";
-
 type Celebration = { type: "record" | "milestone"; value: number };
 
 const CONFETTI_COLORS = ["#BB734A", "#8FA67A", "#C8B57C", "#F7F4EF"];
@@ -358,10 +351,16 @@ function RecordConfetti() {
 
 function IntentionStreakHistory() {
   const { data, isLoading } = useGetIntentionHistory();
+  const { mutateAsync: claimCelebration } = useClaimIntentionCelebration();
   const { toast } = useToast();
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  // Track which data snapshot we last claimed for.
+  // We re-claim whenever currentStreak, longestStreak, or completed-day count
+  // changes (i.e. the user finished new intentions), but skip duplicate calls
+  // for the same snapshot to avoid double-firing on background refetches.
+  const lastClaimedSnapshotRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!showConfetti) return;
@@ -371,58 +370,37 @@ function IntentionStreakHistory() {
 
   useEffect(() => {
     if (!data) return;
-    const { currentStreak, longestStreak } = data;
+    const snapshotKey = `${data.currentStreak}-${data.longestStreak}-${data.completedDays.length}`;
+    if (lastClaimedSnapshotRef.current === snapshotKey) return;
+    lastClaimedSnapshotRef.current = snapshotKey;
 
-    const readNumber = (key: string): number | null => {
-      try {
-        const stored = window.localStorage.getItem(key);
-        return stored === null ? null : Number(stored);
-      } catch {
-        return null;
-      }
-    };
-    const writeNumber = (key: string, value: number) => {
-      try {
-        window.localStorage.setItem(key, String(value));
-      } catch {
-        /* ignore storage failures */
-      }
-    };
+    // The server atomically computes the decision and advances its state under
+    // a row-level lock — concurrent calls from multiple devices are safe.
+    claimCelebration().then(({ kind, value }) => {
+      if (kind === "baseline" || kind === "none") return;
 
-    const decision = decideCelebration({
-      currentStreak,
-      longestStreak,
-      storedState: {
-        lastRecord: readNumber(RECORD_CELEBRATED_KEY),
-        lastMilestone: readNumber(MILESTONE_CELEBRATED_KEY),
-      },
+      if (kind === "record") {
+        setCelebration({ type: "record", value: value! });
+        setShowConfetti(true);
+        toast({
+          title: "New record! 🎉",
+          description: `${value} days of completing all three intentions — your best run yet.`,
+        });
+        return;
+      }
+
+      if (kind === "milestone") {
+        setCelebration({ type: "milestone", value: value! });
+        setShowConfetti(true);
+        toast({
+          title: `${value}-day milestone! 🔥`,
+          description: `${value} straight days of completing all three intentions. Keep the momentum.`,
+        });
+      }
+    }).catch(() => {
+      // Celebration claim failing is non-critical — the page still works fine.
     });
-
-    // Always persist the decided next state.
-    writeNumber(RECORD_CELEBRATED_KEY, decision.nextState.lastRecord!);
-    writeNumber(MILESTONE_CELEBRATED_KEY, decision.nextState.lastMilestone!);
-
-    if (decision.kind === "baseline" || decision.kind === "none") return;
-
-    if (decision.kind === "record") {
-      setCelebration({ type: "record", value: decision.value! });
-      setShowConfetti(true);
-      toast({
-        title: "New record! 🎉",
-        description: `${decision.value} days of completing all three intentions — your best run yet.`,
-      });
-      return;
-    }
-
-    if (decision.kind === "milestone") {
-      setCelebration({ type: "milestone", value: decision.value! });
-      setShowConfetti(true);
-      toast({
-        title: `${decision.value}-day milestone! 🔥`,
-        description: `${decision.value} straight days of completing all three intentions. Keep the momentum.`,
-      });
-    }
-  }, [data, toast]);
+  }, [data, claimCelebration, toast]);
 
   if (isLoading) {
     return <Skeleton className="h-56 w-full rounded-2xl bg-muted/30" />;

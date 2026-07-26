@@ -1570,7 +1570,19 @@ export const GetDashboardResponse = zod.object({
 export const GetIntentionHistoryResponse = zod.object({
   "currentStreak": zod.number().describe('Current consecutive-day streak of fully-completed 333 days'),
   "longestStreak": zod.number().describe('Longest-ever consecutive-day streak of fully-completed 333 days'),
-  "completedDays": zod.array(zod.coerce.date()).describe('Every day (YYYY-MM-DD) where all three intentions were set and completed')
+  "completedDays": zod.array(zod.coerce.date()).describe('Every day (YYYY-MM-DD) where all three intentions were set and completed'),
+  "celebrationLastRecord": zod.number().nullable().describe('The streak value last celebrated as a personal-best record (null = never seeded)'),
+  "celebrationLastMilestone": zod.number().nullable().describe('The highest milestone value last celebrated (null = never seeded)')
+})
+
+
+/**
+ * Computes the current streak server-side and, inside a serializable transaction, decides whether a new record or milestone should be celebrated and advances the stored state. Concurrent calls from multiple devices are safe — only the first request for a given event will return a non-"none" kind.
+ * @summary Atomically claim any pending streak milestone or record celebration
+ */
+export const ClaimIntentionCelebrationResponse = zod.object({
+  "kind": zod.enum(['baseline', 'record', 'milestone', 'none']).describe('What kind of celebration was claimed'),
+  "value": zod.number().optional().describe('The streak value for a record or milestone celebration (absent when kind is \"none\" or \"baseline\")')
 })
 
 

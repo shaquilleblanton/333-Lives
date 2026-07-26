@@ -1477,11 +1477,29 @@ paths:
       summary: Get intention streak history and best run
       responses:
         "200":
-          description: Streak history — current streak, longest streak, and fully-completed days
+          description: Streak history — current streak, longest streak, fully-completed days, and server-side celebration state
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/IntentionHistory"
+
+  /intentions/celebrate:
+    post:
+      operationId: claimIntentionCelebration
+      tags: [intentions]
+      summary: Atomically claim any pending streak milestone or record celebration
+      description: >
+        Computes the current streak server-side and, inside a serializable transaction,
+        decides whether a new record or milestone should be celebrated and advances the
+        stored state. Concurrent calls from multiple devices are safe — only the first
+        request for a given event will return a non-"none" kind.
+      responses:
+        "200":
+          description: Celebration claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CelebrationClaimResult"
 
   /people/{personId}/moments:
     get:
@@ -4079,7 +4097,27 @@ components:
           items:
             type: string
             format: date
-      required: [currentStreak, longestStreak, completedDays]
+        celebrationLastRecord:
+          type: integer
+          nullable: true
+          description: The streak value last celebrated as a personal-best record (null = never seeded)
+        celebrationLastMilestone:
+          type: integer
+          nullable: true
+          description: The highest milestone value last celebrated (null = never seeded)
+      required: [currentStreak, longestStreak, completedDays, celebrationLastRecord, celebrationLastMilestone]
+
+    CelebrationClaimResult:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [baseline, record, milestone, none]
+          description: What kind of celebration was claimed
+        value:
+          type: integer
+          description: The streak value for a record or milestone celebration (absent when kind is "none" or "baseline")
+      required: [kind]
 
     LegacyLetter:
       type: object

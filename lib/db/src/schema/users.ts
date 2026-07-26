@@ -11,6 +11,8 @@ export const usersTable = pgTable("users", {
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
   streakDays: integer("streak_days").notNull().default(0),
+  celebrationLastRecord: integer("celebration_last_record"),
+  celebrationLastMilestone: integer("celebration_last_milestone"),
   messagesSent: integer("messages_sent").notNull().default(0),
   goalsActive: integer("goals_active").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),

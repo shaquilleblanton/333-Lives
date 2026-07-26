@@ -1074,6 +1074,30 @@ export interface IntentionHistory {
   longestStreak: number;
   /** Every day (YYYY-MM-DD) where all three intentions were set and completed */
   completedDays: string[];
+  /** The streak value last celebrated as a personal-best record (null = never seeded) */
+  celebrationLastRecord: number | null;
+  /** The highest milestone value last celebrated (null = never seeded) */
+  celebrationLastMilestone: number | null;
+}
+
+/**
+ * What kind of celebration was claimed
+ */
+export type CelebrationClaimResultKind = typeof CelebrationClaimResultKind[keyof typeof CelebrationClaimResultKind];
+
+
+export const CelebrationClaimResultKind = {
+  baseline: 'baseline',
+  record: 'record',
+  milestone: 'milestone',
+  none: 'none',
+} as const;
+
+export interface CelebrationClaimResult {
+  /** What kind of celebration was claimed */
+  kind: CelebrationClaimResultKind;
+  /** The streak value for a record or milestone celebration (absent when kind is "none" or "baseline") */
+  value?: number;
 }
 
 export type LegacyLetterTriggerType = typeof LegacyLetterTriggerType[keyof typeof LegacyLetterTriggerType];

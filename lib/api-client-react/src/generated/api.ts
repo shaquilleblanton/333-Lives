@@ -24,6 +24,7 @@ import type {
   Affirmation,
   AnnualReview,
   CalendarEvent,
+  CelebrationClaimResult,
   CollectionItem,
   CommunityEvent,
   CreateAffirmationBody,
@@ -5257,6 +5258,77 @@ export function useGetIntentionHistory<TData = Awaited<ReturnType<typeof getInte
 
 
 
+
+export const getClaimIntentionCelebrationUrl = () => {
+
+
+
+
+  return `/api/intentions/celebrate`
+}
+
+/**
+ * Computes the current streak server-side and, inside a serializable transaction, decides whether a new record or milestone should be celebrated and advances the stored state. Concurrent calls from multiple devices are safe — only the first request for a given event will return a non-"none" kind.
+ * @summary Atomically claim any pending streak milestone or record celebration
+ */
+export const claimIntentionCelebration = async ( options?: RequestInit): Promise<CelebrationClaimResult> => {
+
+  return customFetch<CelebrationClaimResult>(getClaimIntentionCelebrationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getClaimIntentionCelebrationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimIntentionCelebration>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimIntentionCelebration>>, TError,void, TContext> => {
+
+const mutationKey = ['claimIntentionCelebration'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimIntentionCelebration>>, void> = () => {
+
+
+          return  claimIntentionCelebration(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimIntentionCelebrationMutationResult = NonNullable<Awaited<ReturnType<typeof claimIntentionCelebration>>>
+
+    export type ClaimIntentionCelebrationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Atomically claim any pending streak milestone or record celebration
+ */
+export const useClaimIntentionCelebration = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimIntentionCelebration>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimIntentionCelebration>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClaimIntentionCelebrationMutationOptions(options));
+    }
 
 export const getGetRelationshipMomentsUrl = (personId: number,) => {
 
