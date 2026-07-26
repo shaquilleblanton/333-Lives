@@ -62,7 +62,7 @@ async function buildAll() {
       "@swc/*",
       "@aws-sdk/*",
       "@azure/*",
-      "@opentelemetry/*",
+      // "@opentelemetry/*",  // bundled so @sentry/node works without extra installs
       "@google-cloud/*",
       "@google/*",
       "googleapis",
