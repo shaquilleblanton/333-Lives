@@ -95,7 +95,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      // Hold the splash for at least 1.5 s so it doesn't flash past on fast devices.
+      const timer = setTimeout(() => SplashScreen.hideAsync(), 1500);
+      return () => clearTimeout(timer);
     }
   }, [fontsLoaded, fontError]);
 

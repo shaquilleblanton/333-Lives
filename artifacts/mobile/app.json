@@ -11,14 +11,14 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#191919"
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.lives333.app",
-      "buildNumber": "26",
+      "buildNumber": "27",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
         "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",
