@@ -9,6 +9,7 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { globalErrorHandler } from "./middlewares/errorHandler";
 
 const app: Express = express();
 
@@ -49,5 +50,9 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Must be last — catches any error thrown in a route or middleware and
+// returns JSON instead of Express's default HTML error page.
+app.use(globalErrorHandler);
 
 export default app;

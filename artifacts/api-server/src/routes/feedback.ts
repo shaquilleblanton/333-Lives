@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId, requireOwner } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -58,7 +59,7 @@ router.get("/feedback/all", requireOwner, async (_req, res) => {
 });
 
 router.patch("/feedback/:id", requireOwner, async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const parsed = updateFeedbackAdminSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });

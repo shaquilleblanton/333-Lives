@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -22,7 +23,7 @@ router.get("/family-members", async (req, res) => {
 });
 
 router.get("/family-members/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const rows = await db
     .select()
     .from(familyMembersTable)
@@ -40,7 +41,7 @@ router.post("/family-members", async (req, res) => {
 });
 
 router.put("/family-members/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateFamilyMemberSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -53,7 +54,7 @@ router.put("/family-members/:id", async (req, res) => {
 });
 
 router.delete("/family-members/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(familyMembersTable)
     .where(and(eq(familyMembersTable.id, id), eq(familyMembersTable.userId, getUserId(req))));
@@ -61,7 +62,7 @@ router.delete("/family-members/:id", async (req, res) => {
 });
 
 router.get("/family-members/:memberId/moments", async (req, res) => {
-  const memberId = Number(req.params.memberId);
+  const memberId = parseIntParam(req.params.memberId, "memberId");
   const rows = await db
     .select()
     .from(familyMemberMomentsTable)
@@ -76,7 +77,7 @@ router.get("/family-members/:memberId/moments", async (req, res) => {
 });
 
 router.post("/family-members/:memberId/moments", async (req, res) => {
-  const memberId = Number(req.params.memberId);
+  const memberId = parseIntParam(req.params.memberId, "memberId");
   const parsed = insertFamilyMemberMomentSchema.safeParse({
     ...req.body,
     userId: getUserId(req),
@@ -88,7 +89,7 @@ router.post("/family-members/:memberId/moments", async (req, res) => {
 });
 
 router.put("/family-members/:memberId/moments/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = insertFamilyMemberMomentSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -103,7 +104,7 @@ router.put("/family-members/:memberId/moments/:id", async (req, res) => {
 });
 
 router.delete("/family-members/:memberId/moments/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(familyMemberMomentsTable)
     .where(

@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -23,7 +24,7 @@ router.post("/goals", async (req, res) => {
 });
 
 router.put("/goals/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateGoalSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db.update(goalsTable).set(parsed.data).where(and(eq(goalsTable.id, id), eq(goalsTable.userId, getUserId(req)))).returning();
@@ -34,7 +35,7 @@ router.put("/goals/:id", async (req, res) => {
 });
 
 router.delete("/goals/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db.delete(goalsTable).where(and(eq(goalsTable.id, id), eq(goalsTable.userId, getUserId(req))));
   return res.json({ success: true });
 });

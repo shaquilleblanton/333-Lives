@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -31,7 +32,7 @@ router.post("/gratitude", async (req, res) => {
 });
 
 router.put("/gratitude/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateGratitudeEntrySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db.update(gratitudeEntriesTable).set({ ...parsed.data, updatedAt: new Date() }).where(and(eq(gratitudeEntriesTable.id, id), eq(gratitudeEntriesTable.userId, getUserId(req)))).returning();
@@ -40,7 +41,7 @@ router.put("/gratitude/:id", async (req, res) => {
 });
 
 router.delete("/gratitude/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db.delete(gratitudeEntriesTable).where(and(eq(gratitudeEntriesTable.id, id), eq(gratitudeEntriesTable.userId, getUserId(req))));
   return res.json({ success: true });
 });

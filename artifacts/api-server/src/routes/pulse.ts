@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId, requireOwner } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -251,7 +252,7 @@ router.post("/pulse/posts", async (req, res) => {
 
 // DELETE /pulse/posts/:id — delete own post (ownership check is sufficient — no circle needed).
 router.delete("/pulse/posts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const [deleted] = await db
@@ -277,7 +278,7 @@ router.delete("/pulse/posts/:id", async (req, res) => {
 // here so that circle-visibility is enforced before any bytes are served.
 // Uses server-side object download (ACL bypassed after the circle gate passes).
 router.get("/pulse/posts/:id/media", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const post = await findVisiblePost(id, getUserId(req), new Date());
@@ -301,7 +302,7 @@ router.get("/pulse/posts/:id/media", async (req, res) => {
 // PUT /pulse/posts/:id/react — add or change reaction (one per user per post).
 // Requires the post to be visible (circle check) before mutating.
 router.put("/pulse/posts/:id/react", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const type = req.body?.type as string;
@@ -326,7 +327,7 @@ router.put("/pulse/posts/:id/react", async (req, res) => {
 // DELETE /pulse/posts/:id/react — remove own reaction.
 // Requires the post to be visible (circle check) before mutating.
 router.delete("/pulse/posts/:id/react", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const post = await findVisiblePost(id, getUserId(req), new Date());

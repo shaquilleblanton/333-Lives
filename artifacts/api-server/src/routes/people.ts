@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId, requireOwner } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -166,7 +167,7 @@ router.get("/people/reminders", async (req, res) => {
 });
 
 router.get("/people/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const rows = await db.select().from(peopleTable).where(and(eq(peopleTable.id, id), eq(peopleTable.userId, getUserId(req)))).limit(1);
   if (rows.length === 0) return res.status(404).json({ error: "Person not found" });
   return res.json(rows[0]);
@@ -184,7 +185,7 @@ router.post("/people", async (req, res) => {
 });
 
 router.put("/people/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updatePersonSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
 
@@ -202,7 +203,7 @@ router.put("/people/:id", async (req, res) => {
 
 // PATCH /people/:id/circle-link — owner-only: link a Person to a user account and toggle circle membership.
 router.patch("/people/:id/circle-link", requireOwner, async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const { linkedUserId, isCircle } = req.body as { linkedUserId?: number | null; isCircle?: boolean };
@@ -231,7 +232,7 @@ router.patch("/people/:id/circle-link", requireOwner, async (req, res) => {
 });
 
 router.delete("/people/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db.delete(peopleTable).where(and(eq(peopleTable.id, id), eq(peopleTable.userId, getUserId(req))));
   return res.json({ success: true });
 });

@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -56,7 +57,7 @@ router.post("/life-events", async (req, res) => {
 });
 
 router.put("/life-events/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const parsed = updateLifeEventSchema.safeParse(req.body);
@@ -82,7 +83,7 @@ router.put("/life-events/:id", async (req, res) => {
 });
 
 router.delete("/life-events/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   const [row] = await db

@@ -16,13 +16,14 @@ import {
   PlayfairDisplay_700Bold,
   PlayfairDisplay_500Medium_Italic,
 } from "@expo-google-fonts/playfair-display";
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -100,6 +101,11 @@ export default function RootLayout() {
           publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
           proxyUrl={process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined}
         >
+          <ClerkLoading>
+            <View style={{ flex: 1, backgroundColor: "#191919", alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator color="#888888" size="large" />
+            </View>
+          </ClerkLoading>
           <ClerkLoaded>
             <AuthTokenBridge />
             <QueryClientProvider client={queryClient}>

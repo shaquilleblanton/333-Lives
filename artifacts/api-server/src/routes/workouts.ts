@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -56,7 +57,7 @@ router.get("/workouts", async (req, res) => {
 });
 
 router.get("/workouts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const session = await sessionWithBlocks(id, getUserId(req));
   if (!session) return res.status(404).json({ error: "Workout not found" });
   return res.json(session);
@@ -71,7 +72,7 @@ router.post("/workouts", async (req, res) => {
 });
 
 router.put("/workouts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateWorkoutSessionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -85,7 +86,7 @@ router.put("/workouts/:id", async (req, res) => {
 });
 
 router.delete("/workouts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const deleted = await db
     .delete(workoutSessionsTable)
     .where(and(eq(workoutSessionsTable.id, id), eq(workoutSessionsTable.userId, getUserId(req))))
@@ -97,7 +98,7 @@ router.delete("/workouts/:id", async (req, res) => {
 // --- Blocks ---
 
 router.post("/workouts/:id/blocks", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const owner = await sessionWithBlocks(id, getUserId(req));
   if (!owner) return res.status(404).json({ error: "Workout not found" });
   const nextPos = owner.blocks.length
@@ -111,7 +112,7 @@ router.post("/workouts/:id/blocks", async (req, res) => {
 });
 
 router.put("/workouts/:id/blocks/reorder", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const owner = await sessionWithBlocks(id, getUserId(req));
   if (!owner) return res.status(404).json({ error: "Workout not found" });
 
@@ -137,8 +138,8 @@ router.put("/workouts/:id/blocks/reorder", async (req, res) => {
 });
 
 router.put("/workouts/:id/blocks/:blockId", async (req, res) => {
-  const id = Number(req.params.id);
-  const blockId = Number(req.params.blockId);
+  const id = parseIntParam(req.params.id, "id");
+  const blockId = parseIntParam(req.params.blockId, "blockId");
   const owner = await sessionWithBlocks(id, getUserId(req));
   if (!owner) return res.status(404).json({ error: "Workout not found" });
   if (!owner.blocks.some((b) => b.id === blockId)) return res.status(404).json({ error: "Block not found" });
@@ -150,8 +151,8 @@ router.put("/workouts/:id/blocks/:blockId", async (req, res) => {
 });
 
 router.delete("/workouts/:id/blocks/:blockId", async (req, res) => {
-  const id = Number(req.params.id);
-  const blockId = Number(req.params.blockId);
+  const id = parseIntParam(req.params.id, "id");
+  const blockId = parseIntParam(req.params.blockId, "blockId");
   const owner = await sessionWithBlocks(id, getUserId(req));
   if (!owner) return res.status(404).json({ error: "Workout not found" });
   if (!owner.blocks.some((b) => b.id === blockId)) return res.status(404).json({ error: "Block not found" });

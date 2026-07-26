@@ -190,7 +190,7 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{dashboard.vaultCount} Vault Items</p>
-                <p className="text-xs text-muted-foreground">Secured and encrypted</p>
+                <p className="text-xs text-muted-foreground">Secured with TLS encryption</p>
               </div>
             </div>
           </div>

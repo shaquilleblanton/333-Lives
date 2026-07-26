@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -32,7 +33,7 @@ router.post("/habits", async (req, res) => {
 });
 
 router.put("/habits/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateHabitSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db.update(habitsTable).set(parsed.data).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, getUserId(req)))).returning();
@@ -42,13 +43,13 @@ router.put("/habits/:id", async (req, res) => {
 });
 
 router.delete("/habits/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db.delete(habitsTable).where(and(eq(habitsTable.id, id), eq(habitsTable.userId, getUserId(req))));
   return res.json({ success: true });
 });
 
 router.post("/habits/:id/checkin", async (req, res) => {
-  const habitId = Number(req.params.id);
+  const habitId = parseIntParam(req.params.id, "id");
   const today = getTodayDate(req);
 
   const habit = await db.select().from(habitsTable).where(and(eq(habitsTable.id, habitId), eq(habitsTable.userId, getUserId(req)))).limit(1);

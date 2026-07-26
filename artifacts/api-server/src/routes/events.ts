@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -28,7 +29,7 @@ router.post("/events", async (req, res) => {
 });
 
 router.put("/events/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid id" });
   const parsed = updateEventSchema.safeParse(coerceEventDates(req.body));
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
@@ -38,7 +39,7 @@ router.put("/events/:id", async (req, res) => {
 });
 
 router.delete("/events/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid id" });
   await db.delete(eventsTable).where(and(eq(eventsTable.id, id), eq(eventsTable.userId, getUserId(req))));
   return res.json({ success: true });

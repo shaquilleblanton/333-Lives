@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -30,7 +31,7 @@ router.post("/memory-collections", async (req, res) => {
 
 // GET /memory-collections/:id
 router.get("/memory-collections/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const rows = await db
     .select()
     .from(memoryCollectionsTable)
@@ -44,7 +45,7 @@ const updateCollectionSchema = insertMemoryCollectionSchema.partial().omit({ use
 
 // PATCH /memory-collections/:id
 router.patch("/memory-collections/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateCollectionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -58,7 +59,7 @@ router.patch("/memory-collections/:id", async (req, res) => {
 
 // DELETE /memory-collections/:id
 router.delete("/memory-collections/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(memoryCollectionsTable)
     .where(and(eq(memoryCollectionsTable.id, id), eq(memoryCollectionsTable.userId, getUserId(req))));
@@ -67,7 +68,7 @@ router.delete("/memory-collections/:id", async (req, res) => {
 
 // GET /memory-collections/:id/items
 router.get("/memory-collections/:id/items", async (req, res) => {
-  const collectionId = Number(req.params.id);
+  const collectionId = parseIntParam(req.params.id, "id");
   // Verify ownership
   const coll = await db
     .select()
@@ -86,7 +87,7 @@ router.get("/memory-collections/:id/items", async (req, res) => {
 
 // POST /memory-collections/:id/items
 router.post("/memory-collections/:id/items", async (req, res) => {
-  const collectionId = Number(req.params.id);
+  const collectionId = parseIntParam(req.params.id, "id");
   const coll = await db
     .select()
     .from(memoryCollectionsTable)
@@ -102,8 +103,8 @@ router.post("/memory-collections/:id/items", async (req, res) => {
 
 // PATCH /memory-collections/:id/items/:itemId
 router.patch("/memory-collections/:id/items/:itemId", async (req, res) => {
-  const collectionId = Number(req.params.id);
-  const itemId = Number(req.params.itemId);
+  const collectionId = parseIntParam(req.params.id, "id");
+  const itemId = parseIntParam(req.params.itemId, "itemId");
   const coll = await db
     .select()
     .from(memoryCollectionsTable)
@@ -126,8 +127,8 @@ router.patch("/memory-collections/:id/items/:itemId", async (req, res) => {
 
 // DELETE /memory-collections/:id/items/:itemId
 router.delete("/memory-collections/:id/items/:itemId", async (req, res) => {
-  const collectionId = Number(req.params.id);
-  const itemId = Number(req.params.itemId);
+  const collectionId = parseIntParam(req.params.id, "id");
+  const itemId = parseIntParam(req.params.itemId, "itemId");
   const coll = await db
     .select()
     .from(memoryCollectionsTable)
@@ -142,7 +143,7 @@ router.delete("/memory-collections/:id/items/:itemId", async (req, res) => {
 
 // POST /memory-collections/:id/items/reorder — bulk sortOrder update
 router.post("/memory-collections/:id/items/reorder", async (req, res) => {
-  const collectionId = Number(req.params.id);
+  const collectionId = parseIntParam(req.params.id, "id");
   const coll = await db
     .select()
     .from(memoryCollectionsTable)

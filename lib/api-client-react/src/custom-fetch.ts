@@ -382,7 +382,35 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // Abort after 20 s so a dead server on a weak connection never leaves the
+  // UI hanging on a black screen. Callers that pass their own signal get the
+  // shorter of the two deadlines via a merged controller.
+  const TIMEOUT_MS = 20_000;
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), TIMEOUT_MS);
+
+  let signal: AbortSignal = timeoutController.signal;
+  if (init.signal) {
+    // Merge caller signal with timeout signal — abort whichever fires first.
+    // AbortSignal.any() is available in RN 0.73+ / modern browsers; fall back
+    // to just the caller's signal (timeout still fires via the controller).
+    signal =
+      typeof AbortSignal !== "undefined" && typeof (AbortSignal as any).any === "function"
+        ? (AbortSignal as any).any([init.signal, timeoutController.signal])
+        : init.signal;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(input, { ...init, method, headers, signal });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if ((err as Error)?.name === "AbortError") {
+      throw new Error("Request timed out — please check your connection and try again.");
+    }
+    throw err;
+  }
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

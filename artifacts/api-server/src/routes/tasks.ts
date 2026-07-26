@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -23,7 +24,7 @@ router.post("/tasks", async (req, res) => {
 });
 
 router.put("/tasks/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateTaskSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
 
@@ -47,7 +48,7 @@ router.put("/tasks/:id", async (req, res) => {
 });
 
 router.delete("/tasks/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const deleted = await db
     .delete(tasksTable)
     .where(and(eq(tasksTable.id, id), eq(tasksTable.userId, getUserId(req))))

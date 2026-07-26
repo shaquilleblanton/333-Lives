@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -84,7 +85,7 @@ router.post("/voice-memos", async (req, res) => {
 });
 
 router.patch("/voice-memos/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
   if (!title || title.length > 200) {
     return res.status(400).json({ error: "title is required (max 200 characters)" });
@@ -103,7 +104,7 @@ router.patch("/voice-memos/:id", async (req, res) => {
 });
 
 router.delete("/voice-memos/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
 
   const [memo] = await db
     .delete(voiceMemosTable)

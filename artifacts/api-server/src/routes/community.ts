@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -79,7 +80,7 @@ router.get("/community", async (req, res) => {
 });
 
 router.get("/community/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const rows = await db.select().from(communityCalendarTable)
     .where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req))))
     .limit(1);
@@ -101,7 +102,7 @@ router.post("/community", async (req, res) => {
 });
 
 router.put("/community/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const body = req.body as Record<string, unknown>;
   const parsed = updateCommunityEventSchema.safeParse(body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
@@ -115,7 +116,7 @@ router.put("/community/:id", async (req, res) => {
 });
 
 router.post("/community/:id/respond", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const { status } = req.body;
   if (!["confirmed", "declined", "pending"].includes(status)) {
     return res.status(400).json({ error: "Invalid status" });
@@ -129,7 +130,7 @@ router.post("/community/:id/respond", async (req, res) => {
 });
 
 router.delete("/community/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db.delete(communityCalendarTable)
     .where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req))));
   return res.json({ success: true });

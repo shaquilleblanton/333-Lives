@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -11,7 +12,7 @@ import { eq, and, desc } from "drizzle-orm";
 const router = Router();
 
 router.get("/people/:personId/moments", async (req, res) => {
-  const personId = Number(req.params.personId);
+  const personId = parseIntParam(req.params.personId, "personId");
   const rows = await db
     .select()
     .from(relationshipMomentsTable)
@@ -26,7 +27,7 @@ router.get("/people/:personId/moments", async (req, res) => {
 });
 
 router.post("/people/:personId/moments", async (req, res) => {
-  const personId = Number(req.params.personId);
+  const personId = parseIntParam(req.params.personId, "personId");
   const parsed = insertRelationshipMomentSchema.safeParse({
     ...req.body,
     userId: getUserId(req),
@@ -38,7 +39,7 @@ router.post("/people/:personId/moments", async (req, res) => {
 });
 
 router.put("/people/:personId/moments/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateRelationshipMomentSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -56,7 +57,7 @@ router.put("/people/:personId/moments/:id", async (req, res) => {
 });
 
 router.delete("/people/:personId/moments/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(relationshipMomentsTable)
     .where(

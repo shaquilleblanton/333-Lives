@@ -1,3 +1,4 @@
+import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
@@ -29,7 +30,7 @@ router.post("/vault", async (req, res) => {
 });
 
 router.get("/vault/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const rows = await db
     .select()
     .from(vaultItemsTable)
@@ -42,7 +43,7 @@ router.get("/vault/:id", async (req, res) => {
 const updateVaultItemSchema = insertVaultItemSchema.partial().omit({ userId: true });
 
 router.patch("/vault/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateVaultItemSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -55,7 +56,7 @@ router.patch("/vault/:id", async (req, res) => {
 });
 
 router.delete("/vault/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(vaultItemsTable)
     .where(and(eq(vaultItemsTable.id, id), eq(vaultItemsTable.userId, getUserId(req))));
@@ -109,7 +110,7 @@ router.post("/vault-contacts", async (req, res) => {
 });
 
 router.patch("/vault-contacts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   const parsed = updateVaultContactSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const updated = await db
@@ -122,7 +123,7 @@ router.patch("/vault-contacts/:id", async (req, res) => {
 });
 
 router.delete("/vault-contacts/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseIntParam(req.params.id, "id");
   await db
     .delete(vaultContactsTable)
     .where(and(eq(vaultContactsTable.id, id), eq(vaultContactsTable.userId, getUserId(req))));
