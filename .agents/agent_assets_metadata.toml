@@ -137,3 +137,9 @@ id = "m7eHQv3lf20EI_3PYiKDo"
 uri = "file://attached_assets/store_assets/ipad_screenshot_2.png"
 type = "image"
 title = "iPad Screenshot 2 — Reflection & Stats"
+
+[[outputs]]
+id = "jxfIYY3IR-Fu5fuYz1DMh"
+uri = "file://333lives-mobile.zip"
+type = "unspecified"
+title = "333 Lives Mobile Source"
