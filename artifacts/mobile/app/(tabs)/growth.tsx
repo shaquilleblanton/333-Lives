@@ -18,6 +18,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -224,7 +225,7 @@ function HabitsTab() {
       />
 
       <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <View style={s.modalBg}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
           <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.modalTitle, { color: colors.foreground }]}>New Habit</Text>
             <TextInput
@@ -258,7 +259,7 @@ function HabitsTab() {
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -332,7 +333,7 @@ function GoalsTab() {
       />
 
       <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <View style={s.modalBg}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
           <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.modalTitle, { color: colors.foreground }]}>New Goal</Text>
             <TextInput
@@ -378,7 +379,7 @@ function GoalsTab() {
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -521,8 +522,8 @@ function JournalTab() {
 
       {/* Write modal */}
       <Modal visible={writeOpen} transparent animationType="slide" onRequestClose={() => { setWriteOpen(false); setPendingPrompt(null); }}>
-        <View style={s.modalBg}>
-          <ScrollView>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[s.modalTitle, { color: colors.foreground }]}>
                 {pendingPrompt ? "Answer Today's Prompt" : "New Entry"}
@@ -584,7 +585,7 @@ function JournalTab() {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
