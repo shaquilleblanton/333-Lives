@@ -21,3 +21,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SENTRY_DSN = "https://e56c21ea7a62a1d37b66e3f647ecda4e@o4511802981548032.ingest.us.sentry.io/4511803034763264"
