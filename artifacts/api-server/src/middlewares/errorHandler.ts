@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import * as Sentry from "@sentry/node";
 
 import { logger } from "../lib/logger";
 import { HttpError } from "../lib/params";
@@ -24,6 +25,7 @@ export function globalErrorHandler(
     err instanceof Error ? err.message : "Internal server error";
 
   if (status >= 500) {
+    Sentry.captureException(err);
     logger.error(
       { err, method: req.method, url: req.url },
       "Unhandled server error",

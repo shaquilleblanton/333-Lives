@@ -1,3 +1,13 @@
+import * as Sentry from "@sentry/node";
+
+// Crash reporting — no-ops when SENTRY_DSN is absent.
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: !!process.env.SENTRY_DSN,
+  tracesSampleRate: 0.1,
+  environment: process.env.NODE_ENV ?? "development",
+});
+
 import app from "./app";
 import { logger } from "./lib/logger";
 

@@ -21,6 +21,7 @@ import { tokenCache } from "@clerk/expo/token-cache";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
+import * as Sentry from "@sentry/react-native";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -30,6 +31,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+
+// Crash reporting — no-ops when EXPO_PUBLIC_SENTRY_DSN is absent (dev builds).
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.2,
+  environment: __DEV__ ? "development" : "production",
+});
 
 // Expo bundles run outside the web proxy and need absolute URLs to reach the
 // shared API server. The domain is injected at build time.
@@ -95,7 +104,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-      <ErrorBoundary>
+      <ErrorBoundary onError={(error, stack) => Sentry.captureException(error, { extra: { stack } })}>
         <ClerkProvider
           tokenCache={tokenCache}
           publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
