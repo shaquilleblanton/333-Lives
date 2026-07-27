@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>333 Lives — Master Account List</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d0d0d;
+      color: #f0ece4;
+      min-height: 100vh;
+      padding: 32px 20px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 560px;
+      width: 100%;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #8B6914);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f0ece4;
+      letter-spacing: -0.3px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      margin-bottom: 28px;
+      padding-left: 54px;
+    }
+
+    .section {
+      margin-bottom: 22px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #1e1e1e;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      border: 1px solid #252525;
+    }
+
+    .row-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      width: 24px;
+      text-align: center;
+      margin-top: 1px;
+    }
+
+    .row-body { flex: 1; }
+
+    .row-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0ece4;
+      margin-bottom: 2px;
+    }
+
+    .row-desc {
+      font-size: 11px;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    .row-detail {
+      font-size: 11px;
+      color: #C9A84C;
+      margin-top: 3px;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+    }
+
+    .critical-label {
+      display: inline-block;
+      background: #3a1a1a;
+      color: #e07070;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #222;
+      margin: 20px 0;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+      margin-top: 24px;
+    }
+
+    .warning-box {
+      background: #1c1510;
+      border: 1px solid #3a2a10;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 20px;
+    }
+
+    .warning-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #C9A84C;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+
+    .warning-item {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.8;
+    }
+
+    .warning-item span {
+      color: #f0ece4;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo-row">
+      <div class="logo-circle">3</div>
+      <h1>333 Lives</h1>
+    </div>
+    <p class="tagline">Master Account Reference · Keep this private</p>
+
+    <!-- Dev & Hosting -->
+    <div class="section">
+      <div class="section-label">🛠 Development &amp; Hosting</div>
+
+      <div class="row">
+        <div class="row-icon">🟣</div>
+        <div class="row-body">
+          <div class="row-name">Replit <span class="critical-label">critical</span></div>
+          <div class="row-desc">Where the app is built, hosted &amp; deployed</div>
+          <div class="row-detail">replit.com</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-icon">🐙</div>
+        <div class="row-body">
+          <div class="row-name">GitHub</div>
+          <div class="row-desc">Source code backup &amp; version history</div>
+          <div class="row-detail">github.com → shaquilleblanton/333-Lives</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div class="section">
+      <div class="section-label">📱 Mobile</div>
+
+      <div class="row">
+        <div class="row-icon">⚡</div>
+        <div class="row-body">
+          <div class="row-name">Expo.dev <span class="critical-label">critical</span></div>
+          <div class="row-desc">Builds the iOS &amp; Android app files</div>
+          <div class="row-detail">expo.dev · account: snipersb</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-icon">🍎</div>
+        <div class="row-body">
+          <div class="row-name">Apple Developer <span class="critical-label">critical</span></div>
+          <div class="row-desc">TestFlight, App Store listing &amp; iOS signing</div>
+          <div class="row-detail">shadblanton@yahoo.com · Team: 262X7APXYK · App ID: 6791305774</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-icon">🤖</div>
+        <div class="row-body">
+          <div class="row-name">Google Play Console</div>
+          <div class="row-desc">Android app listing &amp; publishing</div>
+          <div class="row-detail">Google account · service key in mobile folder</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auth -->
+    <div class="section">
+      <div class="section-label">🔐 Auth &amp; Users</div>
+
+      <div class="row">
+        <div class="row-icon">🔑</div>
+        <div class="row-body">
+          <div class="row-name">Clerk <span class="critical-label">critical</span></div>
+          <div class="row-desc">All login/signup — email, Google &amp; Apple Sign-In</div>
+          <div class="row-detail">clerk.com · app: clerk.333lives.app</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commerce -->
+    <div class="section">
+      <div class="section-label">🛒 Commerce</div>
+
+      <div class="row">
+        <div class="row-icon">🏪</div>
+        <div class="row-body">
+          <div class="row-name">Shopify</div>
+          <div class="row-desc">Store, products &amp; checkout</div>
+          <div class="row-detail">shopify.com · your admin account</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monitoring -->
+    <div class="section">
+      <div class="section-label">🚨 Crash Monitoring</div>
+
+      <div class="row">
+        <div class="row-icon">🛡️</div>
+        <div class="row-body">
+          <div class="row-name">Sentry</div>
+          <div class="row-desc">Crash reports for mobile &amp; server</div>
+          <div class="row-detail">sentry.io · org: o4511802981548032</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Domain & Storage -->
+    <div class="section">
+      <div class="section-label">🌐 Domain &amp; Storage</div>
+
+      <div class="row">
+        <div class="row-icon">🌍</div>
+        <div class="row-body">
+          <div class="row-name">333lives.app Domain</div>
+          <div class="row-desc">Your website address — check where you registered it</div>
+          <div class="row-detail">GoDaddy / Namecheap / Cloudflare — confirm registrar</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-icon">🗄️</div>
+        <div class="row-body">
+          <div class="row-name">Replit Database &amp; Storage</div>
+          <div class="row-desc">All user data, photos &amp; voice notes — no separate account</div>
+          <div class="row-detail">Managed inside Replit automatically</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning-box">
+      <div class="warning-title">⚠️ Lose access to these = major problem</div>
+      <div class="warning-item">
+        <span>Apple Developer</span> — lose this, you can't update the iOS app<br>
+        <span>Clerk</span> — lose this, every user gets locked out instantly<br>
+        <span>Expo.dev</span> — lose this, you can't build new mobile releases<br>
+        <span>Replit</span> — lose this, the website &amp; API go down
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer">Screenshot this and save to Apple Notes · 333lives.app</p>
+</body>
+</html>
