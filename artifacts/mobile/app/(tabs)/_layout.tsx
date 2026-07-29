@@ -61,6 +61,18 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="habits"
+        options={{
+          title: "Habits",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="checkmark.circle" tintColor={color} size={24} />
+            ) : (
+              <Feather name="check-circle" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
         name="life"
         options={{
           title: "Life",
