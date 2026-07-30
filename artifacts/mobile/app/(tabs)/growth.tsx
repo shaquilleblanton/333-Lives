@@ -235,6 +235,8 @@ function HabitsTab() {
               placeholderTextColor={colors.mutedForeground}
               style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
               autoFocus
+              autoCorrect
+              spellCheck
             />
             <TextInput
               value={desc}
@@ -242,6 +244,8 @@ function HabitsTab() {
               placeholder="Why does this matter? (optional)"
               placeholderTextColor={colors.mutedForeground}
               style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background, marginTop: 8 }]}
+              autoCorrect
+              spellCheck
             />
             <View style={s.modalBtns}>
               <Pressable style={[s.btn, { borderColor: colors.border }]} onPress={() => setCreateOpen(false)}>
@@ -343,6 +347,8 @@ function GoalsTab() {
               placeholderTextColor={colors.mutedForeground}
               style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
               autoFocus
+              autoCorrect
+              spellCheck
             />
             <TextInput
               value={desc}
@@ -350,6 +356,8 @@ function GoalsTab() {
               placeholder="What does success look like? (optional)"
               placeholderTextColor={colors.mutedForeground}
               style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background, marginTop: 8 }]}
+              autoCorrect
+              spellCheck
             />
             <Text style={{ color: colors.mutedForeground, fontFamily: fonts.sub, fontSize: 13, marginTop: 12 }}>Starting progress: {progress}%</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 6, marginBottom: 4 }}>
@@ -523,7 +531,7 @@ function JournalTab() {
       {/* Write modal */}
       <Modal visible={writeOpen} transparent animationType="slide" onRequestClose={() => { setWriteOpen(false); setPendingPrompt(null); }}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
-          <ScrollView keyboardShouldPersistTaps="handled">
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}>
             <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[s.modalTitle, { color: colors.foreground }]}>
                 {pendingPrompt ? "Answer Today's Prompt" : "New Entry"}
@@ -567,6 +575,8 @@ function JournalTab() {
                 multiline
                 style={[s.textarea, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
                 autoFocus
+                autoCorrect
+                spellCheck
               />
               <View style={s.modalBtns}>
                 <Pressable style={[s.btn, { borderColor: colors.border }]} onPress={() => { setWriteOpen(false); setPendingPrompt(null); }}>
