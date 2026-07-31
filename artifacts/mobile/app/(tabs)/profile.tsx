@@ -4,6 +4,7 @@ import {
   useGetMe,
   useUpdateMe,
   getGetMeQueryKey,
+  getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -204,6 +205,7 @@ export default function ProfileScreen() {
     try {
       await updateMe.mutateAsync({ data: { name, bio: newBio } } as any);
       qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      qc.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
       setEditOpen(false);
     } catch { Alert.alert("Couldn't save", "Please try again."); }
   }

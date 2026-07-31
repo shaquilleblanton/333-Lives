@@ -12,7 +12,9 @@ import {
   useGetIntentions,
   useUpdateIntention,
   useGetPeopleReminders,
+  useGetEvents,
   type Intention,
+  type CalendarEvent,
 } from "@workspace/api-client-react";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
@@ -102,6 +104,7 @@ export default function TodayScreen() {
   const { data: dashboard } = useGetDashboard();
   const { data: history } = useGetIntentionHistory();
   const { data: reminders } = useGetPeopleReminders();
+  const { data: allEvents } = useGetEvents();
 
   const createIntention = useCreateIntention();
   const updateIntention = useUpdateIntention();
@@ -259,6 +262,34 @@ export default function TodayScreen() {
 
   const isDecember = new Date().getMonth() === 11;
 
+  // Filter calendar events to just today
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+  const todayEvents: CalendarEvent[] = (allEvents ?? []).filter((ev) => {
+    try {
+      const d = new Date(ev.startTime);
+      return d.toLocaleDateString("en-CA") === todayStr;
+    } catch { return false; }
+  }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  function fmtTime(iso: string) {
+    try {
+      return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    } catch { return ""; }
+  }
+
+  const TodaySchedule = todayEvents.length > 0 ? (
+    <View style={[{ backgroundColor: colors.card, borderColor: colors.primary + "33", borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 12, gap: 6 }]}>
+      <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.body, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 2 }}>Today's Schedule</Text>
+      {todayEvents.map((ev) => (
+        <View key={ev.id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: ev.color ?? colors.primary, marginTop: 1 }} />
+          <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }} numberOfLines={1}>{ev.title}</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.body }}>{fmtTime(ev.startTime)}{ev.endTime ? ` – ${fmtTime(ev.endTime)}` : ""}</Text>
+        </View>
+      ))}
+    </View>
+  ) : null;
+
   const upcomingEvents = reminders?.upcomingEvents ?? [];
   const overdueConnections = reminders?.overdueConnections ?? [];
   const hasReminders = upcomingEvents.length > 0 || overdueConnections.length > 0;
@@ -310,6 +341,7 @@ export default function TodayScreen() {
       >
         {Header}
         {ComingUpStrip}
+        {TodaySchedule}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary + "33" }]}>
           <View style={styles.cardHead}>
             <View style={[styles.cardIcon, { backgroundColor: colors.primary + "26" }]}>
@@ -331,16 +363,49 @@ export default function TodayScreen() {
           {[0, 1, 2].map((slot) => {
             const existing = sorted[slot];
             if (existing) {
+              const isEditing = editingId === existing.id;
+              const isBusy =
+                (updateIntention.isPending && updateIntention.variables?.id === existing.id) ||
+                (deleteIntention.isPending && deleteIntention.variables?.id === existing.id);
+              if (isEditing) {
+                return (
+                  <View key={existing.id} style={[styles.row, { alignItems: "center" }]}>
+                    <TextInput
+                      autoFocus
+                      value={editText}
+                      onChangeText={setEditText}
+                      onSubmitEditing={() => saveEdit(existing)}
+                      style={[
+                        styles.editInput,
+                        { flex: 1, backgroundColor: colors.background, borderColor: colors.primary + "66", color: colors.foreground },
+                      ]}
+                      returnKeyType="done"
+                    />
+                    <Pressable onPress={() => saveEdit(existing)} disabled={isBusy} hitSlop={8} style={styles.iconBtn}>
+                      {isBusy ? <ActivityIndicator size="small" color={colors.primary} /> : <Feather name="check" size={18} color={colors.primary} />}
+                    </Pressable>
+                    <Pressable onPress={cancelEdit} hitSlop={8} style={styles.iconBtn}>
+                      <Feather name="x" size={18} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                );
+              }
               return (
-                <View key={existing.id} style={styles.row}>
+                <View key={existing.id} style={[styles.row, { alignItems: "center" }]}>
                   <View style={[styles.numFilled, { backgroundColor: colors.primary + "26", borderColor: colors.primary + "4D" }]}>
                     <Feather name="check" size={14} color={colors.primary} />
                   </View>
-                  <View style={[styles.filledText, { backgroundColor: colors.primary + "0D", borderColor: colors.primary + "26" }]}>
+                  <View style={[styles.filledText, { flex: 1, backgroundColor: colors.primary + "0D", borderColor: colors.primary + "26" }]}>
                     <Text style={{ color: colors.foreground, fontFamily: fonts.body, fontSize: 15 }}>
                       {existing.text}
                     </Text>
                   </View>
+                  <Pressable onPress={() => startEdit(existing)} disabled={isBusy} hitSlop={8} style={styles.iconBtn}>
+                    <Feather name="edit-2" size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                  <Pressable onPress={() => confirmRemove(existing)} disabled={isBusy} hitSlop={8} style={styles.iconBtn}>
+                    <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+                  </Pressable>
                 </View>
               );
             }
@@ -404,6 +469,7 @@ export default function TodayScreen() {
     >
       {Header}
       {ComingUpStrip}
+      {TodaySchedule}
       {isDecember && (
         <Pressable
           onPress={() => router.push("/review" as any)}
