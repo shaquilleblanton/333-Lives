@@ -2,10 +2,12 @@ import { Feather } from "@expo/vector-icons";
 import {
   useGetIntentionHistory,
 } from "@workspace/api-client-react";
+import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -140,9 +142,16 @@ export default function StreakScreen() {
                     const isComplete = completedSet.has(key);
                     const isToday = key === todayKey;
                     return (
-                      <View
+                      <Pressable
                         key={key}
-                        style={[
+                        disabled={isFuture}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/day-detail",
+                            params: { date: key, wasComplete: isComplete ? "true" : "false" },
+                          })
+                        }
+                        style={({ pressed }) => [
                           styles.cell,
                           {
                             backgroundColor: isFuture
@@ -152,6 +161,7 @@ export default function StreakScreen() {
                                 : colors.muted,
                             borderWidth: isToday ? 1.5 : 0,
                             borderColor: colors.primary,
+                            opacity: pressed ? 0.7 : 1,
                           },
                         ]}
                       />
