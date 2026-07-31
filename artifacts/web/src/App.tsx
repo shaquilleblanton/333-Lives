@@ -30,6 +30,7 @@ import People from "@/pages/people";
 import Community from "@/pages/community";
 import LegacyLetters from "@/pages/legacy-letters";
 import Workouts from "@/pages/workouts";
+import Shop from "@/pages/shop";
 import Tasks from "@/pages/tasks";
 
 import Memos from "@/pages/memos";
@@ -59,6 +60,7 @@ const APP_ROUTES: Array<{ path: string; component: React.ComponentType }> = [
   { path: "/community", component: Community },
   { path: "/legacy-letters", component: LegacyLetters },
   { path: "/workouts", component: Workouts },
+  { path: "/shop", component: Shop },
   { path: "/tasks", component: Tasks },
 
   { path: "/memos", component: Memos },

@@ -2494,6 +2494,7 @@ export const GetShopProductsResponseItem = zod.object({
   "title": zod.string(),
   "handle": zod.string(),
   "description": zod.string().optional(),
+  "productType": zod.string().optional(),
   "imageUrl": zod.string().optional(),
   "imageAlt": zod.string().optional(),
   "price": zod.string().describe('Minimum variant price as a decimal string.'),

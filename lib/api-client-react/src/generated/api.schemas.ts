@@ -1470,6 +1470,7 @@ export interface ShopProduct {
   title: string;
   handle: string;
   description?: string;
+  productType?: string;
   imageUrl?: string;
   imageAlt?: string;
   /** Minimum variant price as a decimal string. */

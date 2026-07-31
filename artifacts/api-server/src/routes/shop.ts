@@ -17,6 +17,7 @@ const PRODUCTS_QUERY = `#graphql
         title
         handle
         description
+        productType
         availableForSale
         featuredImage { url altText }
         priceRange { minVariantPrice { amount currencyCode } }
@@ -40,6 +41,7 @@ type ProductsResponse = {
       title: string;
       handle: string;
       description: string | null;
+      productType: string | null;
       availableForSale: boolean;
       featuredImage: { url: string; altText: string | null } | null;
       priceRange: { minVariantPrice: { amount: string; currencyCode: string } };
@@ -63,6 +65,7 @@ router.get("/shop/products", async (_req, res) => {
       title: p.title,
       handle: p.handle,
       description: p.description ?? "",
+      productType: p.productType ?? "",
       imageUrl: p.featuredImage?.url,
       imageAlt: p.featuredImage?.altText ?? undefined,
       price: p.priceRange.minVariantPrice.amount,
