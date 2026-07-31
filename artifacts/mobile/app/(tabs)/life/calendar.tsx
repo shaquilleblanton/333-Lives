@@ -138,6 +138,75 @@ function CalendarGrid({ year, month, events, onDaySelect, selectedDay }: {
   );
 }
 
+/** Parse flexible date strings into a Date object (noon local time).
+ *  Accepts: YYYY-MM-DD, M/D, M/D/YYYY, M-D, "April 8", "Apr 8", etc.
+ */
+function parseFlexibleDate(raw: string): Date | null {
+  const s = raw.trim();
+  if (!s) return null;
+
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+    const d = new Date(s + "T12:00:00");
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+
+  // M/D or M/D/YYYY
+  const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?$/);
+  if (slashMatch) {
+    const m = parseInt(slashMatch[1], 10) - 1;
+    const d = parseInt(slashMatch[2], 10);
+    const y = slashMatch[3] ? parseInt(slashMatch[3], 10) : year;
+    const date = new Date(y, m, d, 12, 0, 0);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // M-D (e.g. "4-8")
+  const dashMatch = s.match(/^(\d{1,2})-(\d{1,2})$/);
+  if (dashMatch) {
+    const m = parseInt(dashMatch[1], 10) - 1;
+    const d = parseInt(dashMatch[2], 10);
+    const date = new Date(year, m, d, 12, 0, 0);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // "April 8" / "Apr 8" / "8 April"
+  const monthNames = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+  const wordMatch = s.match(/^([a-z]+)\s+(\d{1,2})$/i) || s.match(/^(\d{1,2})\s+([a-z]+)$/i);
+  if (wordMatch) {
+    const part1 = wordMatch[1], part2 = wordMatch[2];
+    let monthIdx = -1, dayNum = -1;
+    // Which is the month word?
+    const tryMonth = (w: string) => monthNames.findIndex(mn => mn.startsWith(w.toLowerCase().slice(0, 3)));
+    if (isNaN(Number(part1))) { monthIdx = tryMonth(part1); dayNum = parseInt(part2, 10); }
+    else { dayNum = parseInt(part1, 10); monthIdx = tryMonth(part2); }
+    if (monthIdx >= 0 && dayNum > 0) {
+      const date = new Date(year, monthIdx, dayNum, 12, 0, 0);
+      return isNaN(date.getTime()) ? null : date;
+    }
+  }
+
+  return null;
+}
+
+/** Parse a time string like "9", "9:30", "9:30 AM", "21:30" → { hours, minutes } or null */
+function parseTime(raw: string): { hours: number; minutes: number } | null {
+  const s = raw.trim().toUpperCase();
+  if (!s) return null;
+  const match = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/);
+  if (!match) return null;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  const period = match[3];
+  if (period === "PM" && hours < 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+  if (hours > 23 || minutes > 59) return null;
+  return { hours, minutes };
+}
+
 function AddEventModal({ visible, onClose, onSave, isSaving }: {
   visible: boolean;
   onClose: () => void;
@@ -146,20 +215,46 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
 }) {
   const colors = useColors();
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [type, setType] = useState<EventType>("event");
   const [windowType, setWindowType] = useState<WindowType>("scheduled");
   const [description, setDescription] = useState("");
 
   function reset() {
-    setTitle(""); setDate(new Date().toISOString().split("T")[0]);
+    setTitle(""); setDate(""); setTime("");
     setType("event"); setWindowType("scheduled"); setDescription("");
   }
 
   function submit() {
-    if (!title.trim() || !date.trim()) return;
-    const dateObj = new Date(date + "T09:00:00");
-    if (isNaN(dateObj.getTime())) { Alert.alert("Invalid date", "Use YYYY-MM-DD format."); return; }
+    if (!title.trim()) return;
+
+    // Parse date — fall back to today if blank
+    let dateObj: Date;
+    if (!date.trim()) {
+      dateObj = new Date();
+      dateObj.setHours(9, 0, 0, 0);
+    } else {
+      const parsed = parseFlexibleDate(date);
+      if (!parsed) {
+        Alert.alert("Invalid date", "Try formats like 4/8, Apr 8, or 2025-04-08.");
+        return;
+      }
+      dateObj = parsed;
+    }
+
+    // Parse time — fall back to 9:00 AM if blank
+    if (time.trim()) {
+      const t = parseTime(time);
+      if (!t) {
+        Alert.alert("Invalid time", "Try formats like 9:30, 2:00 PM, or 14:30.");
+        return;
+      }
+      dateObj.setHours(t.hours, t.minutes, 0, 0);
+    } else {
+      dateObj.setHours(9, 0, 0, 0);
+    }
+
     onSave({
       title: title.trim(),
       type,
@@ -179,8 +274,15 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
           <Text style={[styles.sheetTitle, { color: colors.foreground }]}>New Event</Text>
           <TextInput value={title} onChangeText={setTitle} placeholder="What's happening?" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
             style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <TextInput value={date} onChangeText={setDate} placeholder="Date (YYYY-MM-DD)" placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+
+          {/* Date + Time row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput value={date} onChangeText={setDate} placeholder="Date (e.g. 4/8 or Apr 8)" placeholderTextColor={colors.mutedForeground + "99"}
+              style={[styles.input, { flex: 3, backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+            <TextInput value={time} onChangeText={setTime} placeholder="Time (e.g. 9:30)" placeholderTextColor={colors.mutedForeground + "99"}
+              keyboardType="numbers-and-punctuation"
+              style={[styles.input, { flex: 2, backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
+          </View>
 
           {/* Event type */}
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Type</Text>
