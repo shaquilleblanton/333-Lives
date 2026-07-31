@@ -225,7 +225,8 @@ function HabitsTab() {
       />
 
       <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
+        <View style={s.modalBg}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.modalTitle, { color: colors.foreground }]}>New Habit</Text>
             <TextInput
@@ -263,7 +264,8 @@ function HabitsTab() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
@@ -337,7 +339,8 @@ function GoalsTab() {
       />
 
       <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
+        <View style={s.modalBg}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.modalTitle, { color: colors.foreground }]}>New Goal</Text>
             <TextInput
@@ -387,7 +390,8 @@ function GoalsTab() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
@@ -530,8 +534,9 @@ function JournalTab() {
 
       {/* Write modal */}
       <Modal visible={writeOpen} transparent animationType="slide" onRequestClose={() => { setWriteOpen(false); setPendingPrompt(null); }}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalBg}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}>
+        <View style={s.modalBg}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <View style={[s.modalSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[s.modalTitle, { color: colors.foreground }]}>
                 {pendingPrompt ? "Answer Today's Prompt" : "New Entry"}
@@ -595,7 +600,8 @@ function JournalTab() {
               </View>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
