@@ -123,7 +123,7 @@ function MemberCard({ member, onPress, onEdit, onDelete }: {
           <Pressable onPress={onEdit} hitSlop={8} style={{ padding: 4 }}>
             <Feather name="edit-2" size={15} color={colors.mutedForeground + "80"} />
           </Pressable>
-          <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4, marginTop: 4 }}>
+          <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4, marginTop: 4 }} accessibilityLabel="Remove member">
             <Feather name="trash-2" size={15} color={colors.mutedForeground + "80"} />
           </Pressable>
         </View>
@@ -495,6 +495,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
                           {m.description ? <Text style={[styles.momentDesc, { color: colors.mutedForeground }]}>{m.description}</Text> : null}
                         </View>
                         <Pressable hitSlop={8} style={{ padding: 4 }}
+                          accessibilityLabel="Delete moment"
                           onPress={() => deleteMoment.mutate({ memberId, id: m.id }, { onSuccess: invalidate, onError: () => Alert.alert("Error", "Couldn't delete this moment. Please try again.") })}
                         >
                           <Feather name="trash-2" size={14} color={colors.mutedForeground + "60"} />

@@ -168,7 +168,8 @@ export default function ShopScreen() {
       {!isError &&
         products?.map((product) => {
           const isExpanded = expandedId === product.id;
-          const selectedVariant = product.variants.find(
+          const variants = product.variants ?? [];
+          const selectedVariant = variants.find(
             (v) => v.id === variantId,
           );
           return (
@@ -236,9 +237,9 @@ export default function ShopScreen() {
                     </Text>
                   )}
 
-                  {product.variants.length > 1 && (
+                  {variants.length > 1 && (
                     <View style={styles.variantRow}>
-                      {product.variants.map((v) => {
+                      {variants.map((v) => {
                         const isSelected = v.id === variantId;
                         return (
                           <Pressable

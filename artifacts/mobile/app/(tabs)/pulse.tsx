@@ -234,7 +234,7 @@ function PostCard({ post, colors, onReact, onDelete }: {
             </View>
           )}
           {post.isOwn && (
-            <Pressable onPress={onDelete} style={styles.actionBtn}>
+            <Pressable onPress={onDelete} style={styles.actionBtn} accessibilityLabel="Delete post">
               <Feather name="trash-2" size={14} color={colors.mutedForeground} />
             </Pressable>
           )}

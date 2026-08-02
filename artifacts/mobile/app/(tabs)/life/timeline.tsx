@@ -168,10 +168,10 @@ export default function TimelineScreen() {
                 <Pressable onPress={() => setExpandedId(isExpanded ? null : event.id)} style={styles.actionBtn}>
                   <Feather name={isExpanded ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
                 </Pressable>
-                <Pressable onPress={() => { setEditingEvent(event); setIsFormOpen(true); }} style={styles.actionBtn}>
+                <Pressable onPress={() => { setEditingEvent(event); setIsFormOpen(true); }} style={styles.actionBtn} accessibilityLabel="Edit event">
                   <Feather name="edit-2" size={14} color={colors.mutedForeground} />
                 </Pressable>
-                <Pressable onPress={() => confirmDelete(event.id)} style={styles.actionBtn}>
+                <Pressable onPress={() => confirmDelete(event.id)} style={styles.actionBtn} accessibilityLabel="Delete event">
                   <Feather name="trash-2" size={14} color={colors.mutedForeground} />
                 </Pressable>
               </View>
@@ -226,7 +226,7 @@ export default function TimelineScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>Life Timeline</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Your defining moments</Text>
         </View>
-        <Pressable onPress={() => { setEditingEvent(null); setIsFormOpen(true); }} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
+        <Pressable onPress={() => { setEditingEvent(null); setIsFormOpen(true); }} style={[styles.addBtn, { backgroundColor: colors.primary }]} accessibilityLabel="Add event">
           <Feather name="plus" size={18} color="#fff" />
         </Pressable>
       </View>
