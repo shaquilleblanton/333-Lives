@@ -1,0 +1,83 @@
+# LifeStyle App — Full QA & Polish Pass (Pre-Resubmission)
+
+Paste this into Replit as one instruction. Do not fix things piecemeal — run the full checklist below screen by screen, fix everything found, and report back in the format specified at the end.
+
+## Ground rules for this pass
+- Treat every fix as a reusable pattern, not a one-off patch. If a bug (like a keyboard covering an input) shows up on one screen, assume it exists everywhere and fix it app-wide in one pass.
+- Do not mark anything "done" without confirming it on an actual mobile viewport (iOS Safari sizing, safe-area insets, on-screen keyboard open).
+- Brand reference for consistency checks: navy / copper / electric blue / gold color system, gold as the signature accent, typography is Archivo Expanded (headers) + Inter (body) + Space Mono (numeric/data displays), angel wings + halo motif, tagline "Everyone Lives Forever."
+
+---
+
+## 1. Auth (Clerk)
+- [ ] Sign up flow: all fields reachable and visible with keyboard open
+- [ ] Log in flow: same check
+- [ ] Password reset / forgot password flow works end to end
+- [ ] Error states show clearly (wrong password, existing email, weak password) — no silent failures
+- [ ] Session persists correctly after app close/reopen
+- [ ] Logout works and returns to a clean auth screen (no leftover cached data from previous user)
+
+## 2. Today / 333 Method (core daily screen)
+- [ ] All text inputs stay visible above the keyboard when focused
+- [ ] Daily entry saves correctly and reflects immediately in the UI
+- [ ] Editing a previously saved entry works and persists
+- [ ] Empty state (no entry yet today) is designed, not a blank screen
+- [ ] Date/day logic is correct — entries land on the right day, no timezone drift
+
+## 3. Streak
+- [ ] Streak count updates correctly and immediately after a qualifying action
+- [ ] Streak reset logic is correct (doesn't reset incorrectly, doesn't fail to reset when it should)
+- [ ] Visual streak indicator (numbers, flame icon, whatever's used) renders correctly at 1 digit, 2 digits, 3+ digits
+
+## 4. Memos
+- [ ] Text input keyboard-avoidance (same check as above)
+- [ ] Creating, editing, deleting a memo all work
+- [ ] Long memo text doesn't break layout (truncation or scroll, not overflow)
+- [ ] Empty state designed
+
+## 5. Shop
+- [ ] Product listings load and images render at correct aspect ratio
+- [ ] Tapping into a product shows full detail without layout breakage
+- [ ] Cart/checkout flow (if live) completes without errors
+- [ ] If Shop is a placeholder/coming-soon in this build, confirm it's clearly labeled as such rather than looking broken
+
+## 6. Feedback
+- [ ] Feedback form: keyboard-avoidance check
+- [ ] Submission confirms success to the user (toast, message, or screen change)
+- [ ] Submitted feedback actually reaches wherever it's supposed to land (backend/email/db)
+
+## 7. Navigation / global
+- [ ] Bottom nav or tab bar doesn't overlap content on any screen
+- [ ] Bottom nav doesn't stay pinned over the keyboard when a field is focused elsewhere on screen
+- [ ] Back button / gesture behaves correctly on every screen (no dead ends, no app-exit-when-shouldn't)
+- [ ] Safe area insets respected on notched devices (nothing hidden behind the notch or home indicator)
+- [ ] All touch targets are at least ~44x44pt (nothing too small to tap reliably)
+
+## 8. Visual / brand consistency
+- [ ] Colors match the navy/copper/electric blue/gold system consistently across all screens — no stray default-theme colors (default blue links, default black text, etc.)
+- [ ] Gold accent used consistently for the same type of element app-wide (not applied inconsistently screen to screen)
+- [ ] Typography consistent: Archivo Expanded for headers, Inter for body, Space Mono for numeric/data — check no screen fell back to a system default font
+- [ ] Icons/imagery consistent in style weight and size across screens
+- [ ] Splash screen and app icon look correct on device (not just in the editor)
+
+## 9. Loading / error / empty states
+- [ ] Every screen that fetches data has a real loading state (skeleton or spinner, not a blank flash)
+- [ ] Every screen that can fail (no network, server error) shows a real error state with a way to retry — not a silent blank or a crash
+- [ ] Every list/collection screen has a designed empty state, not a blank white screen
+
+## 10. Performance / stability
+- [ ] No visible layout shift/flicker when keyboard opens or closes
+- [ ] No visible layout shift when data loads in
+- [ ] App doesn't crash or freeze on rapid navigation between tabs
+- [ ] Forms don't lose entered data on accidental navigation away and back (where reasonable to preserve)
+
+---
+
+## Required report-back format
+For each of the 10 sections above, list:
+1. What was checked
+2. What was found broken
+3. What was changed to fix it
+4. Confirmation it was re-tested on a mobile viewport with keyboard open where relevant
+
+Do not summarize with "everything looks good" — go section by section with specifics, so this can be verified before resubmission to TestFlight.

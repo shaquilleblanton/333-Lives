@@ -24,6 +24,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -365,6 +366,7 @@ export default function MemosScreen() {
         animationType="fade"
         onRequestClose={() => setRenameTarget(null)}
       >
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.modalBackdrop}>
           <View
             style={[
@@ -413,6 +415,7 @@ export default function MemosScreen() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

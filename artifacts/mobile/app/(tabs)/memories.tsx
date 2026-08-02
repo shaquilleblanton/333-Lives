@@ -25,6 +25,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -404,6 +405,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
 
       {/* Caption edit */}
       <Modal visible={!!captionEdit} transparent animationType="slide" onRequestClose={() => setCaptionEdit(null)}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={s.captionModalBg}>
           <View style={[s.captionModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.captionModalTitle, { color: colors.foreground }]}>Edit Caption</Text>
@@ -426,6 +428,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -586,6 +589,7 @@ function CollectionFormModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <View style={s.captionModalBg}>
         <ScrollView>
           <View style={[s.captionModal, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -687,6 +691,7 @@ function CollectionFormModal({
           </View>
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

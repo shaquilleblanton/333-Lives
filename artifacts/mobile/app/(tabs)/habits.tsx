@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -375,6 +376,7 @@ export default function HabitsScreen() {
         animationType="slide"
         onRequestClose={() => setCreateOpen(false)}
       >
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={s.modalBg}>
           <View
             style={[
@@ -470,6 +472,7 @@ export default function HabitsScreen() {
             </View>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
