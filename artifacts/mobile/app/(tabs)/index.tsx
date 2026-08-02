@@ -310,7 +310,7 @@ export default function TodayScreen() {
         <View key={oc.personId} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 13 }}>💭</Text>
           <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{oc.personName}</Text>
-          <Text style={{ color: "#F87171", fontSize: 12, fontFamily: fonts.body }}>{oc.daysSinceLastMoment}d overdue</Text>
+          <Text style={{ color: colors.destructive, fontSize: 12, fontFamily: fonts.body }}>{oc.daysSinceLastMoment}d overdue</Text>
         </View>
       ))}
     </View>

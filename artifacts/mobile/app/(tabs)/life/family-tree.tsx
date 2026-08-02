@@ -319,7 +319,7 @@ function MemberFormModal({ visible, member, onClose, onSave, isSaving }: {
             disabled={!name.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isSaving ? 0.5 : 1, marginTop: 8 }]}
           >
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : (
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
               <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{member ? "Save Changes" : "Add to Tree"}</Text>
             )}
           </Pressable>
@@ -367,6 +367,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
         <View style={[styles.detailSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -473,7 +474,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
                     disabled={!mTitle.trim() || createMoment.isPending}
                     style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !mTitle.trim() || createMoment.isPending ? 0.5 : 1 }]}
                   >
-                    {createMoment.isPending ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Moment</Text>}
+                    {createMoment.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Moment</Text>}
                   </Pressable>
                 </View>
               ) : null}
@@ -510,6 +511,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
           </ScrollView>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

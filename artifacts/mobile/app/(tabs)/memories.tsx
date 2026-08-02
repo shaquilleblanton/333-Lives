@@ -483,7 +483,7 @@ function VaultPickerModal({
                     style={[s.vaultThumb, { backgroundColor: colors.background, borderColor: colors.border }]}
                   >
                     {item.category === "photo" ? (
-                      <Image source={{ uri: storageUrl(item.fileUrl!) }} style={{ width: "100%", aspectRatio: 1 }} resizeMode="cover" />
+                      <Image source={{ uri: storageUrl(item.fileUrl ?? "") }} style={{ width: "100%", aspectRatio: 1 }} resizeMode="cover" />
                     ) : (
                       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8 }}>
                         <Feather

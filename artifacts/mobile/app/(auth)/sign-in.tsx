@@ -117,7 +117,7 @@ export default function SignInScreen() {
           Continue with Google
         </Text>
       </Pressable>
-      {ssoError && <Text style={[styles.error, { color: "#E5484D" }]}>{ssoError}</Text>}
+      {ssoError && <Text style={[styles.error, { color: colors.destructive }]}>{ssoError}</Text>}
 
       <View style={styles.dividerRow}>
         <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
@@ -139,7 +139,7 @@ export default function SignInScreen() {
         keyboardType="email-address"
       />
       {errors.fields.identifier && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>
+        <Text style={[styles.error, { color: colors.destructive }]}>
           {errors.fields.identifier.message}
         </Text>
       )}
@@ -157,12 +157,12 @@ export default function SignInScreen() {
         onChangeText={setPassword}
       />
       {errors.fields.password && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>
+        <Text style={[styles.error, { color: colors.destructive }]}>
           {errors.fields.password.message}
         </Text>
       )}
       {errors.global && errors.global.length > 0 && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>{errors.global[0].message}</Text>
+        <Text style={[styles.error, { color: colors.destructive }]}>{errors.global[0].message}</Text>
       )}
 
       <Pressable

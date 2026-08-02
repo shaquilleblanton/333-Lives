@@ -104,7 +104,7 @@ function EventCard({ event, onRespond, onEdit, onDelete }: {
 
   const icon = isLocked ? "lock" : CATEGORY_ICONS[(event.category as EventCategory)] ?? "calendar";
   const label = isLocked ? "Blocked Time" : CATEGORY_LABELS[(event.category as EventCategory)] ?? "Event";
-  const startDate = new Date(event.startDate + "T12:00:00");
+  const startDate = event.startDate ? new Date(event.startDate + "T12:00:00") : new Date();
   const dateStr = startDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const dotColor = wt === "open" ? "#34d399" : wt === "locked" ? "#fbbf24" : colors.primary;
 

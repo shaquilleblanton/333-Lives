@@ -123,7 +123,7 @@ export default function SignUpScreen() {
           keyboardType="numeric"
         />
         {errors.fields.code && (
-          <Text style={[styles.error, { color: "#E5484D" }]}>{errors.fields.code.message}</Text>
+          <Text style={[styles.error, { color: colors.destructive }]}>{errors.fields.code.message}</Text>
         )}
 
         <Pressable
@@ -183,7 +183,7 @@ export default function SignUpScreen() {
           Continue with Google
         </Text>
       </Pressable>
-      {ssoError && <Text style={[styles.error, { color: "#E5484D" }]}>{ssoError}</Text>}
+      {ssoError && <Text style={[styles.error, { color: colors.destructive }]}>{ssoError}</Text>}
 
       <View style={styles.dividerRow}>
         <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
@@ -205,7 +205,7 @@ export default function SignUpScreen() {
         keyboardType="email-address"
       />
       {errors.fields.emailAddress && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>
+        <Text style={[styles.error, { color: colors.destructive }]}>
           {errors.fields.emailAddress.message}
         </Text>
       )}
@@ -223,12 +223,12 @@ export default function SignUpScreen() {
         onChangeText={setPassword}
       />
       {errors.fields.password && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>
+        <Text style={[styles.error, { color: colors.destructive }]}>
           {errors.fields.password.message}
         </Text>
       )}
       {errors.global && errors.global.length > 0 && (
-        <Text style={[styles.error, { color: "#E5484D" }]}>{errors.global[0].message}</Text>
+        <Text style={[styles.error, { color: colors.destructive }]}>{errors.global[0].message}</Text>
       )}
 
       <Pressable

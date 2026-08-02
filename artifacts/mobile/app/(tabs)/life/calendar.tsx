@@ -473,7 +473,7 @@ export default function CalendarScreen() {
                         <Text style={[styles.typeText, { color: wtColor }]}>{WINDOW_TYPE_LABELS[wt]}</Text>
                       </View>
                       <Pressable onPress={() => confirmDelete(e.id, e.title)} hitSlop={8}>
-                        <Feather name="trash-2" size={14} color="#f87171" />
+                        <Feather name="trash-2" size={14} color={colors.destructive} />
                       </Pressable>
                     </View>
                   </View>

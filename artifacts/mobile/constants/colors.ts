@@ -35,8 +35,8 @@ const palette = {
   accent: "#C8B57C",
   accentForeground: "#191919",
 
-  // Destructive actions
-  destructive: "#7F1D1D",
+  // Destructive actions — bright red, readable on charcoal bg
+  destructive: "#E5484D",
   destructiveForeground: "#F7F4EF",
 
   // Borders and input outlines

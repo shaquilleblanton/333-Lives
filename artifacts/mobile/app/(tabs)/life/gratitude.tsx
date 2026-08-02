@@ -97,6 +97,14 @@ export default function GratitudeScreen() {
     return current;
   }, [entries]);
 
+  if (isLoading || loadingToday) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
@@ -193,7 +201,7 @@ export default function GratitudeScreen() {
                 ]}
               >
                 {saving ? (
-                  <ActivityIndicator color="#000" size="small" />
+                  <ActivityIndicator color={colors.primaryForeground} size="small" />
                 ) : (
                   <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
                     {hasToday ? "Update Entry" : "Save Gratitude"}
