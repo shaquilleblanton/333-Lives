@@ -3275,10 +3275,30 @@ components:
           type: number
         checkedInToday:
           type: boolean
+        todayStatus:
+          type: string
+          enum: [great, okay, struggling]
+          nullable: true
+        recentCheckins:
+          type: array
+          description: Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status.
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              done:
+                type: boolean
+              status:
+                type: string
+                enum: [great, okay, struggling]
+                nullable: true
+            required: [date, done, status]
         createdAt:
           type: string
           format: date-time
-      required: [id, name, targetDays, currentStreak, longestStreak, completionRate, checkedInToday, createdAt]
+      required: [id, name, targetDays, currentStreak, longestStreak, completionRate, checkedInToday, recentCheckins, createdAt]
 
     CreateHabitBody:
       type: object

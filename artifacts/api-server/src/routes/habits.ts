@@ -3,7 +3,7 @@ import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
 import { habitsTable, habitCheckinsTable, insertHabitSchema, updateHabitSchema, insertHabitCheckinSchema } from "@workspace/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Request } from "express";
 import { getTodayDate } from "../lib/date";
 

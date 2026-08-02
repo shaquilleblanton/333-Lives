@@ -348,6 +348,21 @@ export interface UpdateEventBody {
   color?: string;
 }
 
+export type HabitTodayStatus = typeof HabitTodayStatus[keyof typeof HabitTodayStatus];
+
+
+export const HabitTodayStatus = {
+  great: 'great',
+  okay: 'okay',
+  struggling: 'struggling',
+} as const;
+
+export interface HabitRecentCheckin {
+  date: string;
+  done: boolean;
+  status: HabitTodayStatus | null;
+}
+
 export interface Habit {
   id: number;
   name: string;
@@ -358,6 +373,9 @@ export interface Habit {
   longestStreak: number;
   completionRate: number;
   checkedInToday: boolean;
+  todayStatus?: HabitTodayStatus | null;
+  /** Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status. */
+  recentCheckins: HabitRecentCheckin[];
   createdAt: string;
 }
 
