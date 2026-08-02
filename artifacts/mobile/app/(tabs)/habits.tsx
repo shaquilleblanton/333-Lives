@@ -31,6 +31,18 @@ import { useColors } from "@/hooks/useColors";
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
+type MoodStatus = "great" | "okay" | "struggling";
+
+const MOODS: { value: MoodStatus; emoji: string; label: string }[] = [
+  { value: "great", emoji: "🔥", label: "Great" },
+  { value: "okay", emoji: "😊", label: "Okay" },
+  { value: "struggling", emoji: "😓", label: "Struggling" },
+];
+
+function moodEmoji(status: string | null | undefined): string {
+  return MOODS.find((m) => m.value === status)?.emoji ?? "✓";
+}
+
 export default function HabitsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -51,6 +63,9 @@ export default function HabitsScreen() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
 
+  // Mood picker state
+  const [moodTarget, setMoodTarget] = useState<number | null>(null);
+
   const all = habits ?? [];
   const completed = all.filter((h) => h.checkedInToday).length;
   const total = all.length;
@@ -62,9 +77,17 @@ export default function HabitsScreen() {
 
   function handleCheckIn(id: number, alreadyDone: boolean) {
     if (alreadyDone) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMoodTarget(id);
+  }
+
+  function submitMood(status: MoodStatus) {
+    const id = moodTarget;
+    if (id == null) return;
+    setMoodTarget(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     checkIn.mutate(
-      { id, data: { status: "great" } },
+      { id, data: { status } },
       {
         onSuccess: invalidate,
         onError: () =>
@@ -117,6 +140,8 @@ export default function HabitsScreen() {
       </View>
     );
   }
+
+  const moodTargetHabit = all.find((h) => h.id === moodTarget);
 
   return (
     <>
@@ -224,6 +249,7 @@ export default function HabitsScreen() {
               const isBusy =
                 checkIn.isPending &&
                 (checkIn.variables as any)?.id === h.id;
+              const todayStatus = (h as any).todayStatus as string | null | undefined;
 
               return (
                 <Pressable
@@ -244,7 +270,7 @@ export default function HabitsScreen() {
                     },
                   ]}
                 >
-                  {/* Check circle */}
+                  {/* Check circle / mood indicator */}
                   <View
                     style={[
                       s.checkCircle,
@@ -261,11 +287,17 @@ export default function HabitsScreen() {
                     {isBusy ? (
                       <ActivityIndicator size="small" color={colors.primary} />
                     ) : h.checkedInToday ? (
-                      <Feather
-                        name="check"
-                        size={16}
-                        color={colors.primaryForeground}
-                      />
+                      todayStatus ? (
+                        <Text style={{ fontSize: 14 }}>
+                          {moodEmoji(todayStatus)}
+                        </Text>
+                      ) : (
+                        <Feather
+                          name="check"
+                          size={16}
+                          color={colors.primaryForeground}
+                        />
+                      )
                     ) : null}
                   </View>
 
@@ -368,6 +400,66 @@ export default function HabitsScreen() {
           </Text>
         )}
       </ScrollView>
+
+      {/* ── Mood picker modal ── */}
+      <Modal
+        visible={moodTarget !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMoodTarget(null)}
+      >
+        <View style={s.modalBg}>
+          <View
+            style={[
+              s.modalSheet,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[s.modalTitle, { color: colors.foreground }]}>
+              How did it go?
+            </Text>
+            {moodTargetHabit && (
+              <Text style={[s.moodHabitName, { color: colors.mutedForeground }]}>
+                {moodTargetHabit.name}
+              </Text>
+            )}
+
+            <View style={s.moodRow}>
+              {MOODS.map((m) => (
+                <Pressable
+                  key={m.value}
+                  onPress={() => submitMood(m.value)}
+                  style={({ pressed }) => [
+                    s.moodBtn,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                      opacity: pressed ? 0.75 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={s.moodEmoji}>{m.emoji}</Text>
+                  <Text style={[s.moodLabel, { color: colors.foreground }]}>
+                    {m.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable
+              onPress={() => setMoodTarget(null)}
+              style={[s.cancelBtn, { borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.mutedForeground, fontFamily: fonts.sub }}>
+                Cancel
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Create modal ── */}
       <Modal
@@ -591,6 +683,40 @@ const s = StyleSheet.create({
     textAlign: "center",
     marginTop: 14,
     letterSpacing: 0.3,
+  },
+  // Mood picker
+  moodHabitName: {
+    fontFamily: fonts.sub,
+    fontSize: 13,
+    marginTop: -8,
+    marginBottom: 20,
+  },
+  moodRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  moodBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  moodEmoji: {
+    fontSize: 28,
+  },
+  moodLabel: {
+    fontFamily: fonts.sub,
+    fontSize: 12,
+  },
+  cancelBtn: {
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
   },
   // Modal
   modalBg: {

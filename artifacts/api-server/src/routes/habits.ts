@@ -13,9 +13,11 @@ async function buildHabitResponse(habit: typeof habitsTable.$inferSelect, req: R
   const today = getTodayDate(req);
   const checkins = await db.select().from(habitCheckinsTable).where(eq(habitCheckinsTable.habitId, habit.id));
   const totalCheckins = checkins.length;
-  const checkedInToday = checkins.some((c) => c.date === today);
+  const todayCheckin = checkins.find((c) => c.date === today);
+  const checkedInToday = !!todayCheckin;
+  const todayStatus = todayCheckin?.status ?? null;
   const completionRate = habit.targetDays > 0 ? Math.min(100, Math.round((totalCheckins / habit.targetDays) * 100)) : 0;
-  return { ...habit, checkedInToday, completionRate, totalCheckins };
+  return { ...habit, checkedInToday, todayStatus, completionRate, totalCheckins };
 }
 
 router.get("/habits", async (req, res) => {
