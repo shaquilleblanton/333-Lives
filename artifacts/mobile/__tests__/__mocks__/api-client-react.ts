@@ -42,6 +42,11 @@ let _events: any[] = [];
 let _familyMembers: any[] = [];
 let _familyMoments: any[] = [];
 
+// Habits state
+let _habits: any[] = [];
+let _habitsLoading = false;
+let _checkInError: Error | null = null;
+
 // Mutation spies — rebuilt on __reset so call counts are clean each test
 let _createMutateAsync: jest.Mock;
 let _updateMutate: jest.Mock;
@@ -75,6 +80,11 @@ let _updateMember: jest.Mock;
 let _deleteMember: jest.Mock;
 let _createMoment: jest.Mock;
 let _deleteMoment: jest.Mock;
+
+// Habits mutation spies
+let _checkInHabit: jest.Mock;
+let _createHabit: jest.Mock;
+let _deleteHabit: jest.Mock;
 
 function buildMutations() {
   _createMutateAsync = jest.fn(async (args: any) => {
@@ -117,6 +127,11 @@ function buildMutations() {
   _deleteMember = jest.fn();
   _createMoment = jest.fn(async () => ({ id: Date.now() }));
   _deleteMoment = jest.fn();
+
+  // Habits
+  _checkInHabit = jest.fn();
+  _createHabit = jest.fn();
+  _deleteHabit = jest.fn();
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +153,9 @@ export function __reset() {
   _lifeEvents = [];
   _familyMembers = [];
   _familyMoments = [];
+  _habits = [];
+  _habitsLoading = false;
+  _checkInError = null;
   buildMutations();
 }
 
@@ -155,6 +173,9 @@ export function __setEvents(events: any[]) { _events = events; }
 export function __setLifeEvents(events: any[]) { _lifeEvents = events; }
 export function __setFamilyMembers(members: any[]) { _familyMembers = members; }
 export function __setFamilyMoments(moments: any[]) { _familyMoments = moments; }
+export function __setHabits(habits: any[]) { _habits = habits; }
+export function __setHabitsLoading(v: boolean) { _habitsLoading = v; }
+export function __setCheckInError(err: Error | null) { _checkInError = err; buildMutations(); }
 
 // Expose mutation spies for assertions
 export function __getDeletePost() { return _deletePost; }
@@ -171,6 +192,9 @@ export function __getDeleteLifeEvent() { return _deleteLifeEvent; }
 export function __getDeleteMember() { return _deleteMember; }
 export function __getDeleteMoment() { return _deleteMoment; }
 export function __getCreateMoment() { return _createMoment; }
+export function __getCheckInHabit() { return _checkInHabit; }
+export function __getCreateHabit() { return _createHabit; }
+export function __getDeleteHabit() { return _deleteHabit; }
 
 // ---------------------------------------------------------------------------
 // Query key helpers (exported so component imports resolve)
@@ -186,6 +210,7 @@ export const getGetCollectionItemsQueryKey = (id?: number) => ["collectionItems"
 export const getGetLifeEventsQueryKey = () => ["lifeEvents"];
 export const getGetFamilyMembersQueryKey = () => ["familyMembers"];
 export const getGetFamilyMemberMomentsQueryKey = (id?: number) => ["familyMoments", id];
+export const getGetHabitsQueryKey = () => ["habits"];
 
 // ---------------------------------------------------------------------------
 // Utility exports
@@ -267,6 +292,15 @@ export function useGetFamilyMemberMoments(_memberId: number, _opts?: any) {
   return { data: _familyMoments, isLoading: false };
 }
 
+export function useGetHabits() {
+  return {
+    data: _habitsLoading ? undefined : _habits,
+    isLoading: _habitsLoading,
+    refetch: () => Promise.resolve(),
+    isRefetching: false,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Mutation hooks — jest.fn() spies backed by the current mutation references
 // ---------------------------------------------------------------------------
@@ -327,6 +361,30 @@ export const useCreateFamilyMemberMoment = jest.fn(() => ({
   isPending: false,
 }));
 export const useDeleteFamilyMemberMoment = jest.fn(() => ({ mutate: _deleteMoment, isPending: false }));
+
+// Habits mutations
+export const useCheckInHabit = jest.fn(() => ({
+  mutate: (args: any, opts?: any) => {
+    if (_checkInError) {
+      opts?.onError?.(_checkInError);
+    } else {
+      _checkInHabit(args, opts);
+      opts?.onSuccess?.();
+    }
+  },
+  isPending: false,
+  variables: undefined,
+}));
+
+export const useCreateHabit = jest.fn(() => ({
+  mutate: _createHabit,
+  isPending: false,
+}));
+
+export const useDeleteHabit = jest.fn(() => ({
+  mutate: _deleteHabit,
+  isPending: false,
+}));
 
 // Initialize
 __reset();
