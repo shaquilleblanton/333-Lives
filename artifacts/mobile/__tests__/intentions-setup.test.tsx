@@ -115,6 +115,23 @@ afterEach(async () => {
   await cleanup();
 });
 
+// ── 0. Loading state ──────────────────────────────────────────────────────
+
+describe("Loading state (API slow / pre-load race)", () => {
+  it("renders without crashing when intentions are still loading (API slow / pre-load race)", async () => {
+    mockApi.__setIntentionsLoading(true);
+    // render() must not throw — if the screen crashes it throws here
+    const { queryByText } = await render(withProviders(<TodayScreen />));
+
+    // The setup form and active state must NOT be visible during loading;
+    // both branches read from `intentions` which is undefined while isLoading=true
+    expect(queryByText("Set My Intentions")).toBeNull();
+    expect(queryByText("THE 333 METHOD")).toBeNull();
+    expect(queryByText("Intention A")).toBeNull();
+    expect(queryByText("ALL COMPLETE")).toBeNull();
+  });
+});
+
 // ── 1. Setup state ────────────────────────────────────────────────────────
 
 describe("Setup state (< 3 intentions)", () => {

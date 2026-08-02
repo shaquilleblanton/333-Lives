@@ -42,6 +42,13 @@ let _events: any[] = [];
 let _familyMembers: any[] = [];
 let _familyMoments: any[] = [];
 
+// History loading/null state
+let _historyLoading = false;
+let _historyNull = false;
+
+// Intentions loading state
+let _intentionsLoading = false;
+
 // Habits state
 let _habits: any[] = [];
 let _habitsLoading = false;
@@ -153,6 +160,9 @@ export function __reset() {
   _lifeEvents = [];
   _familyMembers = [];
   _familyMoments = [];
+  _historyLoading = false;
+  _historyNull = false;
+  _intentionsLoading = false;
   _habits = [];
   _habitsLoading = false;
   _checkInError = null;
@@ -173,6 +183,9 @@ export function __setEvents(events: any[]) { _events = events; }
 export function __setLifeEvents(events: any[]) { _lifeEvents = events; }
 export function __setFamilyMembers(members: any[]) { _familyMembers = members; }
 export function __setFamilyMoments(moments: any[]) { _familyMoments = moments; }
+export function __setHistoryLoading(v: boolean) { _historyLoading = v; }
+export function __setHistoryNull(v: boolean) { _historyNull = v; }
+export function __setIntentionsLoading(v: boolean) { _intentionsLoading = v; }
 export function __setHabits(habits: any[]) { _habits = habits; }
 export function __setHabitsLoading(v: boolean) { _habitsLoading = v; }
 export function __setCheckInError(err: Error | null) { _checkInError = err; buildMutations(); }
@@ -230,7 +243,12 @@ export function useGetEvents() {
 }
 
 export function useGetIntentions() {
-  return { data: _intentions, isLoading: false, refetch: () => Promise.resolve(), isRefetching: false };
+  return {
+    data: _intentionsLoading ? undefined : _intentions,
+    isLoading: _intentionsLoading,
+    refetch: () => Promise.resolve(),
+    isRefetching: false,
+  };
 }
 
 export function useGetDashboard() {
@@ -238,7 +256,12 @@ export function useGetDashboard() {
 }
 
 export function useGetIntentionHistory() {
-  return { data: _history, isLoading: false, refetch: () => Promise.resolve(), isRefetching: false };
+  return {
+    data: _historyLoading || _historyNull ? undefined : _history,
+    isLoading: _historyLoading,
+    refetch: () => Promise.resolve(),
+    isRefetching: false,
+  };
 }
 
 export function useGetPeopleReminders() {

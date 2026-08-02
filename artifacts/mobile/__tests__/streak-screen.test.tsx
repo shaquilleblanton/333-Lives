@@ -142,4 +142,45 @@ describe("Streak screen", () => {
     expect(getByText(/^5/)).toBeTruthy();
     expect(getByText("Your History")).toBeTruthy();
   });
+
+  // ── Edge-case / crash-regression tests ────────────────────────────────
+
+  it("renders without crashing while history data is loading (pre-load race)", async () => {
+    mockApi.__setHistoryLoading(true);
+    // render() must not throw — if the screen crashes it throws here
+    const { queryByText } = await render(withProviders(<StreakScreen />));
+
+    // Main streak content must NOT be visible during the loading phase
+    expect(queryByText("CURRENT")).toBeNull();
+    expect(queryByText("BEST RUN")).toBeNull();
+    expect(queryByText("Your History")).toBeNull();
+  });
+
+  it("renders gracefully when history data is undefined after load completes", async () => {
+    // Simulate the gap between isLoading=false and data arriving (null race)
+    mockApi.__setHistoryNull(true);
+    const { getByText, getAllByText } = await render(withProviders(<StreakScreen />));
+
+    // Both stat cards fall back to 0 — they must both be present
+    expect(getAllByText(/^0/).length).toBeGreaterThanOrEqual(2);
+    expect(getByText("CURRENT")).toBeTruthy();
+    expect(getByText("BEST RUN")).toBeTruthy();
+    // No history → empty state copy must render
+    expect(getByText(/No complete 333 days yet/)).toBeTruthy();
+  });
+
+  it("renders a very large streak number (>999) without crashing", async () => {
+    mockApi.__setHistory({
+      currentStreak: 1234,
+      longestStreak: 9999,
+      completedDays: [],
+    });
+    const { getByText } = await render(withProviders(<StreakScreen />));
+
+    // Both large numbers must appear without layout errors
+    expect(getByText(/^1234/)).toBeTruthy();
+    expect(getByText(/^9999/)).toBeTruthy();
+    expect(getByText("CURRENT")).toBeTruthy();
+    expect(getByText("BEST RUN")).toBeTruthy();
+  });
 });
