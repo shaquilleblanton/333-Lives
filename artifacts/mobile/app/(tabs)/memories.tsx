@@ -41,6 +41,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -75,7 +76,7 @@ export default function MemoriesScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const { data: collections, isLoading, refetch } = useGetMemoryCollections();
+  const { data: collections, isLoading, isError, refetch } = useGetMemoryCollections();
   const deleteCollection = useDeleteMemoryCollection();
 
   const [activeCollection, setActiveCollection] = useState<MemoryCollection | null>(null);
@@ -126,7 +127,9 @@ export default function MemoriesScreen() {
         </Pressable>
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView message="Couldn't load your memory albums." onRetry={refetch} />
+      ) : isLoading ? (
         <View style={s.center}>
           <ActivityIndicator color={colors.primary} />
         </View>

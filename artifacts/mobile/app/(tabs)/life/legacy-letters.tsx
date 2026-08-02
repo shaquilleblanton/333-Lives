@@ -279,7 +279,7 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
           )}
           <Pressable onPress={submit} disabled={!title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving ? 0.5 : 1 }]}>
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{isEditing ? "Save Changes" : "Save as Draft"}</Text>}
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{isEditing ? "Save Changes" : "Save as Draft"}</Text>}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

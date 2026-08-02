@@ -171,7 +171,7 @@ function VaultItemModal({
             disabled={!name.trim() || isSaving}
             style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
           >
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : (
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
               <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
                 {item ? "Save Changes" : "Store Securely"}
               </Text>
@@ -282,7 +282,7 @@ function ContactModal({
             disabled={!name.trim() || !email.trim() || isSaving}
             style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || !email.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
           >
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : (
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
               <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
                 {contact ? "Save Changes" : "Add Contact"}
               </Text>

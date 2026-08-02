@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -43,6 +44,17 @@ function moodEmoji(status: string | null | undefined): string {
   return MOODS.find((m) => m.value === status)?.emoji ?? "✓";
 }
 
+function moodDotColor(
+  status: string | null,
+  colors: ReturnType<typeof useColors>
+): string {
+  if (status === "struggling") return colors.destructive;
+  if (status === "okay") return colors.secondary;
+  return colors.primary; // "great" or any checked-in day defaults to gold
+}
+
+type RecentCheckin = { date: string; done: boolean; status: string | null };
+
 export default function HabitsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -51,6 +63,7 @@ export default function HabitsScreen() {
   const {
     data: habits,
     isLoading,
+    isError,
     refetch,
     isRefetching,
   } = useGetHabits();
@@ -66,7 +79,7 @@ export default function HabitsScreen() {
   // Mood picker state
   const [moodTarget, setMoodTarget] = useState<number | null>(null);
 
-  const all = habits ?? [];
+  const all = (habits ?? []).filter((h) => !!h?.id);
   const completed = all.filter((h) => h.checkedInToday).length;
   const total = all.length;
   const allDone = total > 0 && completed === total;
@@ -139,6 +152,10 @@ export default function HabitsScreen() {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (isError) {
+    return <ErrorRetryView message="Couldn't load your habits. Check your connection and try again." onRetry={refetch} />;
   }
 
   const moodTargetHabit = all.find((h) => h.id === moodTarget);
@@ -251,6 +268,9 @@ export default function HabitsScreen() {
                 (checkIn.variables as any)?.id === h.id;
               const todayStatus = (h as any).todayStatus as string | null | undefined;
 
+              const recentCheckins = (h as any).recentCheckins as RecentCheckin[] | undefined;
+              const isToday = (date: string) => date === recentCheckins?.[6]?.date;
+
               return (
                 <Pressable
                   key={h.id}
@@ -270,94 +290,120 @@ export default function HabitsScreen() {
                     },
                   ]}
                 >
-                  {/* Check circle / mood indicator */}
-                  <View
-                    style={[
-                      s.checkCircle,
-                      {
-                        borderColor: h.checkedInToday
-                          ? colors.primary
-                          : colors.border,
-                        backgroundColor: h.checkedInToday
-                          ? colors.primary
-                          : "transparent",
-                      },
-                    ]}
-                  >
-                    {isBusy ? (
-                      <ActivityIndicator size="small" color={colors.primary} />
-                    ) : h.checkedInToday ? (
-                      todayStatus ? (
-                        <Text style={{ fontSize: 14 }}>
-                          {moodEmoji(todayStatus)}
-                        </Text>
-                      ) : (
-                        <Feather
-                          name="check"
-                          size={16}
-                          color={colors.primaryForeground}
-                        />
-                      )
-                    ) : null}
-                  </View>
-
-                  {/* Text */}
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={[
-                        s.habitName,
-                        {
-                          color: h.checkedInToday
-                            ? colors.primary
-                            : colors.foreground,
-                          textDecorationLine: h.checkedInToday
-                            ? "line-through"
-                            : "none",
-                          opacity: h.checkedInToday ? 0.8 : 1,
-                        },
-                      ]}
-                    >
-                      {h.name}
-                    </Text>
-                    {h.description ? (
-                      <Text
-                        style={[
-                          s.habitDesc,
-                          { color: colors.mutedForeground },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {h.description}
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  {/* Streak badge */}
-                  {h.currentStreak > 0 && (
+                  {/* ── Main row: circle · name · streak ── */}
+                  <View style={s.cardRow}>
+                    {/* Check circle / mood indicator */}
                     <View
                       style={[
-                        s.streakBadge,
+                        s.checkCircle,
                         {
-                          backgroundColor: colors.primary + "18",
-                          borderColor: colors.primary + "40",
+                          borderColor: h.checkedInToday
+                            ? colors.primary
+                            : colors.border,
+                          backgroundColor: h.checkedInToday
+                            ? colors.primary
+                            : "transparent",
                         },
                       ]}
                     >
-                      <Feather
-                        name="zap"
-                        size={11}
-                        color={colors.primary}
-                      />
+                      {isBusy ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : h.checkedInToday ? (
+                        todayStatus ? (
+                          <Text style={{ fontSize: 14 }}>
+                            {moodEmoji(todayStatus)}
+                          </Text>
+                        ) : (
+                          <Feather
+                            name="check"
+                            size={16}
+                            color={colors.primaryForeground}
+                          />
+                        )
+                      ) : null}
+                    </View>
+
+                    {/* Text */}
+                    <View style={{ flex: 1 }}>
                       <Text
-                        style={{
-                          color: colors.primary,
-                          fontFamily: fonts.sub,
-                          fontSize: 12,
-                          marginLeft: 3,
-                        }}
+                        style={[
+                          s.habitName,
+                          {
+                            color: h.checkedInToday
+                              ? colors.primary
+                              : colors.foreground,
+                            textDecorationLine: h.checkedInToday
+                              ? "line-through"
+                              : "none",
+                            opacity: h.checkedInToday ? 0.8 : 1,
+                          },
+                        ]}
                       >
-                        {h.currentStreak}
+                        {h.name ?? "Unnamed Habit"}
                       </Text>
+                      {h.description ? (
+                        <Text
+                          style={[s.habitDesc, { color: colors.mutedForeground }]}
+                          numberOfLines={1}
+                        >
+                          {h.description}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    {/* Streak badge */}
+                    {(h.currentStreak ?? 0) > 0 && (
+                      <View
+                        style={[
+                          s.streakBadge,
+                          {
+                            backgroundColor: colors.primary + "18",
+                            borderColor: colors.primary + "40",
+                          },
+                        ]}
+                      >
+                        <Feather name="zap" size={11} color={colors.primary} />
+                        <Text
+                          style={{
+                            color: colors.primary,
+                            fontFamily: fonts.sub,
+                            fontSize: 12,
+                            marginLeft: 3,
+                          }}
+                        >
+                          {h.currentStreak}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* ── 7-day streak dots ── */}
+                  {recentCheckins && recentCheckins.length === 7 && (
+                    <View style={[s.dotsStrip, { borderTopColor: colors.border + "40" }]}>
+                      {recentCheckins.map((day) => {
+                        const label = new Date(day.date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "narrow" });
+                        const dotBg = day.done ? moodDotColor(day.status, colors) : colors.muted;
+                        const today = isToday(day.date);
+                        return (
+                          <View key={day.date} style={s.dotCol}>
+                            <Text style={[s.dotLabel, { color: today ? colors.primary : colors.mutedForeground, fontFamily: today ? fonts.subSemibold : fonts.sub }]}>
+                              {label}
+                            </Text>
+                            <View
+                              style={[
+                                s.dot,
+                                {
+                                  backgroundColor: dotBg,
+                                  opacity: day.done ? 1 : 0.25,
+                                  width: today ? 10 : 8,
+                                  height: today ? 10 : 8,
+                                  borderRadius: today ? 5 : 4,
+                                },
+                              ]}
+                            />
+                          </View>
+                        );
+                      })}
                     </View>
                   )}
                 </Pressable>
@@ -466,7 +512,7 @@ export default function HabitsScreen() {
         visible={createOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => setCreateOpen(false)}
+        onRequestClose={() => { if (!createHabit.isPending) { setCreateOpen(false); setName(""); setDesc(""); } }}
       >
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={s.modalBg}>
@@ -518,11 +564,13 @@ export default function HabitsScreen() {
             <View style={s.modalBtns}>
               <Pressable
                 onPress={() => {
+                  if (createHabit.isPending) return;
                   setCreateOpen(false);
                   setName("");
                   setDesc("");
                 }}
-                style={[s.modalBtn, { borderColor: colors.border }]}
+                disabled={createHabit.isPending}
+                style={[s.modalBtn, { borderColor: colors.border, opacity: createHabit.isPending ? 0.4 : 1 }]}
               >
                 <Text
                   style={{
@@ -610,12 +658,33 @@ const s = StyleSheet.create({
     borderRadius: 2,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
+    flexDirection: "column",
     padding: 16,
     borderRadius: 14,
     borderWidth: 1,
+    gap: 10,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  dotsStrip: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  dotCol: {
+    alignItems: "center",
+    gap: 4,
+    flex: 1,
+  },
+  dotLabel: {
+    fontSize: 9,
+  },
+  dot: {
+    borderRadius: 4,
   },
   checkCircle: {
     width: 28,

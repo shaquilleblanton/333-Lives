@@ -17,7 +17,17 @@ async function buildHabitResponse(habit: typeof habitsTable.$inferSelect, req: R
   const checkedInToday = !!todayCheckin;
   const todayStatus = todayCheckin?.status ?? null;
   const completionRate = habit.targetDays > 0 ? Math.min(100, Math.round((totalCheckins / habit.targetDays) * 100)) : 0;
-  return { ...habit, checkedInToday, todayStatus, completionRate, totalCheckins };
+
+  // Last 7 days for the streak dot calendar (oldest → newest)
+  const recentCheckins = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() - (6 - i));
+    const date = d.toISOString().split("T")[0];
+    const match = checkins.find((c) => c.date === date);
+    return { date, done: !!match, status: match?.status ?? null };
+  });
+
+  return { ...habit, checkedInToday, todayStatus, completionRate, totalCheckins, recentCheckins };
 }
 
 router.get("/habits", async (req, res) => {

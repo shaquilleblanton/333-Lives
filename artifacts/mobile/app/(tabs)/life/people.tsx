@@ -319,7 +319,7 @@ function PersonFormModal({ visible, person, onClose, onSave, isSaving }: {
             disabled={!name.trim() || isSaving}
             style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
           >
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : (
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
               <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{person ? "Save Changes" : "Add to Circle"}</Text>
             )}
           </Pressable>

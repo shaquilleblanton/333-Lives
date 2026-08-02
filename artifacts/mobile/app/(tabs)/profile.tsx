@@ -129,7 +129,7 @@ function EditProfileModal({ visible, name: initName, bio: initBio, onClose, onSa
               disabled={!name.trim() || isSaving}
               style={[styles.saveBtn, { backgroundColor: colors.primary, flex: 1, opacity: !name.trim() || isSaving ? 0.5 : 1 }]}
             >
-              {isSaving ? <ActivityIndicator color="#000" size="small" /> : (
+              {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
                 <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Save</Text>
               )}
             </Pressable>

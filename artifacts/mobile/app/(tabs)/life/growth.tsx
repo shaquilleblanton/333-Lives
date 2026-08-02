@@ -133,7 +133,7 @@ function HabitsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
               style={[sStyles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
             <Pressable onPress={handleCreate} disabled={!name.trim() || createHabit.isPending}
               style={[sStyles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || createHabit.isPending ? 0.5 : 1 }]}>
-              {createHabit.isPending ? <ActivityIndicator color="#000" size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Create Habit</Text>}
+              {createHabit.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Create Habit</Text>}
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -255,7 +255,7 @@ function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
             </View>
             <Pressable onPress={handleCreate} disabled={!title.trim() || createGoal.isPending}
               style={[sStyles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || createGoal.isPending ? 0.5 : 1 }]}>
-              {createGoal.isPending ? <ActivityIndicator color="#000" size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Set Goal</Text>}
+              {createGoal.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Set Goal</Text>}
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -360,7 +360,7 @@ function JournalSection({ colors }: { colors: ReturnType<typeof useColors> }) {
               style={[sStyles.input, sStyles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
             <Pressable onPress={handleCreate} disabled={!content.trim() || createEntry.isPending}
               style={[sStyles.saveBtn, { backgroundColor: colors.primary, opacity: !content.trim() || createEntry.isPending ? 0.5 : 1 }]}>
-              {createEntry.isPending ? <ActivityIndicator color="#000" size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Save Entry</Text>}
+              {createEntry.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Save Entry</Text>}
             </Pressable>
           </View>
         </KeyboardAvoidingView>

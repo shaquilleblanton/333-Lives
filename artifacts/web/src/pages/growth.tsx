@@ -133,8 +133,39 @@ function TabHeader({ title, actionLabel, onAction }: { title: string; actionLabe
 
 // ─── Habits ───────────────────────────────────────────────────────────────────
 
+type HabitRecentCheckin = { date: string; done: boolean; status: string | null };
+
+const MOOD_DOT_CLASS: Record<string, string> = {
+  great: "bg-primary",
+  okay: "bg-secondary",
+  struggling: "bg-destructive",
+};
+
+function HabitDots({ recentCheckins }: { recentCheckins: HabitRecentCheckin[] }) {
+  if (!recentCheckins || recentCheckins.length !== 7) return null;
+  return (
+    <div className="flex justify-between pt-3 border-t border-border/30">
+      {recentCheckins.map((day, i) => {
+        const label = new Date(day.date + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "narrow" });
+        const isToday = i === 6;
+        const dotClass = day.done
+          ? (MOOD_DOT_CLASS[day.status ?? ""] ?? "bg-primary")
+          : "bg-muted";
+        return (
+          <div key={day.date} className="flex flex-col items-center gap-1">
+            <span className={cn("text-[9px] font-subheading", isToday ? "text-primary font-semibold" : "text-muted-foreground")}>
+              {label}
+            </span>
+            <div className={cn("rounded-full transition-opacity", dotClass, isToday ? "w-2.5 h-2.5" : "w-2 h-2", day.done ? "opacity-100" : "opacity-20")} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function HabitsTab() {
-  const { data: habits, isLoading } = useGetHabits();
+  const { data: habits, isLoading, isError, refetch } = useGetHabits();
   const checkIn = useCheckInHabit();
   const createHabit = useCreateHabit();
   const queryClient = useQueryClient();
@@ -164,12 +195,21 @@ function HabitsTab() {
 
   if (isLoading) return <Skeleton className="h-64 w-full bg-muted/30 rounded-xl" />;
 
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <p className="text-muted-foreground font-subheading">Couldn't load habits.</p>
+      <button onClick={() => refetch()} className="text-sm text-primary underline">Try Again</button>
+    </div>
+  );
+
   return (
     <div>
       <TabHeader title="Daily Habits" actionLabel="New Habit" onAction={() => setIsOpen(true)} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {habits?.map((habit) => (
-          <div key={habit.id} className="bg-card/40 border border-border/50 p-6 rounded-2xl flex flex-col gap-6 backdrop-blur-sm">
+        {habits?.map((habit) => {
+          const recentCheckins = (habit as any).recentCheckins as HabitRecentCheckin[] | undefined;
+          return (
+          <div key={habit.id} className="bg-card/40 border border-border/50 p-6 rounded-2xl flex flex-col gap-4 backdrop-blur-sm">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-serif text-xl text-foreground">{habit.name}</h3>
@@ -177,9 +217,10 @@ function HabitsTab() {
               </div>
               <div className="flex items-center gap-1.5 text-secondary bg-secondary/10 px-3 py-1.5 rounded-full border border-secondary/20">
                 <Flame className="w-4 h-4" />
-                <span className="font-medium text-sm">{habit.currentStreak}</span>
+                <span className="font-medium text-sm">{habit.currentStreak ?? 0}</span>
               </div>
             </div>
+            {recentCheckins && <HabitDots recentCheckins={recentCheckins} />}
             <button
               onClick={() => !habit.checkedInToday && handleCheckIn(habit.id)}
               disabled={habit.checkedInToday || checkIn.isPending}
@@ -193,7 +234,8 @@ function HabitsTab() {
               {habit.checkedInToday ? <><Check className="w-4 h-4" /> Completed Today</> : "Check In"}
             </button>
           </div>
-        ))}
+          );
+        })}
         {habits?.length === 0 && (
           <div className="col-span-full text-center py-12 border border-dashed border-border/50 rounded-xl bg-card/20">
             <p className="text-muted-foreground">No habits established yet.</p>

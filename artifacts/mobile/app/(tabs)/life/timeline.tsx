@@ -37,6 +37,7 @@ import {
 } from "@workspace/api-client-react";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;

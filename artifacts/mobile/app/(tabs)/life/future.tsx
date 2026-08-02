@@ -93,7 +93,7 @@ function MessageCard({ msg }: { msg: Message }) {
             disabled={!passcode || unlockMsg.isPending}
             style={[styles.revealBtn, { backgroundColor: colors.primary, opacity: !passcode ? 0.5 : 1 }]}
           >
-            {unlockMsg.isPending ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.revealBtnText, { color: colors.primaryForeground }]}>Reveal</Text>}
+            {unlockMsg.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.revealBtnText, { color: colors.primaryForeground }]}>Reveal</Text>}
           </Pressable>
         </View>
       ) : (
@@ -192,7 +192,7 @@ function ComposeModal({ visible, onClose, onSave, isSaving }: {
             style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
           <Pressable onPress={submit} disabled={!title.trim() || !unlockDate.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !unlockDate.trim() || isSaving ? 0.5 : 1 }]}>
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Seal & Lock</Text>}
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Seal & Lock</Text>}
           </Pressable>
         </View>
       </KeyboardAvoidingView>

@@ -324,7 +324,7 @@ function AddEventModal({ visible, onClose, onSave, isSaving }: {
 
           <Pressable onPress={submit} disabled={!title.trim() || !date.trim() || isSaving}
             style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !date.trim() || isSaving ? 0.5 : 1 }]}>
-            {isSaving ? <ActivityIndicator color="#000" size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Event</Text>}
+            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Add Event</Text>}
           </Pressable>
         </View>
       </KeyboardAvoidingView>

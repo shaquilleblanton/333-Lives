@@ -28,6 +28,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 type Priority = "low" | "medium" | "high";
 type Category = "personal" | "finance" | "health" | "family" | "work" | "other";
@@ -61,7 +62,7 @@ function TaskRow({
         styles.taskRow,
         {
           backgroundColor: colors.card,
-          borderColor: overdue ? "#fb7185" + "50" : task.isCompleted ? colors.border + "60" : colors.border,
+          borderColor: overdue ? PRIORITY_COLORS.high + "50" : task.isCompleted ? colors.border + "60" : colors.border,
           opacity: pressed ? 0.85 : 1,
         },
       ]}
@@ -70,7 +71,7 @@ function TaskRow({
         <Feather
           name={task.isCompleted ? "check-circle" : "circle"}
           size={22}
-          color={task.isCompleted ? colors.primary : overdue ? "#fb7185" : colors.mutedForeground}
+          color={task.isCompleted ? colors.primary : overdue ? PRIORITY_COLORS.high : colors.mutedForeground}
         />
       </Pressable>
       <View style={{ flex: 1 }}>
@@ -97,6 +98,9 @@ function TaskRow({
               {new Date(task.dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </Text>
           ) : null}
+          {overdue && !task.isCompleted && (
+            <Text style={[styles.taskMetaText, { color: PRIORITY_COLORS.high }]}>{" · overdue"}</Text>
+          )}
         </View>
       </View>
       <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4 }}>
@@ -239,7 +243,7 @@ function TaskModal({
             ]}
           >
             {isPending ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color={colors.primaryForeground} size="small" />
             ) : (
               <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
                 {isEditing ? "Save Changes" : "Add Task"}
@@ -268,7 +272,7 @@ export default function TasksScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: tasks, isLoading, refetch, isRefetching } = useGetTasks();
+  const { data: tasks, isLoading, isError, refetch, isRefetching } = useGetTasks();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -316,6 +320,8 @@ export default function TasksScreen() {
     } catch { Alert.alert("Couldn't save task", "Please try again."); }
   }
 
+  if (isError) return <ErrorRetryView message="Couldn't load your tasks. Check your connection and try again." onRetry={refetch} />;
+
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
   const tk = todayKey();
@@ -335,7 +341,7 @@ export default function TasksScreen() {
 
   type GroupedItem = { type: "header"; key: string; label: string; count: number; accent: string } | { type: "task"; task: Task; overdue: boolean };
   const listData: GroupedItem[] = [];
-  if (overdue.length)  { listData.push({ type: "header", key: "h-overdue",  label: "Overdue",  count: overdue.length,  accent: "#fb7185" }); overdue.forEach(t  => listData.push({ type: "task", task: t, overdue: true  })); }
+  if (overdue.length)  { listData.push({ type: "header", key: "h-overdue",  label: "Overdue",  count: overdue.length,  accent: PRIORITY_COLORS.high }); overdue.forEach(t  => listData.push({ type: "task", task: t, overdue: true  })); }
   if (dueToday.length) { listData.push({ type: "header", key: "h-today",   label: "Today",    count: dueToday.length, accent: colors.primary }); dueToday.forEach(t => listData.push({ type: "task", task: t, overdue: false })); }
   if (upcoming.length) { listData.push({ type: "header", key: "h-upcoming", label: "Upcoming", count: upcoming.length, accent: colors.foreground }); upcoming.forEach(t => listData.push({ type: "task", task: t, overdue: false })); }
   if (someday.length)  { listData.push({ type: "header", key: "h-someday",  label: "Someday",  count: someday.length,  accent: colors.mutedForeground }); someday.forEach(t  => listData.push({ type: "task", task: t, overdue: false })); }
