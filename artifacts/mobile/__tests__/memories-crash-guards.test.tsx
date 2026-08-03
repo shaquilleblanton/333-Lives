@@ -94,7 +94,7 @@ const testPhotoItem = {
 };
 
 let MemoriesScreen: React.ComponentType;
-let mockApi: ReturnType<typeof require>;
+let mockApi: any;
 let alertSpy: jest.SpyInstance;
 
 beforeAll(() => {

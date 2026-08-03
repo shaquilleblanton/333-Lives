@@ -64,7 +64,7 @@ function withProviders(ui: React.ReactElement) {
 }
 
 let ShopScreen: React.ComponentType;
-let mockApi: ReturnType<typeof require>;
+let mockApi: any;
 let alertSpy: jest.SpyInstance;
 
 beforeAll(() => {

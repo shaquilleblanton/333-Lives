@@ -78,7 +78,7 @@ function withProviders(ui: React.ReactElement) {
 }
 
 let FamilyTreeScreen: React.ComponentType;
-let mockApi: ReturnType<typeof require>;
+let mockApi: any;
 let alertSpy: jest.SpyInstance;
 
 beforeAll(() => {

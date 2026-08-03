@@ -78,7 +78,7 @@ function withProviders(ui: React.ReactElement) {
 }
 
 let StreakScreen: React.ComponentType;
-let mockApi: ReturnType<typeof require>;
+let mockApi: any;
 
 beforeAll(() => {
   mockApi = require("./__mocks__/api-client-react");

@@ -46,13 +46,13 @@ export default function DayDetailScreen() {
   const complete = wasComplete === "true";
 
   const { data: intentionsData, isLoading: intentionsLoading } =
-    useGetIntentions({ date: date ?? undefined }, { query: { enabled: !!date } });
+    useGetIntentions({ date: date ?? undefined }, { query: { enabled: !!date } as any });
 
   const { data: gratitudeRows, isLoading: gratitudeLoading } =
-    useGetGratitudeEntries({ date: date ?? undefined }, { query: { enabled: !!date } });
+    useGetGratitudeEntries({ date: date ?? undefined }, { query: { enabled: !!date } as any });
 
   const { data: affirmationRows, isLoading: affirmationLoading } =
-    useGetAffirmations({ date: date ?? undefined }, { query: { enabled: !!date } });
+    useGetAffirmations({ date: date ?? undefined }, { query: { enabled: !!date } as any });
 
   const sorted = [...(intentionsData ?? [])].sort((a, b) => a.order - b.order);
   const completedCount = sorted.filter((i) => i.isCompleted).length;

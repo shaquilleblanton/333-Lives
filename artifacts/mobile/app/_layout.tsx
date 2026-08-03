@@ -16,14 +16,15 @@ import {
   PlayfairDisplay_700Bold,
   PlayfairDisplay_500Medium_Italic,
 } from "@expo-google-fonts/playfair-display";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ClerkLoaded, ClerkLoading, ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Stack } from "expo-router";
+import { Redirect, Stack, useRouter } from "expo-router";
 import * as Sentry from "@sentry/react-native";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -52,12 +53,28 @@ const queryClient = new QueryClient();
 
 
 function RootLayoutNav() {
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("hasSeenOnboarding").then((val) => {
+      setHasSeenOnboarding(val === "true");
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  if (!onboardingChecked) return null;
+
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="day-detail" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      {!hasSeenOnboarding && <Redirect href={"/onboarding" as any} />}
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="day-detail" options={{ headerShown: false }} />
+      </Stack>
+    </>
   );
 }
 
