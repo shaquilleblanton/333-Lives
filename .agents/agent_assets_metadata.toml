@@ -143,3 +143,10 @@ id = "jxfIYY3IR-Fu5fuYz1DMh"
 uri = "file://333lives-mobile.zip"
 type = "unspecified"
 title = "333 Lives Mobile Source"
+
+[[outputs]]
+id = "HbpCLiLu-qQNl7fe7A11Q"
+uri = "file://tmp/social/333-lives-social.pdf"
+type = "pdf"
+title = "333 Lives — Social Media Pack"
+description = "5 marketing cards (hero, habits, intentions, timeline, family) — square format, ready for Instagram, Facebook, and LinkedIn."
