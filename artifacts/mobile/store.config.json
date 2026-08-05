@@ -1,0 +1,46 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "en-US": {
+        "title": "333 Lives",
+        "subtitle": "Live intentionally. Every day.",
+        "description": "333 Lives is your all-in-one personal life companion — built to help you live with intention, capture your story, and stay close to the people who matter most.\n\nYOUR DAILY 3 INTENTIONS\nStart every day with focus. Set 3 intentions that matter to you — not a to-do list, but a compass. Track how often you show up for yourself, build momentum, and reflect on your growth week by week.\n\nHABIT TRACKING THAT STICKS\nBuild the habits that define the life you want. Each habit card shows your 7-day check-in history with mood colors — gold for great days, sage for okay, red for hard ones. Watch your streaks grow and never lose sight of how far you've come.\n\nYOUR LIFE STORY, BEAUTIFULLY CAPTURED\nThe Life Timeline lets you record milestones and moments — big and small — with photos and notes. First job, first home, a conversation that changed everything. Your story deserves to be told.\n\nMEMORIES & VAULT\nOrganize photos and memories by collection. Store your most private thoughts and keepsakes in a secure Vault. Everything you've lived, organized in one place.\n\nDAILY REFLECTION\nA built-in gratitude journal, mood tracking, and end-of-day reflections help you close each day with clarity. The annual review gives you a bird's-eye view of your whole year.\n\nPULSE — FAMILY FEED\nShare moments with your family in a private feed. React, comment, and stay present in each other's lives no matter the distance.\n\nFAMILY TREE\nBuild and explore your family tree. Add members, relationships, and photos to preserve your family history for generations.\n\nLEGACY LETTERS\nWrite letters to your future self or loved ones — sealed until the date you choose. A time capsule of your heart.\n\nTASKS & LIFE PLANNING\nManage personal tasks with priorities and due dates. Plan your future with the Future Board — a space for dreams, goals, and the life you're building toward.\n\n333 Lives is designed for anyone who wants to be intentional about how they live, grow, and connect. Dark, focused, and distraction-free — so you can go deeper, not just faster.\n\nDownload 333 Lives and start living on purpose.",
+        "keywords": [
+          "journal",
+          "habits",
+          "intentions",
+          "life",
+          "tracker",
+          "family",
+          "memories",
+          "gratitude",
+          "goals",
+          "mindfulness",
+          "daily",
+          "planner"
+        ],
+        "releaseNotes": "Build 33 — App-wide polish:\n• New onboarding walkthrough on first launch\n• 7-day streak dot history on every habit card\n• Error and retry states across all screens\n• Support page and privacy policy now live\n• Keyboard fixes across all forms",
+        "supportUrl": "https://333lives.app/support",
+        "privacyPolicyUrl": "https://333lives.app/privacy-policy",
+        "marketingUrl": "https://333lives.app"
+      }
+    },
+    "categories": ["HEALTH_AND_FITNESS", "LIFESTYLE"],
+    "advisory": {
+      "alcoholTobaccoDrugUseOrReferences": "NONE",
+      "contests": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+    }
+  }
+}
