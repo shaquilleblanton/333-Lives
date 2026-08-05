@@ -150,3 +150,10 @@ uri = "file://tmp/social/333-lives-social.pdf"
 type = "pdf"
 title = "333 Lives — Social Media Pack"
 description = "5 marketing cards (hero, habits, intentions, timeline, family) — square format, ready for Instagram, Facebook, and LinkedIn."
+
+[[outputs]]
+id = "tBYSh4ttU6IxjjzjArCIo"
+uri = "file://tmp/appstore/333-lives-appstore-package.pdf"
+type = "pdf"
+title = "333 Lives — App Store Package"
+description = "Cover page · 5 screenshots · listing metadata · launch checklist"
