@@ -26,21 +26,6 @@
         "marketingUrl": "https://333lives.app"
       }
     },
-    "categories": ["HEALTH_AND_FITNESS", "LIFESTYLE"],
-    "advisory": {
-      "alcoholTobaccoDrugUseOrReferences": "NONE",
-      "contests": false,
-      "gamblingSimulated": "NONE",
-      "horrorOrFearThemes": "NONE",
-      "matureOrSuggestiveThemes": "NONE",
-      "medicalOrTreatmentInformation": "NONE",
-      "profanityOrCrudeHumor": "NONE",
-      "sexualContentGraphicAndNudity": "NONE",
-      "sexualContentOrNudity": "NONE",
-      "unrestrictedWebAccess": false,
-      "violenceCartoonOrFantasy": "NONE",
-      "violenceRealistic": "NONE",
-      "violenceRealisticProlongedGraphicOrSadistic": "NONE"
-    }
+    "categories": ["HEALTH_AND_FITNESS", "LIFESTYLE"]
   }
 }
