@@ -157,3 +157,59 @@ uri = "file://tmp/appstore/333-lives-appstore-package.pdf"
 type = "pdf"
 title = "333 Lives — App Store Package"
 description = "Cover page · 5 screenshots · listing metadata · launch checklist"
+
+[[outputs]]
+id = "1Ozh5oRTc4p2ahQ3lDt7F"
+uri = "file://tmp/products/fleece-jacket.jpg"
+type = "image"
+title = "333 Lives Legacy Fleece Jacket"
+description = "$120 · Active in Shopify"
+
+[[outputs]]
+id = "5VDPku_5Iyg8WAc0bdgNa"
+uri = "file://tmp/products/gold-tee.png"
+type = "image"
+title = "333 Lives Gold Logo Tee"
+description = "$45 · Active in Shopify"
+
+[[outputs]]
+id = "VjBkKoXxA9xNsULm_IgY9"
+uri = "file://tmp/products/wings-hoodie.jpg"
+type = "image"
+title = "333 Lives Wings Hoodie"
+description = "$75 · 15 in stock"
+
+[[outputs]]
+id = "L-kLrKbqAgXRczo4uzgXB"
+uri = "file://tmp/products/wings-cap.jpg"
+type = "image"
+title = "333 Lives Wings Cap"
+description = "$38 · Active in Shopify"
+
+[[outputs]]
+id = "1glFSrGCSkww5xKOdodmN"
+uri = "file://tmp/products/cutoff-tank.png"
+type = "image"
+title = "333 Lives Legacy Cutoff Tank"
+description = "$38 · Active in Shopify"
+
+[[outputs]]
+id = "w08S8PCBPpSzVk-UHQFTB"
+uri = "file://tmp/products/sweatpants.jpg"
+type = "image"
+title = "333 Lives Legacy Sweatpants"
+description = "$68 · 15 in stock"
+
+[[outputs]]
+id = "ymfPSafL5vC6J2MLrkZAf"
+uri = "file://tmp/products/shorts.jpg"
+type = "image"
+title = "333 Lives Legacy Shorts"
+description = "$55 · 15 in stock"
+
+[[outputs]]
+id = "SQ_Yes643k_AxVA3l2CLj"
+uri = "file://tmp/products/socks.png"
+type = "image"
+title = "333 Lives Legacy Socks 3-Pack"
+description = "$22 · Active in Shopify"
