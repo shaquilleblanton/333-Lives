@@ -79,23 +79,25 @@ function MessageCard({ msg }: { msg: Message }) {
           {displayContent ?? "Audio/Video content"}
         </Text>
       ) : requiresPasscode && dateReached ? (
-        <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-          <TextInput
-            value={passcode}
-            onChangeText={setPasscode}
-            placeholder="Enter passcode"
-            placeholderTextColor={colors.mutedForeground + "99"}
-            secureTextEntry
-            style={[styles.input, { flex: 1, backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-          />
-          <Pressable
-            onPress={handleUnlock}
-            disabled={!passcode || unlockMsg.isPending}
-            style={[styles.revealBtn, { backgroundColor: colors.primary, opacity: !passcode ? 0.5 : 1 }]}
-          >
-            {unlockMsg.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.revealBtnText, { color: colors.primaryForeground }]}>Reveal</Text>}
-          </Pressable>
-        </View>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+            <TextInput
+              value={passcode}
+              onChangeText={setPasscode}
+              placeholder="Enter passcode"
+              placeholderTextColor={colors.mutedForeground + "99"}
+              secureTextEntry
+              style={[styles.input, { flex: 1, backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+            />
+            <Pressable
+              onPress={handleUnlock}
+              disabled={!passcode || unlockMsg.isPending}
+              style={[styles.revealBtn, { backgroundColor: colors.primary, opacity: !passcode ? 0.5 : 1 }]}
+            >
+              {unlockMsg.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.revealBtnText, { color: colors.primaryForeground }]}>Reveal</Text>}
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
       ) : (
         <View style={[styles.sealedBox, { backgroundColor: colors.muted + "20", borderColor: colors.border }]}>
           <Text style={[styles.sealedText, { color: colors.mutedForeground }]}>SEALED</Text>
