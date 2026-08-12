@@ -33,6 +33,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CompletionRing } from "@/components/CompletionRing";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { FeedbackNudgeBanner } from "@/components/FeedbackNudgeBanner";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { fonts } from "@/constants/fonts";
@@ -98,6 +99,7 @@ export default function TodayScreen() {
   const {
     data: intentions,
     isLoading,
+    isError,
     refetch,
     isRefetching,
   } = useGetIntentions();
@@ -323,6 +325,17 @@ export default function TodayScreen() {
     return (
       <View style={[styles.screen, styles.centerFill, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
+        <ErrorRetryView
+          message="We couldn't load your intentions. Check your connection and try again."
+          onRetry={refetch}
+        />
       </View>
     );
   }

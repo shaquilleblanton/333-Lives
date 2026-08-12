@@ -19,6 +19,7 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -62,7 +63,7 @@ export default function MemosScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const { data: memos, isLoading, refetch, isRefetching } = useGetVoiceMemos();
+  const { data: memos, isLoading, isError, refetch, isRefetching } = useGetVoiceMemos();
   const createMemo = useCreateVoiceMemo();
   const updateMemo = useUpdateVoiceMemo();
   const deleteMemo = useDeleteVoiceMemo();
@@ -226,6 +227,15 @@ export default function MemosScreen() {
   const elapsedSeconds = Math.round((recorderState.durationMillis ?? 0) / 1000);
   const contentTopPad = insets.top + WEB_TOP_INSET + 12;
   const contentBottomPad = insets.bottom + WEB_BOTTOM_INSET + 40;
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load your voice memos. Check your connection and try again."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>

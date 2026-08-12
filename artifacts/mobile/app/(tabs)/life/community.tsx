@@ -27,6 +27,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -278,7 +279,7 @@ export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: events, isLoading, refetch, isRefetching } = useGetCommunityEvents();
+  const { data: events, isLoading, isError, refetch, isRefetching } = useGetCommunityEvents();
   const createEvent = useCreateCommunityEvent();
   const respondEvent = useRespondToCommunityEvent();
   const updateEvent = useUpdateCommunityEvent();
@@ -333,6 +334,15 @@ export default function CommunityScreen() {
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load community events. Check your connection and try again."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

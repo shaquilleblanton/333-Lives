@@ -28,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -291,7 +292,7 @@ export default function LegacyLettersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: letters, isLoading, refetch, isRefetching } = useGetLegacyLetters();
+  const { data: letters, isLoading, isError, refetch, isRefetching } = useGetLegacyLetters();
   const createLetter = useCreateLegacyLetter();
   const updateLetter = useUpdateLegacyLetter();
   const deleteLetter = useDeleteLegacyLetter();
@@ -349,6 +350,15 @@ export default function LegacyLettersScreen() {
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
   const isBusy = sealLetter.isPending || unsealLetter.isPending;
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load your legacy letters. Check your connection and try again."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState, useMemo } from "react";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import {
   ActivityIndicator,
   Alert,
@@ -522,7 +523,7 @@ export default function FamilyTreeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: members, isLoading, refetch, isRefetching } = useGetFamilyMembers();
+  const { data: members, isLoading, isError, refetch, isRefetching } = useGetFamilyMembers();
   const createMember = useCreateFamilyMember();
   const updateMember = useUpdateFamilyMember();
   const deleteMember = useDeleteFamilyMember();
@@ -667,7 +668,12 @@ export default function FamilyTreeScreen() {
         ))}
       </ScrollView>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          message="We couldn't load your family tree. Check your connection and try again."
+          onRetry={refetch}
+        />
+      ) : isLoading ? (
         <View style={styles.center}><ActivityIndicator color={colors.primary} size="large" /></View>
       ) : viewMode === "list" ? (
         <FlatList

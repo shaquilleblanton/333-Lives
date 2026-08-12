@@ -94,7 +94,7 @@ export default function TimelineScreen() {
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
-  const { data: events = [], isLoading } = useGetLifeEvents();
+  const { data: events = [], isLoading, isError, refetch } = useGetLifeEvents();
   const deleteEvent = useDeleteLifeEvent();
   const queryClient = useQueryClient();
 
@@ -295,7 +295,12 @@ export default function TimelineScreen() {
         </Pressable>
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          message="We couldn't load your life events. Check your connection and try again."
+          onRetry={refetch}
+        />
+      ) : isLoading ? (
         <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
       ) : items.length === 0 ? (
         <View style={styles.empty}>

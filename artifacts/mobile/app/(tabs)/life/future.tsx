@@ -24,6 +24,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -206,7 +207,7 @@ export default function FutureScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: messages, isLoading, refetch, isRefetching } = useGetMessages();
+  const { data: messages, isLoading, isError, refetch, isRefetching } = useGetMessages();
   const createMessage = useCreateMessage();
   const [composeOpen, setComposeOpen] = useState(false);
 
@@ -222,6 +223,15 @@ export default function FutureScreen() {
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load your future messages. Check your connection and try again."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

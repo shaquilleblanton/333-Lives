@@ -24,6 +24,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -35,7 +36,7 @@ export default function GratitudeScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
 
-  const { data: entries, isLoading, refetch, isRefetching } = useGetGratitudeEntries();
+  const { data: entries, isLoading, isError, refetch, isRefetching } = useGetGratitudeEntries();
   const { data: todayEntry, isLoading: loadingToday } = useGetTodayGratitudeEntry();
   const createEntry = useCreateGratitudeEntry();
   const updateEntry = useUpdateGratitudeEntry();
@@ -102,6 +103,15 @@ export default function GratitudeScreen() {
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color={colors.primary} />
       </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load your gratitude entries. Check your connection and try again."
+        onRetry={refetch}
+      />
     );
   }
 

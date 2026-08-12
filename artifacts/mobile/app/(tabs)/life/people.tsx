@@ -29,6 +29,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -335,7 +336,7 @@ export default function PeopleScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { data: people, isLoading, refetch, isRefetching } = useGetPeople();
+  const { data: people, isLoading, isError, refetch, isRefetching } = useGetPeople();
   const createPerson = useCreatePerson();
   const updatePerson = useUpdatePerson();
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -363,6 +364,15 @@ export default function PeopleScreen() {
   const filtered = (people ?? []).filter(p => filter === "all" || p.relationship === filter);
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
+
+  if (isError) {
+    return (
+      <ErrorRetryView
+        message="We couldn't load your people. Check your connection and try again."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
