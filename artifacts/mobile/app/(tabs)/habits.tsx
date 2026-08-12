@@ -275,7 +275,7 @@ export default function HabitsScreen() {
                 <Pressable
                   key={h.id}
                   onPress={() => handleCheckIn(h.id, h.checkedInToday)}
-                  onLongPress={() => confirmDelete(h.id, h.name)}
+                  onLongPress={() => confirmDelete(h.id, h.name ?? "Unnamed Habit")}
                   delayLongPress={500}
                   style={({ pressed }) => [
                     s.card,

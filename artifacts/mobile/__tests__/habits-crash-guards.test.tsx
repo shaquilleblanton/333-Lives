@@ -314,6 +314,43 @@ describe("Habits tab – crash guards", () => {
     expect(queryByText("New Habit")).toBeNull();
   });
 
+  // ── Malformed / incomplete API data ───────────────────────────────────────
+
+  it("renders without crashing when a habit has null description", async () => {
+    mockApi.__setHabits([
+      makeHabit({ id: 1, name: "Meditate", description: null as any }),
+    ]);
+    const { getByText } = await render(withProviders(<HabitsScreen />));
+
+    // Name must still be visible; no crash from null description
+    expect(getByText("Meditate")).toBeTruthy();
+  });
+
+  it("treats undefined currentStreak as 0 and renders without crashing", async () => {
+    mockApi.__setHabits([
+      makeHabit({ id: 1, name: "Yoga", currentStreak: undefined as any }),
+    ]);
+    const { getByText, getAllByText } = await render(withProviders(<HabitsScreen />));
+
+    expect(getByText("Yoga")).toBeTruthy();
+    // The streak badge only renders when currentStreak > 0 (via `?? 0` guard).
+    // Any "0" on screen comes from the progress counter, not a streak badge —
+    // confirm there is at most one "0" (the progress pill), not two.
+    expect(getAllByText("0").length).toBeLessThanOrEqual(1);
+  });
+
+  it("treats missing checkedInToday as false and renders the habit as unchecked", async () => {
+    mockApi.__setHabits([
+      makeHabit({ id: 1, name: "Read", checkedInToday: undefined as any }),
+    ]);
+    const { getByText } = await render(withProviders(<HabitsScreen />));
+
+    // Screen must not crash and the habit must be visible
+    expect(getByText("Read")).toBeTruthy();
+    // "0 of 1 complete" confirms checkedInToday was treated as falsy
+    expect(getByText(/0 of 1 complete|Build your first streak/)).toBeTruthy();
+  });
+
   it("shows an alert and keeps the modal open when createHabit fails", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockApi.__setCreateHabitError(new Error("server error"));
