@@ -10,6 +10,7 @@ Sentry.init({
 
 import app from "./app";
 import { logger } from "./lib/logger";
+import { purgeCloudflareCache } from "./lib/cloudflareCachePurge";
 
 const rawPort = process.env["PORT"];
 
@@ -32,4 +33,18 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Purge Cloudflare cache on every production startup so users always see
+  // the latest marketing pages immediately after a deployment.
+  if (process.env.NODE_ENV === "production") {
+    purgeCloudflareCache()
+      .then(() => {
+        logger.info("Cloudflare cache purged successfully");
+      })
+      .catch((purgeErr: unknown) => {
+        // Log but never crash the server — a cache purge failure is
+        // recoverable (pages just stay cached a bit longer).
+        logger.error({ err: purgeErr }, "Cloudflare cache purge failed");
+      });
+  }
 });
