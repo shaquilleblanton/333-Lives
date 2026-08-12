@@ -366,8 +366,9 @@ export default function MemosScreen() {
         animationType="fade"
         onRequestClose={() => setRenameTarget(null)}
       >
-        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
         <View style={styles.modalBackdrop}>
+          <KeyboardAvoidingView behavior="padding">
           <View
             style={[
               styles.modalCard,
@@ -414,8 +415,9 @@ export default function MemosScreen() {
               </Pressable>
             </View>
           </View>
+          </KeyboardAvoidingView>
         </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );

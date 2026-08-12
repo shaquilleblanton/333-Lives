@@ -113,8 +113,9 @@ function VaultItemModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
           style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
           contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
@@ -178,7 +179,8 @@ function VaultItemModal({
             )}
           </Pressable>
         </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -223,8 +225,9 @@ function ContactModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
           style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
           contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
@@ -289,7 +292,8 @@ function ContactModal({
             )}
           </Pressable>
         </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

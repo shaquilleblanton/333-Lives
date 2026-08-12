@@ -123,8 +123,9 @@ function HabitsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
       }
 
       <Modal visible={formOpen} transparent animationType="slide">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           <Pressable style={sStyles.overlay} onPress={() => setFormOpen(false)} />
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={[sStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[sStyles.sheetTitle, { color: colors.foreground }]}>New Habit</Text>
             <TextInput value={name} onChangeText={setName} placeholder="Habit name" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
@@ -136,7 +137,8 @@ function HabitsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
               {createHabit.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Create Habit</Text>}
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -238,8 +240,9 @@ function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
       }
 
       <Modal visible={formOpen} transparent animationType="slide">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           <Pressable style={sStyles.overlay} onPress={() => setFormOpen(false)} />
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={[sStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[sStyles.sheetTitle, { color: colors.foreground }]}>New Goal</Text>
             <TextInput value={title} onChangeText={setTitle} placeholder="What do you want to achieve?" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
@@ -258,7 +261,8 @@ function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
               {createGoal.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Set Goal</Text>}
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -329,8 +333,9 @@ function JournalSection({ colors }: { colors: ReturnType<typeof useColors> }) {
       }
 
       <Modal visible={formOpen} transparent animationType="slide">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           <Pressable style={sStyles.overlay} onPress={() => setFormOpen(false)} />
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={[sStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[sStyles.sheetTitle, { color: colors.foreground }]}>New Entry</Text>
             <Text style={[sStyles.fieldLabel, { color: colors.mutedForeground }]}>How are you feeling?</Text>
@@ -363,7 +368,8 @@ function JournalSection({ colors }: { colors: ReturnType<typeof useColors> }) {
               {createEntry.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Save Entry</Text>}
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </ScrollView>
   );

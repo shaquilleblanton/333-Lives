@@ -156,8 +156,9 @@ function TaskModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
             {isEditing ? "Edit Task" : "New Task"}
@@ -251,7 +252,8 @@ function TaskModal({
             )}
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

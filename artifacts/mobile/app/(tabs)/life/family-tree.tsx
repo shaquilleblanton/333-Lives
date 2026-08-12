@@ -218,8 +218,9 @@ function MemberFormModal({ visible, member, onClose, onSave, isSaving }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
           style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
           contentContainerStyle={{ paddingBottom: 40 }}
@@ -324,7 +325,8 @@ function MemberFormModal({ visible, member, onClose, onSave, isSaving }: {
             )}
           </Pressable>
         </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -367,7 +369,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
         <View style={[styles.detailSheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -511,7 +513,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
           </ScrollView>
         </View>
       </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

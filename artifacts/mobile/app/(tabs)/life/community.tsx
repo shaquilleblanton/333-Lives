@@ -208,8 +208,9 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={() => { reset(); onClose(); }} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{initialData ? "Edit Event" : "New Event"}</Text>
           <TextInput value={title} onChangeText={setTitle} placeholder="Event title" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
@@ -263,7 +264,8 @@ function CreateEventModal({ visible, onClose, onSave, isSaving, initialData }: {
             {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{initialData ? "Save" : "Create Event"}</Text>}
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

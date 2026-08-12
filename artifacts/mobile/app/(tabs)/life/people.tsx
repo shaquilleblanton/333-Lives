@@ -275,8 +275,9 @@ function PersonFormModal({ visible, person, onClose, onSave, isSaving }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{person ? "Edit Person" : "Add to My Circle"}</Text>
           <TextInput
@@ -324,7 +325,8 @@ function PersonFormModal({ visible, person, onClose, onSave, isSaving }: {
             )}
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
