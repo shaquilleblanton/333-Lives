@@ -28,16 +28,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { priorityColors } from "@/constants/colors";
 import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 type Priority = "low" | "medium" | "high";
 type Category = "personal" | "finance" | "health" | "family" | "work" | "other";
 
-const PRIORITY_COLORS: Record<Priority, string> = {
-  high: "#fb7185",
-  medium: "#fbbf24",
-  low: "#38bdf8",
-};
+const PRIORITY_COLORS: Record<Priority, string> = priorityColors;
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 const CATEGORIES: Category[] = ["personal", "finance", "health", "family", "work", "other"];
 const PRIORITIES: Priority[] = ["high", "medium", "low"];
@@ -93,7 +90,7 @@ function TaskRow({
             {task.priority ?? "low"} · {task.category ?? "other"}
           </Text>
           {task.dueDate ? (
-            <Text style={[styles.taskMetaText, { color: overdue ? "#fb7185" : colors.mutedForeground }]}>
+            <Text style={[styles.taskMetaText, { color: overdue ? PRIORITY_COLORS.high : colors.mutedForeground }]}>
               {" · "}
               {new Date(task.dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </Text>
@@ -377,7 +374,7 @@ export default function TasksScreen() {
             {/* Stats row */}
             <View style={[styles.statsRow, { gap: 8 }]}>
               {[
-                { label: "Overdue", value: overdue.length, color: "#fb7185" },
+                { label: "Overdue", value: overdue.length, color: PRIORITY_COLORS.high },
                 { label: "Today",   value: dueToday.length, color: colors.primary },
                 { label: "Done",    value: completed.length, color: colors.accent ?? colors.secondary },
               ].map(s => (

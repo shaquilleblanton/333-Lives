@@ -33,6 +33,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { moodColors } from "@/constants/colors";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -43,13 +44,7 @@ const GOAL_CATEGORIES = ["personal", "financial", "health", "relationships", "ca
 const MOODS = ["great", "good", "okay", "rough", "struggling"] as const;
 type Mood = typeof MOODS[number];
 
-const MOOD_COLORS: Record<Mood, string> = {
-  great: "#34d399",
-  good: "#38bdf8",
-  okay: "#fbbf24",
-  rough: "#fb923c",
-  struggling: "#f87171",
-};
+const MOOD_COLORS: Record<Mood, string> = moodColors;
 
 // ── Habits ──────────────────────────────────────────────────────────────
 function HabitsSection({ colors }: { colors: ReturnType<typeof useColors> }) {

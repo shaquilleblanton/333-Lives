@@ -55,3 +55,49 @@ const colors = {
 };
 
 export default colors;
+
+/**
+ * Category colors for life timeline events.
+ * Defined here so every screen shares one source of truth.
+ */
+export const categoryColors = {
+  education:    "#60a5fa",
+  career:       "#34d399",
+  family:       "#f472b6",
+  health:       "#fb7185",
+  home:         "#fbbf24",
+  travel:       "#38bdf8",
+  loss:         "#94a3b8",
+  achievement:  "#f59e0b",
+  relationship: "#a78bfa",
+  spiritual:    "#e879f9",
+  other:        "#6b7280",
+} as const;
+
+/**
+ * Mood colors for journal entries (growth screen).
+ */
+export const moodColors = {
+  great:      "#34d399",
+  good:       "#38bdf8",
+  okay:       "#fbbf24",
+  rough:      "#fb923c",
+  struggling: "#f87171",
+} as const;
+
+/**
+ * Priority colors for tasks.
+ */
+export const priorityColors = {
+  high:   "#fb7185",
+  medium: "#fbbf24",
+  low:    "#38bdf8",
+} as const;
+
+/**
+ * Window-status colors for community availability badges.
+ */
+export const statusColors = {
+  open:   "#34d399",
+  locked: "#fbbf24",
+} as const;

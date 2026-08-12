@@ -37,23 +37,24 @@ import {
 } from "@workspace/api-client-react";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { categoryColors } from "@/constants/colors";
 import { ErrorRetryView } from "@/components/ErrorRetryView";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 const CATEGORIES = [
-  { value: "education",    label: "Education",    icon: "book" as const,       color: "#60a5fa" },
-  { value: "career",       label: "Career",       icon: "briefcase" as const,  color: "#34d399" },
-  { value: "family",       label: "Family",       icon: "users" as const,      color: "#f472b6" },
-  { value: "health",       label: "Health",       icon: "heart" as const,      color: "#fb7185" },
-  { value: "home",         label: "Home",         icon: "home" as const,       color: "#fbbf24" },
-  { value: "travel",       label: "Travel",       icon: "map" as const,        color: "#38bdf8" },
-  { value: "loss",         label: "Loss",         icon: "cloud-rain" as const, color: "#94a3b8" },
-  { value: "achievement",  label: "Achievement",  icon: "award" as const,      color: "#f59e0b" },
-  { value: "relationship", label: "Relationship", icon: "link" as const,       color: "#a78bfa" },
-  { value: "spiritual",    label: "Spiritual",    icon: "star" as const,       color: "#e879f9" },
-  { value: "other",        label: "Other",        icon: "circle" as const,     color: "#6b7280" },
+  { value: "education",    label: "Education",    icon: "book" as const,       color: categoryColors.education    },
+  { value: "career",       label: "Career",       icon: "briefcase" as const,  color: categoryColors.career       },
+  { value: "family",       label: "Family",       icon: "users" as const,      color: categoryColors.family       },
+  { value: "health",       label: "Health",       icon: "heart" as const,      color: categoryColors.health       },
+  { value: "home",         label: "Home",         icon: "home" as const,       color: categoryColors.home         },
+  { value: "travel",       label: "Travel",       icon: "map" as const,        color: categoryColors.travel       },
+  { value: "loss",         label: "Loss",         icon: "cloud-rain" as const, color: categoryColors.loss         },
+  { value: "achievement",  label: "Achievement",  icon: "award" as const,      color: categoryColors.achievement  },
+  { value: "relationship", label: "Relationship", icon: "link" as const,       color: categoryColors.relationship },
+  { value: "spiritual",    label: "Spiritual",    icon: "star" as const,       color: categoryColors.spiritual    },
+  { value: "other",        label: "Other",        icon: "circle" as const,     color: categoryColors.other        },
 ] as const;
 
 type Category = (typeof CATEGORIES)[number]["value"];
@@ -228,7 +229,7 @@ export default function TimelineScreen() {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Your defining moments</Text>
         </View>
         <Pressable onPress={() => { setEditingEvent(null); setIsFormOpen(true); }} style={[styles.addBtn, { backgroundColor: colors.primary }]} accessibilityLabel="Add event">
-          <Feather name="plus" size={18} color="#fff" />
+          <Feather name="plus" size={18} color={colors.primaryForeground} />
         </Pressable>
       </View>
 
@@ -477,7 +478,7 @@ function EventFormModal({ visible, onClose, editingEvent }: {
           <Pressable onPress={handleSave}
             disabled={!title.trim() || !date.trim() || isPending || isUploading || isRecording || isSavingAudio}
             style={[styles.modalSaveBtn, { backgroundColor: colors.primary, opacity: (!title.trim() || !date.trim() || isPending || isUploading || isRecording || isSavingAudio) ? 0.5 : 1 }]}>
-            {isPending ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalSaveText}>Save</Text>}
+            {isPending ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : <Text style={[styles.modalSaveText, { color: colors.primaryForeground }]}>Save</Text>}
           </Pressable>
         </View>
 
@@ -518,7 +519,7 @@ function EventFormModal({ visible, onClose, editingEvent }: {
             style={[styles.textInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
           <Pressable onPress={() => setApprox(!approx)} style={styles.approxRow}>
             <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: approx ? colors.primary : "transparent" }]}>
-              {approx && <Feather name="check" size={10} color="#fff" />}
+              {approx && <Feather name="check" size={10} color={colors.primaryForeground} />}
             </View>
             <Text style={[styles.approxLabel, { color: colors.mutedForeground }]}>Approximate date</Text>
           </Pressable>
@@ -559,9 +560,9 @@ function EventFormModal({ visible, onClose, editingEvent }: {
                 </Pressable>
               ) : (
                 <Pressable onPress={stopRecord}
-                  style={[styles.attachBtn, { borderColor: "#ef4444" + "60", backgroundColor: "#ef4444" + "10" }]}>
-                  <Feather name="stop-circle" size={16} color="#ef4444" />
-                  <Text style={[styles.attachBtnText, { color: "#ef4444" }]}>
+                  style={[styles.attachBtn, { borderColor: colors.destructive + "60", backgroundColor: colors.destructive + "10" }]}>
+                  <Feather name="stop-circle" size={16} color={colors.destructive} />
+                  <Text style={[styles.attachBtnText, { color: colors.destructive }]}>
                     Stop · {formatClock(recorderState.durationMillis ?? 0)}
                   </Text>
                 </Pressable>
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
   modalCloseText: { fontFamily: fonts.sub, fontSize: 15 },
   modalTitle: { fontFamily: fonts.serifBold, fontSize: 17 },
   modalSaveBtn: { minWidth: 60, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, alignItems: "center" },
-  modalSaveText: { fontFamily: fonts.sub, fontSize: 14, color: "#fff" },
+  modalSaveText: { fontFamily: fonts.sub, fontSize: 14 },
   fieldLabel: { fontFamily: fonts.sub, fontSize: 12, marginBottom: 6, marginTop: 16, textTransform: "uppercase", letterSpacing: 0.5 },
   textInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.sub, fontSize: 15 },
   textArea: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.sub, fontSize: 15, minHeight: 100, textAlignVertical: "top" },
