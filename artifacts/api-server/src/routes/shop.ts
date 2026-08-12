@@ -1,4 +1,6 @@
 import { Router, type Response } from "express";
+import { db } from "@workspace/db";
+import { shopReferralClicksTable } from "@workspace/db/schema";
 import { shopifyStorefrontRequest } from "../lib/shopifyStorefrontClient";
 
 const router = Router();
@@ -136,6 +138,32 @@ router.post("/shop/checkout", async (req, res) => {
     return res.json({ checkoutUrl: checkoutUrl.toString() });
   } catch (err) {
     return sendShopifyError(res, err, "Could not start checkout");
+  }
+});
+
+// ── Referral click tracker ─────────────────────────────────────────────────
+// Logs every tap of a "Shop on EATLIVE" button so we can report conversions
+// to the owner and agree on a commission rate.
+router.post("/shop/referral-click", async (req, res) => {
+  const productId   = typeof req.body?.productId   === "string" ? req.body.productId.trim()   : "";
+  const productName = typeof req.body?.productName  === "string" ? req.body.productName.trim() : "";
+  const referralCode= typeof req.body?.referralCode === "string" ? req.body.referralCode.trim(): "333lives";
+
+  if (!productId || !productName) {
+    return res.status(400).json({ error: "productId and productName are required" });
+  }
+
+  try {
+    await db.insert(shopReferralClicksTable).values({
+      productId,
+      productName,
+      referralCode,
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    // Non-critical — log but don't fail the user's experience
+    console.error("[shop] referral-click insert failed:", err);
+    return res.json({ ok: false });
   }
 });
 
