@@ -213,3 +213,38 @@ uri = "file://tmp/products/socks.png"
 type = "image"
 title = "333 Lives Legacy Socks 3-Pack"
 description = "$22 · Active in Shopify"
+
+[[outputs]]
+id = "mND2-akF5VtXJKfZlRJ8D"
+uri = "file://tmp/appstore/as4-welcome.jpg"
+type = "image"
+title = "Screenshot 1 — Welcome"
+description = "App Store: Welcome screen (upload to ASC)"
+
+[[outputs]]
+id = "dVIc4TX8r-d1NHhYelBKX"
+uri = "file://tmp/appstore/as1-intentions.jpg"
+type = "image"
+title = "Screenshot 2 — Daily Intentions"
+description = "App Store: Intentions screen (upload to ASC)"
+
+[[outputs]]
+id = "F3S5k-s6GxsLwNCmW0Jia"
+uri = "file://tmp/appstore/as2-habits.jpg"
+type = "image"
+title = "Screenshot 3 — Habits"
+description = "App Store: Habits screen (upload to ASC)"
+
+[[outputs]]
+id = "k-tGNvf7iK8uB7rWpTg86"
+uri = "file://tmp/appstore/as3-timeline.jpg"
+type = "image"
+title = "Screenshot 4 — Life Timeline"
+description = "App Store: Timeline screen (upload to ASC)"
+
+[[outputs]]
+id = "qIBsqJeoAA6bllEWC6LGn"
+uri = "file://tmp/appstore/as5-pulse.jpg"
+type = "image"
+title = "Screenshot 5 — Family Pulse"
+description = "App Store: Family Pulse screen (upload to ASC)"
