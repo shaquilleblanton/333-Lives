@@ -218,33 +218,68 @@ description = "$22 · Active in Shopify"
 id = "mND2-akF5VtXJKfZlRJ8D"
 uri = "file://tmp/appstore/as4-welcome.jpg"
 type = "image"
-title = "Screenshot 1 — Welcome"
-description = "App Store: Welcome screen (upload to ASC)"
+title = "Aug 12 — Screenshot 1: Welcome"
+description = "New set from today"
 
 [[outputs]]
 id = "dVIc4TX8r-d1NHhYelBKX"
 uri = "file://tmp/appstore/as1-intentions.jpg"
 type = "image"
-title = "Screenshot 2 — Daily Intentions"
-description = "App Store: Intentions screen (upload to ASC)"
+title = "Aug 12 — Screenshot 2: Intentions"
+description = "New set from today"
 
 [[outputs]]
 id = "F3S5k-s6GxsLwNCmW0Jia"
 uri = "file://tmp/appstore/as2-habits.jpg"
 type = "image"
-title = "Screenshot 3 — Habits"
-description = "App Store: Habits screen (upload to ASC)"
+title = "Aug 12 — Screenshot 3: Habits"
+description = "New set from today"
 
 [[outputs]]
 id = "k-tGNvf7iK8uB7rWpTg86"
 uri = "file://tmp/appstore/as3-timeline.jpg"
 type = "image"
-title = "Screenshot 4 — Life Timeline"
-description = "App Store: Timeline screen (upload to ASC)"
+title = "Aug 12 — Screenshot 4: Timeline"
+description = "New set from today"
 
 [[outputs]]
 id = "qIBsqJeoAA6bllEWC6LGn"
 uri = "file://tmp/appstore/as5-pulse.jpg"
 type = "image"
-title = "Screenshot 5 — Family Pulse"
-description = "App Store: Family Pulse screen (upload to ASC)"
+title = "Aug 12 — Screenshot 5: Pulse"
+description = "New set from today"
+
+[[outputs]]
+id = "WvOkYkBeCcFpjD4zUTPzs"
+uri = "file://tmp/appstore/ss1-welcome.jpg"
+type = "image"
+title = "Aug 5 — Screenshot 1: Welcome"
+description = "Older set — may already be in App Store Connect"
+
+[[outputs]]
+id = "0CMAoRo-eA638Hc_hvSsT"
+uri = "file://tmp/appstore/ss2-intentions.jpg"
+type = "image"
+title = "Aug 5 — Screenshot 2: Intentions"
+description = "Older set"
+
+[[outputs]]
+id = "6lxpDw1835lksPjj3PtA8"
+uri = "file://tmp/appstore/ss3-habits.jpg"
+type = "image"
+title = "Aug 5 — Screenshot 3: Habits"
+description = "Older set"
+
+[[outputs]]
+id = "SGqInUYYNABwrLAABG-D9"
+uri = "file://tmp/appstore/ss4-timeline.jpg"
+type = "image"
+title = "Aug 5 — Screenshot 4: Timeline"
+description = "Older set"
+
+[[outputs]]
+id = "xVhdek639dPCNQ1F2_6mi"
+uri = "file://tmp/appstore/ss5-pulse.jpg"
+type = "image"
+title = "Aug 5 — Screenshot 5: Pulse"
+description = "Older set"
