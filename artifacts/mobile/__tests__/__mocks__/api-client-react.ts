@@ -93,6 +93,9 @@ let _checkInHabit: jest.Mock;
 let _createHabit: jest.Mock;
 let _deleteHabit: jest.Mock;
 
+// Habits error state
+let _createHabitError: Error | null = null;
+
 function buildMutations() {
   _createMutateAsync = jest.fn(async (args: any) => {
     if (_createError) throw _createError;
@@ -166,6 +169,7 @@ export function __reset() {
   _habits = [];
   _habitsLoading = false;
   _checkInError = null;
+  _createHabitError = null;
   buildMutations();
 }
 
@@ -189,6 +193,7 @@ export function __setIntentionsLoading(v: boolean) { _intentionsLoading = v; }
 export function __setHabits(habits: any[]) { _habits = habits; }
 export function __setHabitsLoading(v: boolean) { _habitsLoading = v; }
 export function __setCheckInError(err: Error | null) { _checkInError = err; buildMutations(); }
+export function __setCreateHabitError(err: Error | null) { _createHabitError = err; buildMutations(); }
 
 // Expose mutation spies for assertions
 export function __getDeletePost() { return _deletePost; }
@@ -400,7 +405,14 @@ export const useCheckInHabit = jest.fn(() => ({
 }));
 
 export const useCreateHabit = jest.fn(() => ({
-  mutate: _createHabit,
+  mutate: (args: any, opts?: any) => {
+    if (_createHabitError) {
+      opts?.onError?.(_createHabitError);
+    } else {
+      _createHabit(args, opts);
+      opts?.onSuccess?.();
+    }
+  },
   isPending: false,
 }));
 

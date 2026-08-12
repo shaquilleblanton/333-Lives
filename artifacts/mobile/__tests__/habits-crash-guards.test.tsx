@@ -256,4 +256,99 @@ describe("Habits tab – crash guards", () => {
 
     expect(getByText("Run")).toBeTruthy();
   });
+
+  // ── Create Habit form tests ────────────────────────────────────────────────
+
+  it("does not call createHabit mutation when name is empty", async () => {
+    mockApi.__setHabits([]);
+    const { getByText } = await render(withProviders(<HabitsScreen />));
+
+    // Open the create modal
+    await act(async () => {
+      fireEvent.press(getByText("Add Habit"));
+    });
+
+    // "New Habit" modal should be visible
+    expect(getByText("New Habit")).toBeTruthy();
+
+    // Press Create without entering a name
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    // Mutation spy must not have been called
+    const spy = mockApi.__getCreateHabit();
+    expect(spy).not.toHaveBeenCalled();
+
+    // Modal stays open
+    expect(getByText("New Habit")).toBeTruthy();
+  });
+
+  it("closes the modal and resets fields on successful create", async () => {
+    mockApi.__setHabits([]);
+    const { getByText, getByPlaceholderText, queryByText } = await render(
+      withProviders(<HabitsScreen />),
+    );
+
+    // Open the create modal
+    await act(async () => {
+      fireEvent.press(getByText("Add Habit"));
+    });
+
+    expect(getByText("New Habit")).toBeTruthy();
+
+    // Enter a habit name
+    await act(async () => {
+      fireEvent.changeText(
+        getByPlaceholderText("Morning meditation, read 10 pages…"),
+        "Daily walk",
+      );
+    });
+
+    // Submit
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    // Modal should be closed
+    expect(queryByText("New Habit")).toBeNull();
+  });
+
+  it("shows an alert and keeps the modal open when createHabit fails", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockApi.__setCreateHabitError(new Error("server error"));
+    mockApi.__setHabits([]);
+
+    const { getByText, getByPlaceholderText } = await render(
+      withProviders(<HabitsScreen />),
+    );
+
+    // Open the create modal
+    await act(async () => {
+      fireEvent.press(getByText("Add Habit"));
+    });
+
+    expect(getByText("New Habit")).toBeTruthy();
+
+    // Enter a habit name
+    await act(async () => {
+      fireEvent.changeText(
+        getByPlaceholderText("Morning meditation, read 10 pages…"),
+        "Evening run",
+      );
+    });
+
+    // Submit
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    // Alert must have fired
+    expect(alertSpy).toHaveBeenCalledWith("Oops", "Couldn't create habit.");
+
+    // Modal must remain open
+    expect(getByText("New Habit")).toBeTruthy();
+
+    alertSpy.mockRestore();
+  });
 });
