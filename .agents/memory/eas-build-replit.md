@@ -39,9 +39,16 @@ description: How to run EAS build, submit, and metadata push from the Replit env
 - Needs expo.dev credentials UI or ASC API key
 - Store builds must bake `pk_live_*` in eas.json (not pk_test)
 
+## EXPO_ASC_API_KEY_P8 secret format
+The secret stores **bare base64** (no PEM headers). Always wrap before use:
+```js
+const p8 = `-----BEGIN PRIVATE KEY-----\n${process.env.EXPO_ASC_API_KEY_P8}\n-----END PRIVATE KEY-----`;
+```
+
 ## App info
 - App ID: 6791305774
-- Version ID: af5e8004-19c9-4fe7-979f-b0883cdbd11e (currently REJECTED)
-- ASC screenshot set: 9335afac (APP_IPHONE_67, 5 screenshots uploaded Aug 13 2026)
+- Version ID: af5e8004-19c9-4fe7-979f-b0883cdbd11e
+- Submitted Aug 13 2026 with Build 34 (id: b77c9e71) — state: WAITING_FOR_REVIEW
+- ASC screenshot set: 9335afac (APP_IPHONE_67, 5 screenshots — COMPLETE)
 - Apple Team: 262X7APXYK (INDIVIDUAL)
 - Apple ID: shadblanton@yahoo.com
