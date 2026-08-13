@@ -133,15 +133,14 @@ function TabHeader({ title, actionLabel, onAction }: { title: string; actionLabe
 
 // ─── Habits ───────────────────────────────────────────────────────────────────
 
-type HabitRecentCheckin = { date: string; done: boolean; status: string | null };
-
+/** Map mood status → Tailwind bg class using the app's design token palette. */
 const MOOD_DOT_CLASS: Record<string, string> = {
-  great: "bg-primary",
-  okay: "bg-secondary",
-  struggling: "bg-destructive",
+  great: "bg-primary",       // gold / copper — the brand's warm accent
+  okay: "bg-secondary",      // sage — a calm positive
+  struggling: "bg-destructive", // red — honest signal
 };
 
-function HabitDots({ recentCheckins }: { recentCheckins: HabitRecentCheckin[] }) {
+function HabitDots({ recentCheckins }: { recentCheckins: { date: string; done: boolean; status: string | null }[] }) {
   if (!recentCheckins || recentCheckins.length !== 7) return null;
   return (
     <div className="flex justify-between pt-3 border-t border-border/30">
@@ -152,11 +151,19 @@ function HabitDots({ recentCheckins }: { recentCheckins: HabitRecentCheckin[] })
           ? (MOOD_DOT_CLASS[day.status ?? ""] ?? "bg-primary")
           : "bg-muted";
         return (
-          <div key={day.date} className="flex flex-col items-center gap-1">
-            <span className={cn("text-[9px] font-subheading", isToday ? "text-primary font-semibold" : "text-muted-foreground")}>
+          <div key={day.date} className="flex flex-col items-center gap-1.5">
+            <span className={cn(
+              "text-[9px] font-subheading uppercase tracking-wide",
+              isToday ? "text-primary font-semibold" : "text-muted-foreground/70"
+            )}>
               {label}
             </span>
-            <div className={cn("rounded-full transition-opacity", dotClass, isToday ? "w-2.5 h-2.5" : "w-2 h-2", day.done ? "opacity-100" : "opacity-20")} />
+            <div className={cn(
+              "rounded-full transition-all duration-200",
+              dotClass,
+              isToday ? "w-2.5 h-2.5" : "w-2 h-2",
+              day.done ? "opacity-100" : "opacity-20"
+            )} />
           </div>
         );
       })}
@@ -207,7 +214,7 @@ function HabitsTab() {
       <TabHeader title="Daily Habits" actionLabel="New Habit" onAction={() => setIsOpen(true)} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {habits?.map((habit) => {
-          const recentCheckins = (habit as any).recentCheckins as HabitRecentCheckin[] | undefined;
+          const recentCheckins = habit.recentCheckins;
           return (
           <div key={habit.id} className="bg-card/40 border border-border/50 p-6 rounded-2xl flex flex-col gap-4 backdrop-blur-sm">
             <div className="flex items-start justify-between">
