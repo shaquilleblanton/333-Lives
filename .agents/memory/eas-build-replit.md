@@ -1,46 +1,47 @@
 ---
-name: EAS build from Replit main agent
-description: How to trigger EAS builds from Replit's main agent, which blocks git write operations
+name: EAS build from Replit
+description: How to run EAS build, submit, and metadata push from the Replit environment; known gotchas with credentials and env vars
 ---
 
-## Rule
-Always use `EAS_NO_VCS=1` when running any `eas build` or `eas submit` command from the main agent.
+# EAS Build from Replit
 
-**Why:** Replit's main agent blocks git write operations (index.lock creation). EAS CLI normally runs `git archive` / `makeShallowCopyAsync` via the GitClient, which writes `.git/index.lock`. `EAS_NO_VCS=1` switches EAS to `NoVcsClient` which does a pure file copy — no git operations at all.
+## Key flags
+- `EAS_NO_VCS=1` — bypasses git lock; required for all EAS CLI calls from Replit
+- `EXPO_ASC_API_KEY_PATH=/path/to.p8` — point to temp file; do NOT rely on EXPO_ASC_API_KEY_P8 secret (users repeatedly paste wrong value)
+- `EXPO_ASC_KEY_ID=<10-char-id>` — set explicitly in env
+- `EXPO_ASC_ISSUER_ID=$EXPO_ASC_ISSUER_ID` — from secret
+- `EXPO_APPLE_TEAM_ID=262X7APXYK` — required for metadata:push
+- `EXPO_APPLE_TEAM_TYPE=INDIVIDUAL` — required for metadata:push (otherwise interactive prompt hangs)
 
-**How to apply:** Every `eas` command:
-```bash
-EAS_NO_VCS=1 EXPO_TOKEN=$EXPO_TOKEN eas build --platform all --profile production --non-interactive --no-wait
-```
+## ASC API key credential workflow
+- **Never** rely on EXPO_ASC_API_KEY_P8 secret — users consistently paste only the Key ID (10 chars) instead of full .p8 content
+- Always use `AskQuestion` with `fileUpload` kind to get the .p8 file directly
+- After using: immediately `rm -f` the temp file AND the attached_assets copy
+- Key ID for this project: `CGA9B6TAG7`; Issuer ID in `$EXPO_ASC_ISSUER_ID` secret
 
-## iOS credentials
+**Why:** The secrets form doesn't enforce multiline input and users paste the wrong thing every time. File upload is reliable.
 
-For iOS builds, EAS needs a Distribution Certificate + Provisioning Profile. These don't exist on Expo servers for this project yet.
+**How to apply:** Any time ASC API key is needed, use file upload not requestSecrets for the p8 content.
 
-**Patched file:** `~/.config/npm/node_global/lib/node_modules/eas-cli/build/credentials/ios/actions/SetUpDistributionCertificate.js` — `runNonInteractiveAsync` was changed to call `createNewDistCertAsync(ctx)` instead of throwing when no cert exists.
+## Screenshot upload via ASC REST API
+- Screenshots belong to `appStoreVersionLocalizations`, NOT directly to `appStoreVersions`
+- Flow: GET /appStoreVersions → GET /appStoreVersionLocalizations → GET/POST /appScreenshotSets → POST /appScreenshots (reserve) → PUT chunk → PATCH (commit with MD5)
+- Use `screenshotDisplayType: "APP_IPHONE_67"` for 1290×2796 screenshots (6.7" iPhone)
+- JWT: ES256, kid=KEY_ID, aud="appstoreconnect-v1", exp=now+1100
+- Sign with `crypto.createSign('SHA256')` + `dsaEncoding: 'ieee-p1363'`
 
-**Apple auth env vars** (correct names for EAS CLI):
-- `EXPO_APPLE_ID` — Apple Developer account email
-- `EXPO_APPLE_PASSWORD` — app-specific password (NOT regular password; generate at appleid.apple.com)
-- `EXPO_APPLE_TEAM_ID` — 10-char team ID from developer.apple.com/account
+## Resubmitting a REJECTED app
+- Cannot resubmit via API when version is in REJECTED state (reviewSubmissionItems returns 409 "not in valid state"; appStoreVersionSubmissions returns 403 "only DELETE allowed")
+- User must tap "Resubmit for Review" in App Store Connect manually
+- Make sure support/privacy URLs are live before resubmission
 
-**Blocker:** App-specific passwords for `shadblanton@yahoo.com` + team `262X7APXYK` returned "Invalid username and password combination" repeatedly. Could be wrong email or the account lacks Apple Developer Program membership.
+## iOS cert creation
+- Needs expo.dev credentials UI or ASC API key
+- Store builds must bake `pk_live_*` in eas.json (not pk_test)
 
-**Reliable alternative:** Set up credentials at `expo.dev/accounts/snipersb/projects/333-lives/credentials` (browser-based Apple auth, no credentials shared via chat). Once saved there, EAS non-interactive build works without any Apple env vars.
-
-## Android credentials
-Android keystore is auto-managed by Expo (`Build Credentials _t_WueQSll`). No setup needed — works first time.
-
-## Successful Android build
-`fd1d02d6-eb82-47c5-9309-3766e3c82caa` — triggered with `EAS_NO_VCS=1`, platform android, profile production.
-
-## iOS Build Success (July 14 2026)
-- Apple session cached at: /home/runner/.app-store/auth/shadblanton@yahoo.com/cookie
-- Use `setsid` won't work (Replit kills all processes on bash exit)
-- Use Replit WORKFLOW to run persistent Python PTY script (/tmp/eas_worker.py)
-- Python pty.openpty() + subprocess.Popen with slave as stdin/stdout/stderr works great
-- EAS auto-answered via state machine watching PTY output
-- Key: catch ANY `(Y/n)` prompt with generic handler; `Generate a new Apple Provisioning Profile` includes "Apple" — don't miss it
-- Build queued: https://expo.dev/accounts/snipersb/projects/333-lives/builds/76ec3373-c328-430e-b61b-b67bf5ed4972
-- Apple Dist Cert serial: 2C944898AEE642996DD6524C7C0BDC8F (expires Jul 2027)
-- Apple Provisioning Profile ID: 6GC2388NMX
+## App info
+- App ID: 6791305774
+- Version ID: af5e8004-19c9-4fe7-979f-b0883cdbd11e (currently REJECTED)
+- ASC screenshot set: 9335afac (APP_IPHONE_67, 5 screenshots uploaded Aug 13 2026)
+- Apple Team: 262X7APXYK (INDIVIDUAL)
+- Apple ID: shadblanton@yahoo.com
