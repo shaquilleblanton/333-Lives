@@ -57,10 +57,17 @@ function RootLayoutNav() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("hasSeenOnboarding").then((val) => {
-      setHasSeenOnboarding(val === "true");
-      setOnboardingChecked(true);
-    });
+    AsyncStorage.getItem("hasSeenOnboarding")
+      .then((val) => {
+        setHasSeenOnboarding(val === "true");
+        setOnboardingChecked(true);
+      })
+      .catch(() => {
+        // Storage read failed (e.g. device storage unavailable).
+        // Default to showing onboarding — safer than hanging on a blank screen.
+        setHasSeenOnboarding(false);
+        setOnboardingChecked(true);
+      });
   }, []);
 
   if (!onboardingChecked) return null;
