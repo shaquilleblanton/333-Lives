@@ -10,7 +10,7 @@ import {
   insertWorkoutBlockSchema,
   updateWorkoutBlockSchema,
 } from "@workspace/db/schema";
-import { eq, and, gte, lte, asc } from "drizzle-orm";
+import { eq, and, gte, lte, asc, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -42,7 +42,11 @@ router.get("/workouts", async (req, res) => {
 
   if (sessions.length === 0) return res.json([]);
 
-  const blocks = await db.select().from(workoutBlocksTable);
+  const sessionIds = sessions.map((s) => s.id);
+  const blocks = await db
+    .select()
+    .from(workoutBlocksTable)
+    .where(inArray(workoutBlocksTable.sessionId, sessionIds));
   const bySession = new Map<number, typeof blocks>();
   for (const b of blocks) {
     const arr = bySession.get(b.sessionId) || [];

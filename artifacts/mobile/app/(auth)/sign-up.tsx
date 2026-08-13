@@ -6,6 +6,8 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -93,6 +95,7 @@ export default function SignUpScreen() {
 
   if (awaitingCode) {
     return (
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
       <KeyboardAwareScrollViewCompat
         style={{ flex: 1, backgroundColor: colors.background }}
         contentContainerStyle={[
@@ -150,10 +153,12 @@ export default function SignUpScreen() {
           <Text style={[styles.link, { color: colors.primary }]}>I need a new code</Text>
         </Pressable>
       </KeyboardAwareScrollViewCompat>
+      </KeyboardAvoidingView>
     );
   }
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={[
@@ -262,6 +267,7 @@ export default function SignUpScreen() {
       {/* Required for sign-up flows — Clerk's bot protection is enabled by default */}
       <View nativeID="clerk-captcha" />
     </KeyboardAwareScrollViewCompat>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -51,7 +51,7 @@ function fmtDue(due: string) {
 }
 
 export default function Tasks() {
-  const { data: tasks, isLoading } = useGetTasks();
+  const { data: tasks, isLoading, isError, refetch } = useGetTasks();
   const { toast } = useToast();
   const qc = useQueryClient();
   const createTask = useCreateTask();
@@ -139,7 +139,12 @@ export default function Tasks() {
         <StatCard label="Done" value={completed.length} tone="accent" />
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <div className="border border-dashed border-border/60 rounded-2xl bg-card/20 p-12 text-center">
+          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading tasks.</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl bg-muted/30" />)}
         </div>
@@ -246,8 +251,8 @@ function TaskRow({ task, overdue, onToggle, onEdit, onDelete }: {
       </div>
 
       <div className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-        <button onClick={onEdit} className="p-1.5 text-muted-foreground hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
-        <button onClick={onDelete} className="p-1.5 text-muted-foreground hover:text-rose-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+        <button onClick={onEdit} aria-label="Edit task" className="p-1.5 text-muted-foreground hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
+        <button onClick={onDelete} aria-label="Delete task" className="p-1.5 text-muted-foreground hover:text-rose-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
       </div>
     </div>
   );

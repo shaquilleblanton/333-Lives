@@ -42,9 +42,18 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 
 export default function Home() {
-  const { data: dashboard, isLoading } = useGetDashboard();
+  const { data: dashboard, isLoading, isError, refetch } = useGetDashboard();
   const { data: todayEntry } = useGetTodayGratitudeEntry();
   const { data: todayAffirmation } = useGetTodayAffirmation();
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-12 max-w-5xl mx-auto w-full flex flex-col items-center justify-center min-h-[40vh] gap-4">
+        <p className="text-muted-foreground">Error loading dashboard.</p>
+        <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

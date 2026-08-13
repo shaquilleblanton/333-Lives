@@ -103,7 +103,7 @@ const CONTACT_TYPE_DESCRIPTIONS: Record<ContactType, string> = {
 };
 
 export default function Vault() {
-  const { data: vaultItems, isLoading } = useGetVaultItems();
+  const { data: vaultItems, isLoading, isError, refetch } = useGetVaultItems();
   const { data: contacts, isLoading: contactsLoading } = useGetVaultContacts();
   const deleteVaultItem = useDeleteVaultItem();
   const queryClient = useQueryClient();
@@ -189,8 +189,16 @@ export default function Vault() {
         ))}
       </div>
 
+      {/* Error state */}
+      {isError && (
+        <div className="text-center py-16 border border-dashed border-border/50 rounded-2xl bg-card/20">
+          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading vault items.</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+        </div>
+      )}
+
       {/* ── GENERAL TAB ── */}
-      {activeTab === "general" && (
+      {!isError && activeTab === "general" && (
         <div className="space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {GENERAL_CATEGORIES.map(cat => {
@@ -231,7 +239,7 @@ export default function Vault() {
       )}
 
       {/* ── ESTATE TAB ── */}
-      {activeTab === "estate" && (
+      {!isError && activeTab === "estate" && (
         <div className="space-y-10">
           {/* Intro banner */}
           <div className="rounded-2xl border border-border/50 bg-card/30 p-6 flex gap-4">

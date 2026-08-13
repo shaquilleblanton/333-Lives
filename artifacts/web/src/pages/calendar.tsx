@@ -37,14 +37,19 @@ const getEventColor = (type: string) => {
 };
 
 export default function Calendar() {
-  const { data: events, isLoading } = useGetEvents();
+  const { data: events, isLoading, isError, refetch } = useGetEvents();
   const deleteEvent = useDeleteEvent();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
 
   async function handleDelete(id: number) {
-    await deleteEvent.mutateAsync({ id });
-    queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
+    try {
+      await deleteEvent.mutateAsync({ id });
+      queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
+    } catch {
+      toast({ title: "Failed to delete", variant: "destructive" });
+    }
   }
 
   const today = new Date();
@@ -74,7 +79,12 @@ export default function Calendar() {
 
       <EventFormDialog open={isOpen} onOpenChange={setIsOpen} />
 
-      {isLoading ? (
+      {isError ? (
+        <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-card/20">
+          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading calendar.</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+        </div>
+      ) : isLoading ? (
         <Skeleton className="h-[600px] w-full rounded-2xl bg-muted/30" />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -160,6 +170,7 @@ export default function Calendar() {
                       <button
                         onClick={() => handleDelete(event.id)}
                         disabled={deleteEvent.isPending}
+                        aria-label="Delete event"
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"
                         title="Delete event"
                       >

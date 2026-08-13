@@ -92,7 +92,11 @@ router.post("/messages", async (req, res) => {
 
   const values: typeof messagesTable.$inferInsert = { ...parsed.data };
   if (typeof passcode === "string" && passcode.trim().length > 0) {
-    values.passcodeHash = hashPasscode(passcode.trim());
+    const trimmed = passcode.trim();
+    if (trimmed.length < 4 || trimmed.length > 64) {
+      return res.status(400).json({ error: "Passcode must be between 4 and 64 characters" });
+    }
+    values.passcodeHash = hashPasscode(trimmed);
   }
 
   const inserted = await db.insert(messagesTable).values(values).returning();
@@ -135,7 +139,11 @@ router.post("/messages/:id/unlock", async (req, res) => {
     if (typeof passcode !== "string" || passcode.trim().length === 0) {
       return res.status(401).json({ error: "This message requires a passcode." });
     }
-    if (!verifyPasscode(passcode.trim(), m.passcodeHash)) {
+    const trimmedPasscode = passcode.trim();
+    if (trimmedPasscode.length < 4 || trimmedPasscode.length > 64) {
+      return res.status(400).json({ error: "Passcode must be between 4 and 64 characters" });
+    }
+    if (!verifyPasscode(trimmedPasscode, m.passcodeHash)) {
       return res.status(401).json({ error: "Incorrect passcode." });
     }
     clearUnlockRateLimit(id);

@@ -1,3 +1,5 @@
+import { Card, CardContent } from "@/components/ui/card";
+
 export default function Support() {
   const faqs = [
     {
@@ -6,7 +8,7 @@ export default function Support() {
     },
     {
       q: "How do I delete my account and data?",
-      a: "Go to Profile \u2192 Settings \u2192 Delete Account. This permanently removes your account and all associated data within 30 days. Alternatively, email support@333lives.app and we'll process it within 30 days.",
+      a: "Go to Profile → Settings → Delete Account. This permanently removes your account and all associated data within 30 days. Alternatively, email support@333lives.app and we'll process it within 30 days.",
     },
     {
       q: "My habits or intentions aren't saving. What should I do?",
@@ -14,11 +16,11 @@ export default function Support() {
     },
     {
       q: "Can I use 333 Lives on multiple devices?",
-      a: "Yes \u2014 your data syncs automatically across all devices signed in to the same account. Download the app on any iPhone, iPad, or use the web version at 333lives.app.",
+      a: "Yes — your data syncs automatically across all devices signed in to the same account. Download the app on any iPhone, iPad, or use the web version at 333lives.app.",
     },
     {
       q: "How does the Family Pulse feed work?",
-      a: "Family Pulse lets you share moments with family members you've invited. Only people in your family group can see your posts. You can manage your family group in Profile \u2192 Family.",
+      a: "Family Pulse lets you share moments with family members you've invited. Only people in your family group can see your posts. You can manage your family group in Profile → Family.",
     },
     {
       q: "Are my journal entries and life events private?",
@@ -26,11 +28,11 @@ export default function Support() {
     },
     {
       q: "How do I restore a purchase?",
-      a: "Open the app and go to Profile \u2192 Subscription \u2192 Restore Purchases. Make sure you're signed in with the same Apple ID used for the original purchase.",
+      a: "Open the app and go to Profile → Subscription → Restore Purchases. Make sure you're signed in with the same Apple ID used for the original purchase.",
     },
     {
       q: "The app is crashing. How do I fix it?",
-      a: "Try closing the app fully and reopening it. If crashes continue, go to Settings \u2192 General \u2192 iPhone Storage \u2192 333 Lives \u2192 Offload App, then reinstall from the App Store. Contact us if the issue persists.",
+      a: "Try closing the app fully and reopening it. If crashes continue, go to Settings → General → iPhone Storage → 333 Lives → Offload App, then reinstall from the App Store. Contact us if the issue persists.",
     },
     {
       q: "How do I update the app?",
@@ -43,38 +45,57 @@ export default function Support() {
   ];
 
   return (
-    <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#F5F0E8", fontFamily: "system-ui, sans-serif", lineHeight: 1.8 }}>
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "60px 32px 100px" }}>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="max-w-3xl mx-auto px-6 py-16 pb-24">
 
-        <div style={{ borderBottom: "1px solid rgba(201,168,76,0.25)", marginBottom: 56, paddingBottom: 24 }}>
-          <span style={{ fontSize: 22, fontWeight: 700, color: "#C9A439", letterSpacing: 2 }}>333 LIVES</span>
+        {/* Brand header */}
+        <div className="border-b border-primary/20 pb-6 mb-14">
+          <span className="text-xl font-bold tracking-[0.15em] text-primary">333 LIVES</span>
         </div>
 
-        <h1 style={{ fontSize: 36, fontWeight: 700, color: "#C9A439", marginBottom: 8 }}>Support</h1>
-        <p style={{ color: "#888", marginBottom: 48, fontSize: 14 }}>We're here to help. Find answers below or reach us directly.</p>
+        {/* Page title */}
+        <h1 className="text-4xl font-bold text-primary mb-2">Support</h1>
+        <p className="text-muted-foreground text-sm mb-12">
+          We&apos;re here to help. Find answers below or reach us directly.
+        </p>
 
-        <div style={{ background: "rgba(201,164,57,0.07)", border: "1px solid rgba(201,164,57,0.25)", borderRadius: 14, padding: "28px 32px", marginBottom: 56 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#C9A439", marginBottom: 4, marginTop: 0 }}>Contact Us</h2>
-          <p style={{ color: "#ccc", marginBottom: 12, fontSize: 15 }}>
-            For account issues, bug reports, or general questions, email us and we'll respond within one business day.
-          </p>
-          <a href="mailto:support@333lives.app" style={{ color: "#C9A439", fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
-            support@333lives.app
-          </a>
+        {/* Contact card */}
+        <Card className="bg-primary/[0.07] border border-primary/25 rounded-2xl mb-14">
+          <CardContent className="p-7">
+            <h2 className="text-lg font-semibold text-primary mb-1">Contact Us</h2>
+            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+              For account issues, bug reports, or general questions, email us and we&apos;ll respond within one business day.
+            </p>
+            <a
+              href="mailto:support@333lives.app"
+              className="text-primary font-semibold text-sm hover:underline"
+            >
+              support@333lives.app
+            </a>
+          </CardContent>
+        </Card>
+
+        {/* FAQ */}
+        <h2 className="text-xl font-bold text-foreground mb-7">Frequently Asked Questions</h2>
+
+        <div className="space-y-0">
+          {faqs.map(({ q, a }) => (
+            <div
+              key={q}
+              className="border-b border-border/40 py-8 last:border-b-0"
+            >
+              <h3 className="text-base font-semibold text-foreground mb-2.5">{q}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
+            </div>
+          ))}
         </div>
 
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#F5F0E8", marginBottom: 28, marginTop: 0 }}>Frequently Asked Questions</h2>
-
-        {faqs.map(({ q, a }) => (
-          <div key={q} style={{ marginBottom: 36, paddingBottom: 36, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: "#F5F0E8", marginBottom: 10, marginTop: 0 }}>{q}</h3>
-            <p style={{ color: "#aaa", marginBottom: 0, fontSize: 15 }}>{a}</p>
-          </div>
-        ))}
-
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid rgba(201,168,76,0.2)", color: "#555", fontSize: 13, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        {/* Footer */}
+        <div className="flex items-center justify-between flex-wrap gap-2 mt-12 pt-6 border-t border-primary/20 text-xs text-muted-foreground/60">
           <span>&copy; 2026 333 Lives. All rights reserved.</span>
-          <a href="/privacy-policy" style={{ color: "#C9A439", textDecoration: "none" }}>Privacy Policy</a>
+          <a href="/privacy-policy" className="text-primary hover:underline">
+            Privacy Policy
+          </a>
         </div>
       </div>
     </div>

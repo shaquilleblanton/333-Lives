@@ -1,7 +1,14 @@
 import { Router, type Response } from "express";
+import { z } from "zod";
 import { db } from "@workspace/db";
 import { shopReferralClicksTable } from "@workspace/db/schema";
 import { shopifyStorefrontRequest } from "../lib/shopifyStorefrontClient";
+import { logger } from "../lib/logger";
+
+const checkoutSchema = z.object({
+  variantId: z.string().min(1),
+  quantity: z.number().int().positive(),
+});
 
 const router = Router();
 
@@ -103,16 +110,11 @@ type CartCreateResponse = {
 };
 
 router.post("/shop/checkout", async (req, res) => {
-  const variantId = typeof req.body?.variantId === "string" ? req.body.variantId.trim() : "";
-  const quantityRaw = req.body?.quantity ?? 1;
-  const quantity = Number(quantityRaw);
-
-  if (!variantId) {
-    return res.status(400).json({ error: "variantId is required" });
+  const parsed = checkoutSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.message });
   }
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-    return res.status(400).json({ error: "quantity must be an integer between 1 and 99" });
-  }
+  const { variantId, quantity } = parsed.data;
 
   try {
     const data = await shopifyStorefrontRequest<CartCreateResponse>(CART_CREATE, {
@@ -162,14 +164,14 @@ router.post("/shop/referral-click", async (req, res) => {
     return res.json({ ok: true });
   } catch (err) {
     // Non-critical — log but don't fail the user's experience
-    console.error("[shop] referral-click insert failed:", err);
+    logger.error({ err }, "[shop] referral-click insert failed");
     return res.json({ ok: false });
   }
 });
 
 function sendShopifyError(res: Response, err: unknown, message: string) {
   const detail = err instanceof Error ? err.message : String(err);
-  console.error(`[shop] ${message}:`, detail);
+  logger.error({ err }, `[shop] ${message}: ${detail}`);
   // Don't leak upstream/operational detail to clients in production.
   const body =
     process.env.NODE_ENV === "production"

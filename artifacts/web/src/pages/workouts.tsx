@@ -604,6 +604,7 @@ function SessionDetailModal({ session, onClose, onInvalidate, onToggle, onDelete
           </button>
           <button
             onClick={onDelete}
+            aria-label="Delete workout session"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-subheading border border-border text-muted-foreground hover:text-rose-400 hover:border-rose-400/40 transition-all"
           >
             <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -653,10 +654,10 @@ function SessionDetailModal({ session, onClose, onInvalidate, onToggle, onDelete
                       <p className="text-xs text-muted-foreground">{bm.label} · {fmtDuration(b.durationMin)}</p>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
-                      <button onClick={() => move(idx, -1)} disabled={idx === 0} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ArrowUp className="w-4 h-4" /></button>
-                      <button onClick={() => move(idx, 1)} disabled={idx === blocks.length - 1} className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ArrowDown className="w-4 h-4" /></button>
-                      <button onClick={() => setEditingBlockId(b.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
-                      <button onClick={() => removeBlock(b)} className="p-1 text-muted-foreground hover:text-rose-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => move(idx, -1)} disabled={idx === 0} aria-label="Move block up" className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ArrowUp className="w-4 h-4" /></button>
+                      <button onClick={() => move(idx, 1)} disabled={idx === blocks.length - 1} aria-label="Move block down" className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"><ArrowDown className="w-4 h-4" /></button>
+                      <button onClick={() => setEditingBlockId(b.id)} aria-label="Edit block" className="p-1 text-muted-foreground hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => removeBlock(b)} aria-label="Delete block" className="p-1 text-muted-foreground hover:text-rose-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 );

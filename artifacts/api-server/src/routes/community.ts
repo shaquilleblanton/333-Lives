@@ -126,7 +126,7 @@ router.post("/community/:id/respond", async (req, res) => {
     .where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req))))
     .returning();
   if (updated.length === 0) return res.status(404).json({ error: "Event not found" });
-  return res.json(updated[0]);
+  return res.json(applyCircleVisibility(updated[0]!));
 });
 
 router.delete("/community/:id", async (req, res) => {

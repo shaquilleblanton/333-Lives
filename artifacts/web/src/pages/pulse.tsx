@@ -55,7 +55,7 @@ function expiryLabel(expiresAt: string | null, isPersistent: boolean) {
 export default function Pulse() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: posts = [], isLoading } = useGetPulseFeed();
+  const { data: posts = [], isLoading, isError, refetch } = useGetPulseFeed();
   const createPost = useCreatePulsePost();
   const deletePost = useDeletePulsePost();
   const reactMutation = useReactToPulsePost();
@@ -94,7 +94,12 @@ export default function Pulse() {
       <PostComposer onSuccess={invalidate} />
 
       {/* Feed */}
-      {isLoading ? (
+      {isError ? (
+        <div className="text-center py-12 border border-dashed border-border/50 rounded-2xl bg-card/20">
+          <p className="text-muted-foreground text-sm mb-3">Error loading feed.</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 rounded-2xl bg-muted/30" />)}
         </div>
@@ -327,7 +332,7 @@ function PostCard({
               </span>
             )}
             {post.isOwn && (
-              <button onClick={onDelete} className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
+              <button onClick={onDelete} aria-label="Delete post" className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
@@ -355,13 +360,14 @@ function PostCard({
         {/* Reactions */}
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-1">
-            {REACTIONS.map(({ type, emoji }) => {
+            {REACTIONS.map(({ type, emoji, label }) => {
               const count = post.reactions[type] ?? 0;
               const isActive = post.myReaction === type;
               return (
                 <button
                   key={type}
                   onClick={() => onReact(type)}
+                  aria-label={`React with ${label}`}
                   className={cn(
                     "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-subheading border transition-all",
                     isActive

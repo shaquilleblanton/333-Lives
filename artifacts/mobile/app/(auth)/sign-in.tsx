@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -88,6 +89,7 @@ export default function SignInScreen() {
   const busy = fetchStatus === "fetching";
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={[
@@ -191,6 +193,7 @@ export default function SignInScreen() {
         </Link>
       </View>
     </KeyboardAwareScrollViewCompat>
+    </KeyboardAvoidingView>
   );
 }
 

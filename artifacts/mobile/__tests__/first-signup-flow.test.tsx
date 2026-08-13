@@ -167,7 +167,7 @@ jest.mock("expo-web-browser", () => ({
 }));
 
 // expo-router — track Redirect calls and stub Stack.
-const mockRedirect = jest.fn(() => null);
+const mockRedirect = jest.fn((...args: any[]) => null);
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 

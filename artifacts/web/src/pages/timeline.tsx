@@ -68,7 +68,7 @@ function mediaType(file: File): MediaAttachment["type"] {
 }
 
 export default function Timeline() {
-  const { data: events, isLoading } = useGetLifeEvents();
+  const { data: events, isLoading, isError, refetch } = useGetLifeEvents();
   const createEvent = useCreateLifeEvent();
   const deleteEvent = useDeleteLifeEvent();
   const queryClient = useQueryClient();
@@ -215,7 +215,12 @@ export default function Timeline() {
       </div>
 
       {/* Timeline */}
-      {isLoading ? (
+      {isError ? (
+        <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-card/20">
+          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading timeline.</p>
+          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-xl bg-muted/30" />)}
         </div>

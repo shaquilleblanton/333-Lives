@@ -379,11 +379,11 @@ export default function Community() {
         <div className="lg:col-span-2 space-y-6">
           {/* Month nav */}
           <div className="flex items-center justify-between">
-            <button onClick={handlePrevMonth} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={handlePrevMonth} aria-label="Previous month" className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <h2 className="font-serif text-xl text-foreground">{MONTHS[viewMonth]} {viewYear}</h2>
-            <button onClick={handleNextMonth} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={handleNextMonth} aria-label="Next month" className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>

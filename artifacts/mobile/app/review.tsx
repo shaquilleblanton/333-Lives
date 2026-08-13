@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 
@@ -67,7 +68,7 @@ export default function ReviewScreen() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [yearIdx, setYearIdx] = useState(0);
 
-  const { data, isLoading } = useGetAnnualReview(year);
+  const { data, isLoading, isError, refetch } = useGetAnnualReview(year);
 
   const handlePrevYear = () => {
     if (yearIdx < AVAILABLE_YEARS.length - 1) {
@@ -86,7 +87,7 @@ export default function ReviewScreen() {
   };
 
   const moodEntries = data
-    ? Object.entries(data.growth.moodBreakdown).sort((a, b) => b[1] - a[1])
+    ? Object.entries((data?.growth ?? {}).moodBreakdown ?? {}).sort((a, b) => b[1] - a[1])
     : [];
   const totalMoods = moodEntries.reduce((s, [, v]) => s + v, 0);
 
@@ -123,7 +124,12 @@ export default function ReviewScreen() {
         </View>
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          message="We couldn't load your annual review. Check your connection and try again."
+          onRetry={refetch}
+        />
+      ) : isLoading ? (
         <View style={styles.loadingWrap}>
           <ActivityIndicator color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>Gathering your year…</Text>
@@ -133,22 +139,22 @@ export default function ReviewScreen() {
           <View style={styles.section}>
             <SectionHeader label="THE NUMBERS" />
             <View style={styles.statGrid}>
-              <StatCard icon="calendar" value={data.numbers.daysActive} label="Days Active" accent />
-              <StatCard icon="check-square" value={data.numbers.intentionsCompleted} label="Intentions" />
-              <StatCard icon="zap" value={data.numbers.longestStreak} label="Longest Streak" accent />
-              <StatCard icon="heart" value={data.numbers.gratitudeEntries} label="Gratitude" />
-              <StatCard icon="activity" value={data.numbers.habitCheckins} label="Habit Check-ins" />
-              <StatCard icon="star" value={data.numbers.goalsCompleted} label="Goals Completed" accent />
+              <StatCard icon="calendar" value={(data?.numbers ?? {}).daysActive ?? 0} label="Days Active" accent />
+              <StatCard icon="check-square" value={(data?.numbers ?? {}).intentionsCompleted ?? 0} label="Intentions" />
+              <StatCard icon="zap" value={(data?.numbers ?? {}).longestStreak ?? 0} label="Longest Streak" accent />
+              <StatCard icon="heart" value={(data?.numbers ?? {}).gratitudeEntries ?? 0} label="Gratitude" />
+              <StatCard icon="activity" value={(data?.numbers ?? {}).habitCheckins ?? 0} label="Habit Check-ins" />
+              <StatCard icon="star" value={(data?.numbers ?? {}).goalsCompleted ?? 0} label="Goals Completed" accent />
             </View>
           </View>
 
           <View style={styles.section}>
             <SectionHeader label="YOUR STORY" />
             <View style={styles.statGrid}>
-              <StatCard icon="clock" value={data.story.lifeEventsAdded} label="Life Events" />
-              <StatCard icon="file-text" value={data.story.lettersWritten} label="Letters Written" accent />
-              <StatCard icon="send" value={data.story.futureMessagesSet} label="Future Messages" />
-              <StatCard icon="lock" value={data.story.vaultItemsAdded} label="Vault Items" accent />
+              <StatCard icon="clock" value={(data?.story ?? {}).lifeEventsAdded ?? 0} label="Life Events" />
+              <StatCard icon="file-text" value={(data?.story ?? {}).lettersWritten ?? 0} label="Letters Written" accent />
+              <StatCard icon="send" value={(data?.story ?? {}).futureMessagesSet ?? 0} label="Future Messages" />
+              <StatCard icon="lock" value={(data?.story ?? {}).vaultItemsAdded ?? 0} label="Vault Items" accent />
             </View>
           </View>
 
@@ -157,16 +163,16 @@ export default function ReviewScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.peopleSummaryRow}>
                 <View>
-                  <Text style={[styles.bigNum, { color: colors.foreground }]}>{data.people.totalMoments}</Text>
+                  <Text style={[styles.bigNum, { color: colors.foreground }]}>{(data?.people ?? {}).totalMoments ?? 0}</Text>
                   <Text style={[styles.bigNumLabel, { color: colors.mutedForeground }]}>Total moments logged</Text>
                 </View>
                 <Feather name="users" size={32} color={colors.secondary + "50"} />
               </View>
-              {data.people.topPeople.length > 0 && (
+              {(data?.people?.topPeople ?? []).length > 0 && (
                 <>
                   <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   <Text style={[styles.subLabel, { color: colors.mutedForeground }]}>TOP CONNECTIONS</Text>
-                  {data.people.topPeople.map((person, i) => (
+                  {(data?.people?.topPeople ?? []).map((person, i) => (
                     <View key={person.personId} style={styles.personRow}>
                       <View style={[
                         styles.rankBadge,
@@ -191,7 +197,7 @@ export default function ReviewScreen() {
             <SectionHeader label="GROWTH" />
             <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 10 }]}>
               <Feather name="book-open" size={22} color={colors.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.bigNum, { color: colors.foreground }]}>{data.growth.journalEntries}</Text>
+              <Text style={[styles.bigNum, { color: colors.foreground }]}>{(data?.growth ?? {}).journalEntries ?? 0}</Text>
               <Text style={[styles.bigNumLabel, { color: colors.mutedForeground }]}>Journal entries written</Text>
             </View>
             {moodEntries.length > 0 && (
@@ -218,7 +224,7 @@ export default function ReviewScreen() {
             )}
           </View>
 
-          {data.topWord ? (
+          {data?.topWord ? (
             <View style={styles.section}>
               <SectionHeader label="YOUR WORD" />
               <View style={[styles.wordCard, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "30" }]}>
@@ -226,7 +232,7 @@ export default function ReviewScreen() {
                   Your most-used word across all journal entries
                 </Text>
                 <Text style={[styles.wordBig, { color: colors.primary }]}>
-                  {data.topWord.charAt(0).toUpperCase() + data.topWord.slice(1)}
+                  {(data?.topWord ?? "").charAt(0).toUpperCase() + (data?.topWord ?? "").slice(1)}
                 </Text>
                 <Text style={[styles.wordQuote, { color: colors.mutedForeground }]}>
                   "The words we use reveal the life we're living."

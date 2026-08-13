@@ -10,6 +10,9 @@ import {
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { globalErrorHandler } from "./middlewares/errorHandler";
+// asyncHandler (lib/asyncHandler.ts) is available for wrapping async route
+// handlers that need explicit error forwarding. Express 5 propagates async
+// rejections natively, so the global error handler below covers all routes.
 
 const app: Express = express();
 
