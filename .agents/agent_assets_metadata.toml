@@ -283,3 +283,38 @@ uri = "file://tmp/appstore/ss5-pulse.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 5: Pulse"
 description = "Older set"
+
+[[outputs]]
+id = "M6oseKIyGi2yGyNW-KUNC"
+uri = "file://tmp/appstore/final-as1-intentions.jpg"
+type = "image"
+title = "Screenshot 1 — Intentions (1290×2796)"
+description = "Apple App Store spec"
+
+[[outputs]]
+id = "4zcq4FqFIcA8h_e2iIANS"
+uri = "file://tmp/appstore/final-as2-habits.jpg"
+type = "image"
+title = "Screenshot 2 — Habits (1290×2796)"
+description = "Apple App Store spec"
+
+[[outputs]]
+id = "BgSHdXNQ_rHj69zbnUvmW"
+uri = "file://tmp/appstore/final-as3-timeline.jpg"
+type = "image"
+title = "Screenshot 3 — Timeline (1290×2796)"
+description = "Apple App Store spec"
+
+[[outputs]]
+id = "0kh5hEcWoZLKuPjwYJyyT"
+uri = "file://tmp/appstore/final-as4-welcome.jpg"
+type = "image"
+title = "Screenshot 4 — Welcome (1290×2796)"
+description = "Apple App Store spec"
+
+[[outputs]]
+id = "K_speWbGhvaMa9vFH6bEP"
+uri = "file://tmp/appstore/final-as5-pulse.jpg"
+type = "image"
+title = "Screenshot 5 — Pulse (1290×2796)"
+description = "Apple App Store spec"
