@@ -318,3 +318,38 @@ uri = "file://tmp/appstore/final-as5-pulse.jpg"
 type = "image"
 title = "Screenshot 5 — Pulse (1290×2796)"
 description = "Apple App Store spec"
+
+[[outputs]]
+id = "Ei3XSASeNbxkl0smp78W-"
+uri = "file://tmp/appstore/final2-as1-intentions.jpg"
+type = "image"
+title = "Screenshot 1 — Intentions"
+description = "Real app colors + actual logo"
+
+[[outputs]]
+id = "ko_JNBkOS1ByTjSJ8FXx4"
+uri = "file://tmp/appstore/final2-as2-habits.jpg"
+type = "image"
+title = "Screenshot 2 — Habits"
+description = "Real app colors + actual logo"
+
+[[outputs]]
+id = "TW3zJ2gR504yIv3hPJAGK"
+uri = "file://tmp/appstore/final2-as3-timeline.jpg"
+type = "image"
+title = "Screenshot 3 — Timeline"
+description = "Real app colors + actual logo"
+
+[[outputs]]
+id = "EEWDEEla_QPmt_C9DkmLM"
+uri = "file://tmp/appstore/final2-as4-welcome.jpg"
+type = "image"
+title = "Screenshot 4 — Welcome"
+description = "Real logo mark, full brand"
+
+[[outputs]]
+id = "XcczjiGtN0fnB4Z6FiUal"
+uri = "file://tmp/appstore/final2-as5-pulse.jpg"
+type = "image"
+title = "Screenshot 5 — Family Pulse"
+description = "Real app colors + actual logo"
