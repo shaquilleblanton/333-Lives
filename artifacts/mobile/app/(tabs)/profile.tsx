@@ -1,5 +1,6 @@
 import { useClerk } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   useGetMe,
   useUpdateMe,
@@ -212,6 +213,11 @@ export default function ProfileScreen() {
     } catch { Alert.alert("Couldn't save", "Please try again."); }
   }
 
+  async function handleViewAppTour() {
+    await AsyncStorage.removeItem("hasSeenOnboarding");
+    router.push("/onboarding" as any);
+  }
+
   function confirmSignOut() {
     if (Platform.OS === "web") { void signOut(); return; }
     Alert.alert("Sign out", "Are you sure?", [
@@ -276,6 +282,8 @@ export default function ProfileScreen() {
         <MenuItem icon="moon" label="Appearance" sub="Choose your theme"
           rightLabel={THEMES.find(t => t.id === theme)?.label ?? "Charcoal"}
           onPress={() => setThemeOpen(true)} />
+        <MenuItem icon="play-circle" label="View App Tour" sub="Replay the intro walkthrough"
+          onPress={handleViewAppTour} />
         <MenuItem icon="info" label="Version" rightLabel="333 Lives" />
       </Section>
 
