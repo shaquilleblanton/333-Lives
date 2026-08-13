@@ -218,36 +218,36 @@ description = "$22 · Active in Shopify"
 id = "mND2-akF5VtXJKfZlRJ8D"
 uri = "file://tmp/appstore/as4-welcome.jpg"
 type = "image"
-title = "Aug 12 — Screenshot 1: Welcome"
-description = "New set from today"
+title = "Screenshot 4 — Welcome"
+description = "App Store screenshot 4 of 5"
 
 [[outputs]]
 id = "dVIc4TX8r-d1NHhYelBKX"
 uri = "file://tmp/appstore/as1-intentions.jpg"
 type = "image"
-title = "Aug 12 — Screenshot 2: Intentions"
-description = "New set from today"
+title = "Screenshot 1 — Intentions"
+description = "App Store screenshot 1 of 5"
 
 [[outputs]]
 id = "F3S5k-s6GxsLwNCmW0Jia"
 uri = "file://tmp/appstore/as2-habits.jpg"
 type = "image"
-title = "Aug 12 — Screenshot 3: Habits"
-description = "New set from today"
+title = "Screenshot 2 — Habits"
+description = "App Store screenshot 2 of 5"
 
 [[outputs]]
 id = "k-tGNvf7iK8uB7rWpTg86"
 uri = "file://tmp/appstore/as3-timeline.jpg"
 type = "image"
-title = "Aug 12 — Screenshot 4: Timeline"
-description = "New set from today"
+title = "Screenshot 3 — Timeline"
+description = "App Store screenshot 3 of 5"
 
 [[outputs]]
 id = "qIBsqJeoAA6bllEWC6LGn"
 uri = "file://tmp/appstore/as5-pulse.jpg"
 type = "image"
-title = "Aug 12 — Screenshot 5: Pulse"
-description = "New set from today"
+title = "Screenshot 5 — Pulse"
+description = "App Store screenshot 5 of 5"
 
 [[outputs]]
 id = "WvOkYkBeCcFpjD4zUTPzs"
