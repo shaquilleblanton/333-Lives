@@ -29,6 +29,7 @@ import pulseRouter from "./pulse";
 import memoryCollectionsRouter from "./memory-collections";
 import reviewRouter from "./review";
 import adminRouter from "./admin";
+import anthropicRouter from "./anthropic";
 
 const router: IRouter = Router();
 
@@ -66,5 +67,6 @@ router.use(pulseRouter);
 router.use(memoryCollectionsRouter);
 router.use(reviewRouter);
 router.use(adminRouter);
+router.use(anthropicRouter);
 
 export default router;

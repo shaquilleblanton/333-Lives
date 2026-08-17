@@ -348,7 +348,7 @@ export interface UpdateEventBody {
   color?: string;
 }
 
-export type HabitTodayStatus = typeof HabitTodayStatus[keyof typeof HabitTodayStatus];
+export type HabitTodayStatus = typeof HabitTodayStatus[keyof typeof HabitTodayStatus] | null;
 
 
 export const HabitTodayStatus = {
@@ -357,11 +357,20 @@ export const HabitTodayStatus = {
   struggling: 'struggling',
 } as const;
 
-export interface HabitRecentCheckin {
+export type HabitRecentCheckinsItemStatus = typeof HabitRecentCheckinsItemStatus[keyof typeof HabitRecentCheckinsItemStatus] | null;
+
+
+export const HabitRecentCheckinsItemStatus = {
+  great: 'great',
+  okay: 'okay',
+  struggling: 'struggling',
+} as const;
+
+export type HabitRecentCheckinsItem = {
   date: string;
   done: boolean;
-  status: HabitTodayStatus | null;
-}
+  status: HabitRecentCheckinsItemStatus;
+};
 
 export interface Habit {
   id: number;
@@ -373,9 +382,9 @@ export interface Habit {
   longestStreak: number;
   completionRate: number;
   checkedInToday: boolean;
-  todayStatus?: HabitTodayStatus | null;
+  todayStatus?: HabitTodayStatus;
   /** Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status. */
-  recentCheckins: HabitRecentCheckin[];
+  recentCheckins: HabitRecentCheckinsItem[];
   createdAt: string;
 }
 
@@ -1488,7 +1497,6 @@ export interface ShopProduct {
   title: string;
   handle: string;
   description?: string;
-  productType?: string;
   imageUrl?: string;
   imageAlt?: string;
   /** Minimum variant price as a decimal string. */
@@ -1992,6 +2000,50 @@ export interface AnnualReview {
   people: AnnualReviewPeople;
   growth: AnnualReviewGrowth;
   topWord: string | null;
+}
+
+export interface AnthropicConversation {
+  id: number;
+  title: string;
+  createdAt: string;
+}
+
+export interface AnthropicMessage {
+  id: number;
+  conversationId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface AnthropicConversationInput {
+  title: string;
+}
+
+export interface AnthropicMessageInput {
+  content: string;
+}
+
+export interface AnthropicConversationWithMessages {
+  id: number;
+  title: string;
+  createdAt: string;
+  messages: AnthropicMessage[];
+}
+
+export interface AnthropicError {
+  error: string;
+}
+
+export interface AnthropicCoachInsights {
+  insights: string;
+  streakDays: number;
+  habitsSummary?: string;
+  intentionsSummary?: string;
+}
+
+export interface AnthropicAffirmationResult {
+  text: string;
 }
 
 export type GetMessagesParams = {

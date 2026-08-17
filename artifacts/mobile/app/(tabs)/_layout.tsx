@@ -157,8 +157,11 @@ function ClassicTabLayout() {
         }}
       />
       {/* Hidden tabs — still accessible via router.push */}
-      <Tabs.Screen name="streak"   options={{ href: null }} />
-      <Tabs.Screen name="feedback" options={{ href: null }} />
+      <Tabs.Screen name="streak"          options={{ href: null }} />
+      <Tabs.Screen name="feedback"        options={{ href: null }} />
+      <Tabs.Screen name="ai-chat"         options={{ href: null }} />
+      <Tabs.Screen name="ai-coach"        options={{ href: null }} />
+      <Tabs.Screen name="ai-affirmations" options={{ href: null }} />
     </Tabs>
   );
 }

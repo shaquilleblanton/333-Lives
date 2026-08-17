@@ -29,6 +29,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fonts } from "@/constants/fonts";
@@ -102,6 +103,34 @@ export default function GrowthScreen() {
           <Text style={s.subtitle}>Habits · Goals · Journal</Text>
         </View>
       </View>
+
+      {/* AI Feature Cards */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.aiRow} contentContainerStyle={s.aiRowContent}>
+        <Pressable
+          onPress={() => router.push("/(tabs)/ai-coach")}
+          style={({ pressed }) => [s.aiCard, { opacity: pressed ? 0.75 : 1 }]}
+        >
+          <Text style={s.aiCardIcon}>🧠</Text>
+          <Text style={s.aiCardTitle}>Life Coach</Text>
+          <Text style={s.aiCardDesc}>Daily insights</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/(tabs)/ai-affirmations")}
+          style={({ pressed }) => [s.aiCard, { opacity: pressed ? 0.75 : 1 }]}
+        >
+          <Text style={s.aiCardIcon}>✨</Text>
+          <Text style={s.aiCardTitle}>Affirmations</Text>
+          <Text style={s.aiCardDesc}>AI-personalized</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/(tabs)/ai-chat")}
+          style={({ pressed }) => [s.aiCard, { opacity: pressed ? 0.75 : 1 }]}
+        >
+          <Text style={s.aiCardIcon}>💬</Text>
+          <Text style={s.aiCardTitle}>AI Chat</Text>
+          <Text style={s.aiCardDesc}>Talk it through</Text>
+        </Pressable>
+      </ScrollView>
 
       {/* Sub-tab bar */}
       <View style={[s.tabBar, { borderBottomColor: colors.border }]}>
@@ -623,6 +652,31 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
     },
     title: { fontSize: 26, fontFamily: fonts.serif, color: colors.foreground },
     subtitle: { fontSize: 13, fontFamily: fonts.sub, color: colors.mutedForeground, marginTop: 2 },
+    aiRow: { marginHorizontal: 16, marginBottom: 4 },
+    aiRowContent: { gap: 10, paddingVertical: 10 },
+    aiCard: {
+      backgroundColor: "#1F1F23",
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.primary + "30",
+      padding: 14,
+      width: 110,
+      alignItems: "center",
+      gap: 4,
+    },
+    aiCardIcon: { fontSize: 24, marginBottom: 2 },
+    aiCardTitle: {
+      fontFamily: fonts.sub,
+      fontSize: 13,
+      color: colors.foreground,
+      textAlign: "center",
+    },
+    aiCardDesc: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.mutedForeground,
+      textAlign: "center",
+    },
     tabBar: {
       flexDirection: "row",
       borderBottomWidth: 1,

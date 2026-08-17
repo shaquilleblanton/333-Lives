@@ -538,6 +538,12 @@ export const GetHabitsResponseItem = zod.object({
   "longestStreak": zod.number(),
   "completionRate": zod.number(),
   "checkedInToday": zod.boolean(),
+  "todayStatus": zod.enum(['great', 'okay', 'struggling']).nullish(),
+  "recentCheckins": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "done": zod.boolean(),
+  "status": zod.enum(['great', 'okay', 'struggling']).nullable()
+})).describe('Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status.'),
   "createdAt": zod.coerce.date()
 })
 export const GetHabitsResponse = zod.array(GetHabitsResponseItem)
@@ -563,6 +569,12 @@ export const CreateHabitResponse = zod.object({
   "longestStreak": zod.number(),
   "completionRate": zod.number(),
   "checkedInToday": zod.boolean(),
+  "todayStatus": zod.enum(['great', 'okay', 'struggling']).nullish(),
+  "recentCheckins": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "done": zod.boolean(),
+  "status": zod.enum(['great', 'okay', 'struggling']).nullable()
+})).describe('Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status.'),
   "createdAt": zod.coerce.date()
 })
 
@@ -591,6 +603,12 @@ export const UpdateHabitResponse = zod.object({
   "longestStreak": zod.number(),
   "completionRate": zod.number(),
   "checkedInToday": zod.boolean(),
+  "todayStatus": zod.enum(['great', 'okay', 'struggling']).nullish(),
+  "recentCheckins": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "done": zod.boolean(),
+  "status": zod.enum(['great', 'okay', 'struggling']).nullable()
+})).describe('Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status.'),
   "createdAt": zod.coerce.date()
 })
 
@@ -1543,6 +1561,12 @@ export const GetDashboardResponse = zod.object({
   "longestStreak": zod.number(),
   "completionRate": zod.number(),
   "checkedInToday": zod.boolean(),
+  "todayStatus": zod.enum(['great', 'okay', 'struggling']).nullish(),
+  "recentCheckins": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "done": zod.boolean(),
+  "status": zod.enum(['great', 'okay', 'struggling']).nullable()
+})).describe('Exactly 7 entries for the past 7 days (oldest first), each with date, done, and mood status.'),
   "createdAt": zod.coerce.date()
 })),
   "todayEvents": zod.array(zod.object({
@@ -2494,7 +2518,6 @@ export const GetShopProductsResponseItem = zod.object({
   "title": zod.string(),
   "handle": zod.string(),
   "description": zod.string().optional(),
-  "productType": zod.string().optional(),
   "imageUrl": zod.string().optional(),
   "imageAlt": zod.string().optional(),
   "price": zod.string().describe('Minimum variant price as a decimal string.'),
@@ -3104,6 +3127,112 @@ export const GetAnnualReviewResponse = zod.object({
   "moodBreakdown": zod.record(zod.string(), zod.number())
 }),
   "topWord": zod.string().nullable()
+})
+
+
+/**
+ * @summary List all conversations for the current user
+ */
+export const ListAnthropicConversationsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAnthropicConversationsResponse = zod.array(ListAnthropicConversationsResponseItem)
+
+
+/**
+ * @summary Create a new conversation
+ */
+export const CreateAnthropicConversationBody = zod.object({
+  "title": zod.string()
+})
+
+export const CreateAnthropicConversationResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get conversation with messages
+ */
+export const GetAnthropicConversationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAnthropicConversationResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "messages": zod.array(zod.object({
+  "id": zod.number(),
+  "conversationId": zod.number(),
+  "role": zod.string(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Delete a conversation
+ */
+export const DeleteAnthropicConversationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAnthropicConversationResponse = zod.void()
+
+
+/**
+ * @summary List messages in a conversation
+ */
+export const ListAnthropicMessagesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListAnthropicMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "conversationId": zod.number(),
+  "role": zod.string(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAnthropicMessagesResponse = zod.array(ListAnthropicMessagesResponseItem)
+
+
+/**
+ * @summary Send a message and receive an AI response (SSE stream)
+ */
+export const SendAnthropicMessageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SendAnthropicMessageBody = zod.object({
+  "content": zod.string()
+})
+
+export const SendAnthropicMessageResponse = zod.unknown()
+
+
+/**
+ * @summary Get personalized life coach insights based on habits, intentions, and streaks
+ */
+export const GetAnthropicCoachInsightsResponse = zod.object({
+  "insights": zod.string(),
+  "streakDays": zod.number(),
+  "habitsSummary": zod.string().optional(),
+  "intentionsSummary": zod.string().optional()
+})
+
+
+/**
+ * @summary Generate a personalized affirmation using AI
+ */
+export const GenerateAnthropicAffirmationResponse = zod.object({
+  "text": zod.string()
 })
 
 

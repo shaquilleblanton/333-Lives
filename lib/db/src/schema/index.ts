@@ -22,4 +22,6 @@ export * from "./life-events";
 export * from "./pulse";
 export * from "./memory-collections";
 export * from "./shop-referrals";
+export * from "./ai-conversations";
+export * from "./ai-messages";
 
