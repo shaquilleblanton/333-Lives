@@ -22,6 +22,7 @@ import {
 import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -114,7 +115,7 @@ function parseBirthday(b?: string | null): { mmdd: string; year: string } {
 
 export default function People() {
   const [, setLocation] = useLocation();
-  const { data: people, isLoading } = useGetPeople();
+  const { data: people, isLoading, isError, refetch } = useGetPeople();
   const { data: reminders } = useGetPeopleReminders();
   const [filter, setFilter] = useState<RelationshipFilter>("all");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -182,7 +183,13 @@ export default function People() {
       </div>
 
       {/* Grid */}
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          title="Couldn't load people"
+          description="We had trouble loading your circle. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-xl bg-muted/30" />)}
         </div>

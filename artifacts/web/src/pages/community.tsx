@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { cn } from "@/lib/utils";
 
 /**
@@ -270,7 +271,7 @@ const DEFAULT_FORM = {
 
 export default function Community() {
   const qc = useQueryClient();
-  const { data: events = [], isLoading } = useGetCommunityEvents();
+  const { data: events = [], isLoading, isError, refetch } = useGetCommunityEvents();
   const createEvent = useCreateCommunityEvent();
   const deleteEvent = useDeleteCommunityEvent();
   const respondEvent = useRespondToCommunityEvent();
@@ -352,6 +353,18 @@ export default function Community() {
 
   const selectedDateEvents = selectedDate ? eventsOnDate(selectedDate) : [];
   const upcomingEvents = filteredEvents().filter(e => e.startDate >= todayStr).slice(0, 8);
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-10 max-w-6xl mx-auto w-full pt-20">
+        <ErrorRetryView
+          title="Couldn't load community calendar"
+          description="We had trouble loading events. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-6xl mx-auto w-full space-y-10 animate-in fade-in duration-700">

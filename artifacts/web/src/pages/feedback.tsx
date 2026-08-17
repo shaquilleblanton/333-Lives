@@ -21,6 +21,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryInline } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -173,7 +174,11 @@ function SubmitForm() {
 }
 
 function MyFeedbackList() {
-  const { data: items, isLoading } = useGetMyFeedback();
+  const { data: items, isLoading, isError, refetch } = useGetMyFeedback();
+
+  if (isError) {
+    return <ErrorRetryInline message="Couldn't load your feedback." onRetry={() => refetch()} />;
+  }
 
   if (isLoading) {
     return <Skeleton className="h-40 w-full rounded-2xl bg-muted/30" />;
@@ -307,7 +312,7 @@ function AdminQueueRow({ item }: { item: AdminFeedbackItem }) {
 }
 
 function AdminQueue() {
-  const { data: items, isLoading } = useGetAllFeedback();
+  const { data: items, isLoading, isError, refetch } = useGetAllFeedback();
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<FeedbackType | "all">("all");
 
@@ -358,7 +363,9 @@ function AdminQueue() {
       <p className="text-sm text-muted-foreground">
         Everything members have sent in, for your end-of-month update pass.
       </p>
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryInline message="Couldn't load the triage queue." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <Skeleton className="h-40 w-full rounded-2xl bg-muted/30" />
       ) : filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No feedback matches these filters.</p>

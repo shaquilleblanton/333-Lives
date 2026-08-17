@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUpload } from "@workspace/object-storage-web";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -216,10 +217,11 @@ export default function Timeline() {
 
       {/* Timeline */}
       {isError ? (
-        <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-card/20">
-          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading timeline.</p>
-          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
-        </div>
+        <ErrorRetryView
+          title="Couldn't load timeline"
+          description="We had trouble loading your life events. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-xl bg-muted/30" />)}

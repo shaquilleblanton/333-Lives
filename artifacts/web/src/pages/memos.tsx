@@ -19,6 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryInline } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +37,7 @@ function formatRecordedAt(iso: string) {
 }
 
 export default function Memos() {
-  const { data: memos, isLoading } = useGetVoiceMemos();
+  const { data: memos, isLoading, isError, refetch } = useGetVoiceMemos();
   const updateMemo = useUpdateVoiceMemo();
   const deleteMemo = useDeleteVoiceMemo();
   const queryClient = useQueryClient();
@@ -187,7 +188,9 @@ export default function Memos() {
           Your recordings
         </h2>
 
-        {isLoading ? (
+        {isError ? (
+          <ErrorRetryInline message="Couldn't load your recordings." onRetry={() => refetch()} />
+        ) : isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-20 w-full rounded-2xl bg-muted/30" />
             <Skeleton className="h-20 w-full rounded-2xl bg-muted/30" />

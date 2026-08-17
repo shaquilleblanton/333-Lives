@@ -12,6 +12,7 @@ import {
 import { Heart, Sparkles, PenLine, ChevronDown, Check, Flame } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function Gratitude() {
-  const { data: entries, isLoading: loadingEntries } = useGetGratitudeEntries();
+  const { data: entries, isLoading: loadingEntries, isError, refetch } = useGetGratitudeEntries();
   const { data: todayEntry, isLoading: loadingToday } = useGetTodayGratitudeEntry();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -124,6 +125,18 @@ export default function Gratitude() {
       );
     }
   };
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-12 max-w-4xl mx-auto w-full pt-20">
+        <ErrorRetryView
+          title="Couldn't load gratitude entries"
+          description="We had trouble loading your gratitude journal. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-12 max-w-4xl mx-auto w-full space-y-10 animate-in fade-in duration-700 slide-in-from-bottom-4">

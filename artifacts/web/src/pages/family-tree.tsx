@@ -22,6 +22,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useUpload } from "@workspace/object-storage-web";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -623,7 +624,7 @@ function MemberFormDialog({ open, onOpenChange, member }: {
 export default function FamilyTree() {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { data: members, isLoading } = useGetFamilyMembers();
+  const { data: members, isLoading, isError, refetch } = useGetFamilyMembers();
   const deleteMember = useDeleteFamilyMember();
 
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
@@ -648,6 +649,18 @@ export default function FamilyTree() {
     qc.invalidateQueries({ queryKey: getGetFamilyMembersQueryKey() });
     setSelectedMember(null);
     toast({ title: "Member removed", description: `${member.name} has been removed.` });
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-12 max-w-6xl mx-auto w-full pt-20">
+        <ErrorRetryView
+          title="Couldn't load family tree"
+          description="We had trouble loading your family members. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
   }
 
   return (

@@ -6,6 +6,7 @@ import { useClerk } from "@clerk/react";
 import { basePath } from "@/lib/clerk";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ function avatarSrc(path: string) {
 }
 
 export default function Profile() {
-  const { data: user, isLoading } = useGetMe();
+  const { data: user, isLoading, isError, refetch } = useGetMe();
   const { signOut } = useClerk();
   const [, setLocation] = useLocation();
   const updateMe = useUpdateMe();
@@ -78,6 +79,18 @@ export default function Profile() {
       setIsUploadingAvatar(false);
     }
   };
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-12 max-w-4xl mx-auto w-full pt-20">
+        <ErrorRetryView
+          title="Couldn't load your profile"
+          description="We had trouble loading your account details. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 
 type Chapter = {
   id: string;
@@ -170,7 +171,7 @@ type ViewMode = "chapters" | "timeline";
 export default function TellYourStory() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: answers, isLoading } = useGetStoryAnswers();
+  const { data: answers, isLoading, isError, refetch } = useGetStoryAnswers();
   const upsert = useUpsertStoryAnswer();
   const del = useDeleteStoryAnswer();
 
@@ -327,7 +328,13 @@ export default function TellYourStory() {
         ))}
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          title="Couldn't load your story"
+          description="We had trouble loading your answers. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>

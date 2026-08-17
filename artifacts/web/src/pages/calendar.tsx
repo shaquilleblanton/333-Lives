@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGetEvents, useCreateEvent, useDeleteEvent, getGetEventsQueryKey } from "@workspace/api-client-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Calendar as CalendarIcon, Clock, Plus, Loader2, Unlock, Lock, CalendarCheck, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,10 +81,11 @@ export default function Calendar() {
       <EventFormDialog open={isOpen} onOpenChange={setIsOpen} />
 
       {isError ? (
-        <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-card/20">
-          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading calendar.</p>
-          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
-        </div>
+        <ErrorRetryView
+          title="Couldn't load calendar"
+          description="We had trouble loading your events. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       ) : isLoading ? (
         <Skeleton className="h-[600px] w-full rounded-2xl bg-muted/30" />
       ) : (

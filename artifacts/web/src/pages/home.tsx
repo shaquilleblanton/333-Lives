@@ -30,6 +30,7 @@ import {
   Cake, Calendar,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import {
   Dialog,
   DialogContent,
@@ -48,9 +49,12 @@ export default function Home() {
 
   if (isError) {
     return (
-      <div className="p-6 md:p-12 max-w-5xl mx-auto w-full flex flex-col items-center justify-center min-h-[40vh] gap-4">
-        <p className="text-muted-foreground">Error loading dashboard.</p>
-        <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
+      <div className="p-6 md:p-12 max-w-5xl mx-auto w-full pt-20">
+        <ErrorRetryView
+          title="Couldn't load dashboard"
+          description="We had trouble loading your dashboard. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }

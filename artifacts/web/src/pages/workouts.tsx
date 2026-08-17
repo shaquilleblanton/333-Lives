@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryInline } from "@/components/ui/error-retry-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -79,7 +80,7 @@ export default function Workouts() {
     return { start: startOfMonth(anchor), end: endOfMonth(anchor) };
   })();
 
-  const { data: sessions = [], isLoading } = useGetWorkouts({
+  const { data: sessions = [], isLoading, isError, refetch } = useGetWorkouts({
     start: toISODate(range.start),
     end: toISODate(range.end),
   });
@@ -193,7 +194,9 @@ export default function Workouts() {
       </div>
 
       {/* Body */}
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryInline message="Couldn't load workouts." onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>

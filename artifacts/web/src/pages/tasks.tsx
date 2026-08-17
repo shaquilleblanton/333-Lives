@@ -17,6 +17,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -140,10 +141,11 @@ export default function Tasks() {
       </div>
 
       {isError ? (
-        <div className="border border-dashed border-border/60 rounded-2xl bg-card/20 p-12 text-center">
-          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading tasks.</p>
-          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
-        </div>
+        <ErrorRetryView
+          title="Couldn't load tasks"
+          description="We had trouble loading your tasks. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       ) : isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl bg-muted/30" />)}

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,7 +56,7 @@ function storageUrl(objectPath: string) {
 // ─── Album Grid ─────────────────────────────────────────────────────────────
 
 export default function Memories() {
-  const { data: collections, isLoading } = useGetMemoryCollections();
+  const { data: collections, isLoading, isError, refetch } = useGetMemoryCollections();
   const deleteCollection = useDeleteMemoryCollection();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -111,7 +112,13 @@ export default function Memories() {
         editTarget={editTarget}
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          title="Couldn't load memory collections"
+          description="We had trouble loading your albums. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-52 rounded-2xl bg-muted/30" />)}
         </div>

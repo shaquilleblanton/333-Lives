@@ -20,6 +20,7 @@ import {
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -191,10 +192,11 @@ export default function Vault() {
 
       {/* Error state */}
       {isError && (
-        <div className="text-center py-16 border border-dashed border-border/50 rounded-2xl bg-card/20">
-          <p className="text-muted-foreground font-subheading text-sm mb-4">Error loading vault items.</p>
-          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
-        </div>
+        <ErrorRetryView
+          title="Couldn't load vault items"
+          description="We had trouble loading your vault. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       )}
 
       {/* ── GENERAL TAB ── */}

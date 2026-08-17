@@ -18,6 +18,7 @@ import {
   Mic, Square, RotateCcw, Sparkles, AudioLines, Loader2, Quote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -106,7 +107,7 @@ const EMPTY_FORM: FormState = {
 export default function LegacyLetters() {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { data: letters = [], isLoading } = useGetLegacyLetters();
+  const { data: letters = [], isLoading, isError, refetch } = useGetLegacyLetters();
   const createLetter = useCreateLegacyLetter();
   const updateLetter = useUpdateLegacyLetter();
   const deleteLetter = useDeleteLegacyLetter();
@@ -318,7 +319,13 @@ export default function LegacyLetters() {
       </div>
 
       {/* Letters list */}
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          title="Couldn't load legacy letters"
+          description="We had trouble loading your letters. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>

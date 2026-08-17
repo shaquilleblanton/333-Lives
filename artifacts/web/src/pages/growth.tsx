@@ -15,6 +15,7 @@ import { Check, Target, BookOpen, Flame, PenLine, Plus, Loader2, Sparkles } from
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryInline } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -202,12 +203,7 @@ function HabitsTab() {
 
   if (isLoading) return <Skeleton className="h-64 w-full bg-muted/30 rounded-xl" />;
 
-  if (isError) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <p className="text-muted-foreground font-subheading">Couldn't load habits.</p>
-      <button onClick={() => refetch()} className="text-sm text-primary underline">Try Again</button>
-    </div>
-  );
+  if (isError) return <ErrorRetryInline message="Couldn't load habits." onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -279,7 +275,7 @@ function HabitsTab() {
 // ─── Goals ────────────────────────────────────────────────────────────────────
 
 function GoalsTab() {
-  const { data: goals, isLoading } = useGetGoals();
+  const { data: goals, isLoading, isError, refetch } = useGetGoals();
   const createGoal = useCreateGoal();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -302,6 +298,8 @@ function GoalsTab() {
   };
 
   if (isLoading) return <Skeleton className="h-64 w-full bg-muted/30 rounded-xl" />;
+
+  if (isError) return <ErrorRetryInline message="Couldn't load goals." onRetry={() => refetch()} />;
 
   return (
     <div>
@@ -371,7 +369,7 @@ function GoalsTab() {
 // ─── Journal ──────────────────────────────────────────────────────────────────
 
 function JournalTab() {
-  const { data: entries, isLoading } = useGetJournalEntries();
+  const { data: entries, isLoading, isError, refetch } = useGetJournalEntries();
   const createEntry = useCreateJournalEntry();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -421,6 +419,8 @@ function JournalTab() {
   };
 
   if (isLoading) return <Skeleton className="h-64 w-full bg-muted/30 rounded-xl" />;
+
+  if (isError) return <ErrorRetryInline message="Couldn't load journal entries." onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-8">

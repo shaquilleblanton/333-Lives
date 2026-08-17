@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Lock, Unlock, KeyRound, FileText, Mic, Video, Plus, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Future() {
-  const { data: messages, isLoading } = useGetMessages();
+  const { data: messages, isLoading, isError, refetch } = useGetMessages();
   const searchString = useSearch();
   const queryParams = new URLSearchParams(searchString);
   const initialRecipient = queryParams.get("recipient") || "";
@@ -44,7 +45,13 @@ export default function Future() {
         initialRecipient={initialRecipient}
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorRetryView
+          title="Couldn't load messages"
+          description="We had trouble loading your future messages. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
         <div className="space-y-6">
           {[1, 2, 3].map(i => (
             <Skeleton key={i} className="h-32 w-full rounded-xl bg-muted/30" />

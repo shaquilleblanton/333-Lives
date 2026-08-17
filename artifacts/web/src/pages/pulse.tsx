@@ -13,6 +13,7 @@ import {
 import { useUpload } from "@workspace/object-storage-web";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { ErrorRetryView } from "@/components/ui/error-retry-view";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -95,10 +96,11 @@ export default function Pulse() {
 
       {/* Feed */}
       {isError ? (
-        <div className="text-center py-12 border border-dashed border-border/50 rounded-2xl bg-card/20">
-          <p className="text-muted-foreground text-sm mb-3">Error loading feed.</p>
-          <button onClick={() => refetch()} className="text-primary hover:underline text-sm font-subheading">Retry</button>
-        </div>
+        <ErrorRetryView
+          title="Couldn't load the feed"
+          description="We had trouble loading pulse posts. Check your connection and try again."
+          onRetry={() => refetch()}
+        />
       ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36 rounded-2xl bg-muted/30" />)}
