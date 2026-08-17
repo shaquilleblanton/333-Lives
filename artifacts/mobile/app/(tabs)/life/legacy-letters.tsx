@@ -310,7 +310,7 @@ export default function LegacyLettersScreen() {
       if (editingLetter) {
         await updateLetter.mutateAsync({ id: editingLetter.id, data });
       } else {
-        await createLetter.mutateAsync({ data: { ...data, userId: 0 } as any });
+        await createLetter.mutateAsync({ data });
       }
       invalidate();
       setWriteOpen(false);

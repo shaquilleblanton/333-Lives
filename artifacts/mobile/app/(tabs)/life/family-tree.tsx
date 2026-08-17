@@ -497,7 +497,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
                 </View>
               ) : (
                 <View style={{ marginTop: 8, gap: 10 }}>
-                  {(moments as FamilyMemberMoment[]).map(m => (
+                  {(Array.isArray(moments) ? (moments as FamilyMemberMoment[]) : []).map(m => (
                     <View key={m.id} style={[styles.momentCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
                       <View style={styles.momentRow}>
                         <View style={{ flex: 1 }}>
