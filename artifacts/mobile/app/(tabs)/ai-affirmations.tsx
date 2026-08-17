@@ -32,7 +32,7 @@ export default function AiAffirmationsScreen() {
   const qc = useQueryClient();
 
   const generateMutation = useGenerateAnthropicAffirmation();
-  const { data: history, isLoading: historyLoading } = useGetAffirmations();
+  const { data: history, isLoading: historyLoading, isError: historyError } = useGetAffirmations();
 
   const [generated, setGenerated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +45,7 @@ export default function AiAffirmationsScreen() {
       setGenerated(result.text);
       // Refresh affirmation history
       qc.invalidateQueries({ queryKey: getGetAffirmationsQueryKey() });
-    } catch (err) {
-      console.error("Affirmation error:", err);
+    } catch {
       setError("Couldn't generate an affirmation. Please try again.");
     }
   }
@@ -141,6 +140,11 @@ export default function AiAffirmationsScreen() {
 
         {historyLoading && (
           <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
+        )}
+        {historyError && !historyLoading && (
+          <Text style={[s.errorText, { textAlign: "center", marginTop: 12 }]}>
+            Couldn't load recent affirmations.
+          </Text>
         )}
       </ScrollView>
     </View>

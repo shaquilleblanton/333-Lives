@@ -39,6 +39,10 @@ The project already has a `messages` table (sealed future messages — `lib/db/s
 
 The `sendAnthropicMessage` orval hook is NOT used for the streaming endpoint. The mobile chat screen uses raw `fetch` + `ReadableStream` parser. `getBaseUrl()` was added to `lib/api-client-react/src/custom-fetch.ts` and exported from `src/index.ts` to support this.
 
+## Native auth for SSE
+
+The streaming fetch passes `getToken` (from `useAuth()` in `@clerk/expo`) as a function prop through `AiChatScreen → ChatThread`. Inside `streamMessage`, `await getToken()` is called fresh on each send to get a live Bearer token. This is required for native iOS/Android where session cookies don't work — web uses cookies automatically.
+
 ## Models used
 
 - Chat: `claude-sonnet-4-6` (balanced)

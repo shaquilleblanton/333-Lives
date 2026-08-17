@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   useListAnthropicConversations,
@@ -8,7 +9,7 @@ import {
   getGetAnthropicConversationQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -43,8 +44,9 @@ type Message = {
 async function* streamMessage(
   conversationId: number,
   content: string,
-  token: string | null
+  getToken: () => Promise<string | null>
 ): AsyncGenerator<string, void, unknown> {
+  const token = await getToken();
   const base = getBaseUrl();
   const res = await fetch(
     `${base}/api/anthropic/conversations/${conversationId}/messages`,
@@ -99,7 +101,7 @@ function ConversationList({
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { data: convos, isLoading } = useListAnthropicConversations();
+  const { data: convos, isLoading, isError } = useListAnthropicConversations();
   const deleteConv = useDeleteAnthropicConversation();
   const qc = useQueryClient();
 
@@ -150,6 +152,12 @@ function ConversationList({
           color={colors.primary}
           style={{ marginTop: 40 }}
         />
+      ) : isError ? (
+        <View style={s.emptyState}>
+          <Text style={s.emptyIcon}>⚠️</Text>
+          <Text style={s.emptyTitle}>Couldn't load conversations</Text>
+          <Text style={s.emptyBody}>Check your connection and try again.</Text>
+        </View>
       ) : !convos?.length ? (
         <View style={s.emptyState}>
           <Text style={s.emptyIcon}>💬</Text>
@@ -218,11 +226,11 @@ function ConversationList({
 function ChatThread({
   conversationId,
   onBack,
-  authToken,
+  getToken,
 }: {
   conversationId: number;
   onBack: () => void;
-  authToken: string | null;
+  getToken: () => Promise<string | null>;
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -272,7 +280,7 @@ function ChatThread({
 
     try {
       let accumulated = "";
-      for await (const chunk of streamMessage(conversationId, text, authToken)) {
+      for await (const chunk of streamMessage(conversationId, text, getToken)) {
         accumulated += chunk;
         setStreamingText(accumulated);
         scrollRef.current?.scrollToEnd({ animated: false });
@@ -282,8 +290,7 @@ function ChatThread({
       await qc.invalidateQueries({
         queryKey: getGetAnthropicConversationQueryKey(conversationId),
       });
-    } catch (err) {
-      console.error("Stream error:", err);
+    } catch {
       Alert.alert("Error", "Couldn't send message. Please try again.");
       setLocalMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
     } finally {
@@ -481,6 +488,7 @@ function NewConvSheet({
 
 export default function AiChatScreen() {
   const colors = useColors();
+  const { getToken } = useAuth();
   const [activeConv, setActiveConv] = useState<number | null>(null);
   const [showNew, setShowNew] = useState(false);
 
@@ -504,7 +512,7 @@ export default function AiChatScreen() {
         <ChatThread
           conversationId={activeConv}
           onBack={() => setActiveConv(null)}
-          authToken={null}
+          getToken={getToken}
         />
       </View>
     );

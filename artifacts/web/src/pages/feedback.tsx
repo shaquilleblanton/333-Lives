@@ -39,7 +39,7 @@ const TYPE_OPTIONS: Array<{ value: FeedbackType; label: string; icon: typeof Bug
 
 const APP_AREAS = [
   "Home", "Tasks", "Future", "Vault", "Growth", "Gratitude", "People",
-  "Legacy Letters", "Workouts", "Voice Memos", "Shop", "Community",
+  "Legacy Letters", "Workouts", "Voice Memos", "Community",
   "Calendar", "Profile", "Mobile app", "Other",
 ];
 

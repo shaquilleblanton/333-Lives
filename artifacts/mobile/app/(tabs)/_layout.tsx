@@ -132,18 +132,8 @@ function ClassicTabLayout() {
             ),
         }}
       />
-      <Tabs.Screen
-        name="shop"
-        options={{
-          title: "Shop",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bag" tintColor={color} size={24} />
-            ) : (
-              <Feather name="shopping-bag" size={22} color={color} />
-            ),
-        }}
-      />
+      {/* Shop tab hidden until product catalog is confirmed */}
+      <Tabs.Screen name="shop" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

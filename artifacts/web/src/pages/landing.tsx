@@ -100,8 +100,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-border px-6 md:px-12 py-6 text-center text-xs text-muted-foreground">
-        333 Lives — a life managed with intention.
+      <footer className="mt-auto border-t border-border px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>333 Lives — a life managed with intention.</span>
+        <div className="flex items-center gap-4">
+          <Link href="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+          <Link href="/support" className="hover:text-foreground transition-colors">Support</Link>
+        </div>
       </footer>
     </div>
   );

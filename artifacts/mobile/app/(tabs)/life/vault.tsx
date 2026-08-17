@@ -305,7 +305,7 @@ export default function VaultScreen() {
   const qc = useQueryClient();
 
   const { data: items, isLoading, refetch, isRefetching } = useGetVaultItems();
-  const { data: contacts, refetch: refetchContacts } = useGetVaultContacts();
+  const { data: contacts, isLoading: contactsLoading, isError: contactsError, refetch: refetchContacts } = useGetVaultContacts();
   const createItem = useCreateVaultItem();
   const updateItem = useUpdateVaultItem();
   const deleteItem = useDeleteVaultItem();

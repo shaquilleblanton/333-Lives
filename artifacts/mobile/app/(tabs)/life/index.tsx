@@ -30,6 +30,7 @@ const FEATURES: FeatureItem[] = [
   { key: "familyTree", label: "Family Tree",      sub: "Your lineage & ancestors", icon: "git-branch",   route: "life/family-tree",     accent: "amber" },
   { key: "myStory",   label: "Tell Your Story", sub: "A living autobiography",   icon: "book-open",    route: "life/tell-your-story", accent: "violet" },
   { key: "timeline",  label: "Life Timeline",   sub: "Your defining moments",    icon: "calendar",     route: "life/timeline",        accent: "sky" },
+  { key: "workouts",  label: "Workouts",        sub: "Train with intention",      icon: "activity",     route: "life/workouts",        accent: "rose" },
 ];
 
 const ACCENT_MAP = {
