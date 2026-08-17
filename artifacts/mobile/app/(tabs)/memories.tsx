@@ -200,7 +200,7 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const { data: items, isLoading, refetch } = useGetCollectionItems(collection.id);
+  const { data: items, isLoading, isError: itemsError, refetch } = useGetCollectionItems(collection.id);
   const createItem = useCreateCollectionItem();
   const deleteItem = useDeleteCollectionItem();
   const updateItem = useUpdateCollectionItem();
@@ -330,6 +330,8 @@ function AlbumView({ collection, onBack }: { collection: MemoryCollection; onBac
 
       {isLoading ? (
         <View style={s.center}><ActivityIndicator color={colors.primary} /></View>
+      ) : itemsError ? (
+        <ErrorRetryView message="Couldn't load album photos. Check your connection and try again." onRetry={refetch} />
       ) : (
         <FlatList
           data={sorted}
@@ -453,7 +455,7 @@ function VaultPickerModal({
   isPending: boolean;
 }) {
   const colors = useColors();
-  const { data: vaultItems, isLoading } = useGetVaultItems();
+  const { data: vaultItems, isLoading, isError: vaultError, refetch: refetchVault } = useGetVaultItems();
 
   const mediaItems = (vaultItems ?? []).filter(
     v => v.fileUrl && (v.category === "photo" || v.category === "voice_note" || v.category === "document")
@@ -471,6 +473,16 @@ function VaultPickerModal({
           </View>
           {isLoading ? (
             <ActivityIndicator color={colors.primary} />
+          ) : vaultError ? (
+            <View style={{ alignItems: "center", paddingVertical: 32 }}>
+              <Feather name="alert-circle" size={36} color="#f87171" style={{ opacity: 0.7, marginBottom: 8 }} />
+              <Text style={{ color: colors.mutedForeground, fontFamily: fonts.body, textAlign: "center" }}>
+                Couldn't load Vault items.
+              </Text>
+              <Pressable onPress={() => refetchVault()} style={{ marginTop: 8 }}>
+                <Text style={{ color: colors.primary, fontFamily: fonts.body }}>Try again</Text>
+              </Pressable>
+            </View>
           ) : mediaItems.length === 0 ? (
             <View style={{ alignItems: "center", paddingVertical: 32 }}>
               <Feather name="lock" size={36} color={colors.mutedForeground} style={{ opacity: 0.3, marginBottom: 8 }} />

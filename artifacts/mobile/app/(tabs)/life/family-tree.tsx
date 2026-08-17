@@ -341,7 +341,7 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
   const colors = useColors();
   const qc = useQueryClient();
   const memberId = member?.id ?? 0;
-  const { data: moments = [], isLoading } = useGetFamilyMemberMoments(memberId, {
+  const { data: moments = [], isLoading, isError: momentsError, refetch: refetchMoments } = useGetFamilyMemberMoments(memberId, {
     query: { enabled: !!member, queryKey: getGetFamilyMemberMomentsQueryKey(memberId) },
   });
   const createMoment = useCreateFamilyMemberMoment();
@@ -484,6 +484,13 @@ function MemberDetailModal({ member, visible, onClose, onEdit }: {
 
               {isLoading ? (
                 <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
+              ) : momentsError ? (
+                <View style={styles.emptyMoments}>
+                  <Text style={[styles.emptySub, { color: "#f87171" }]}>Couldn't load moments.</Text>
+                  <Pressable onPress={() => refetchMoments()} style={{ marginTop: 6 }}>
+                    <Text style={{ color: colors.primary, fontFamily: fonts.sub, fontSize: 13 }}>Try again</Text>
+                  </Pressable>
+                </View>
               ) : moments.length === 0 ? (
                 <View style={styles.emptyMoments}>
                   <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>No moments yet. Tap + to add one.</Text>

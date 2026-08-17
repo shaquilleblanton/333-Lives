@@ -83,7 +83,7 @@ function PersonCard({ person, onPress }: { person: Person; onPress: () => void }
 function PersonDetailModal({ person, onClose, onDeleted, onEdit }: { person: Person; onClose: () => void; onDeleted: () => void; onEdit: () => void }) {
   const colors = useColors();
   const qc = useQueryClient();
-  const { data: moments = [], isLoading } = useGetRelationshipMoments(person.id);
+  const { data: moments = [], isLoading, isError, refetch: refetchMoments } = useGetRelationshipMoments(person.id);
   const createMoment = useCreateRelationshipMoment();
   const deletePerson = useDeletePerson();
   const [showForm, setShowForm] = useState(false);
@@ -224,7 +224,15 @@ function PersonDetailModal({ person, onClose, onDeleted, onEdit }: { person: Per
             ) : null}
 
             {/* Moments list */}
-            {isLoading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} /> : sorted.length === 0 ? (
+            {isError ? (
+              <View style={styles.emptyMoments}>
+                <Feather name="alert-circle" size={28} color="#f87171" />
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Couldn't load moments.</Text>
+                <Pressable onPress={() => refetchMoments()}>
+                  <Text style={[styles.addLink, { color: colors.primary }]}>Try again</Text>
+                </Pressable>
+              </View>
+            ) : isLoading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} /> : sorted.length === 0 ? (
               <View style={styles.emptyMoments}>
                 <Feather name="clock" size={28} color={colors.mutedForeground + "50"} />
                 <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No moments yet. Add conversations, promises, memories.</Text>
