@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import * as Sentry from "@sentry/react";
 import { Switch, Route, Redirect, useLocation, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, Show, useClerk } from "@clerk/react";
@@ -174,13 +175,39 @@ function ClerkProviderWithRoutes() {
   );
 }
 
-function App() {
+function AppInner() {
   return (
     <ThemeProvider>
       <WouterRouter base={basePath}>
         <ClerkProviderWithRoutes />
       </WouterRouter>
     </ThemeProvider>
+  );
+}
+
+// Sentry.ErrorBoundary catches any unhandled render error across the whole app
+// and reports it before showing a fallback. The boundary is outside all
+// providers so it catches initialisation failures too.
+function App() {
+  return (
+    <Sentry.ErrorBoundary
+      fallback={({ error, resetError }) => (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center bg-background">
+          <p className="text-lg font-serif text-foreground">Something went wrong</p>
+          <p className="text-sm text-muted-foreground font-subheading max-w-sm">
+            {error instanceof Error ? error.message : "An unexpected error occurred."}
+          </p>
+          <button
+            onClick={resetError}
+            className="mt-2 px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-subheading hover:bg-primary/90 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+    >
+      <AppInner />
+    </Sentry.ErrorBoundary>
   );
 }
 
