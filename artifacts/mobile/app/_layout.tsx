@@ -85,7 +85,7 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -140,3 +140,7 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+// Sentry.wrap registers the native JS engine crash handler and unhandled
+// promise rejection listener at the top level — required for @sentry/react-native v8+.
+export default Sentry.wrap(RootLayout);
