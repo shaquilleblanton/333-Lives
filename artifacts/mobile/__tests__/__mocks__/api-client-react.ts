@@ -96,6 +96,62 @@ let _deleteHabit: jest.Mock;
 // Habits error state
 let _createHabitError: Error | null = null;
 
+// ── isError state for each screen's primary hook ───────────────────────────
+let _intentionsError = false;
+let _memosError = false;
+let _habitsError = false;
+let _memoriesError = false;
+let _lifeEventsError = false;
+let _familyMembersError = false;
+let _peopleError = false;
+let _tasksError = false;
+let _communityEventsError = false;
+let _legacyLettersError = false;
+let _gratitudeError = false;
+let _messagesError = false;
+let _eventsError = false;
+
+// ── Data state for newly added hooks ──────────────────────────────────────
+let _memos: any[] = [];
+let _tasks: any[] = [];
+let _communityEvents: any[] = [];
+let _legacyLetters: any[] = [];
+let _gratitudeEntries: any[] = [];
+let _todayGratitudeEntry: any = null;
+let _messages: any[] = [];
+let _relationshipMoments: any[] = [];
+
+// ── Refetch spies — rebuilt on __reset so call counts are clean each test ─
+let _intentionsRefetch: jest.Mock;
+let _memosRefetch: jest.Mock;
+let _habitsRefetch: jest.Mock;
+let _memoriesRefetch: jest.Mock;
+let _lifeEventsRefetch: jest.Mock;
+let _familyMembersRefetch: jest.Mock;
+let _peopleRefetch: jest.Mock;
+let _tasksRefetch: jest.Mock;
+let _communityEventsRefetch: jest.Mock;
+let _legacyLettersRefetch: jest.Mock;
+let _gratitudeRefetch: jest.Mock;
+let _messagesRefetch: jest.Mock;
+let _eventsRefetch: jest.Mock;
+
+function buildRefetchSpies() {
+  _intentionsRefetch = jest.fn(() => Promise.resolve());
+  _memosRefetch = jest.fn(() => Promise.resolve());
+  _habitsRefetch = jest.fn(() => Promise.resolve());
+  _memoriesRefetch = jest.fn(() => Promise.resolve());
+  _lifeEventsRefetch = jest.fn(() => Promise.resolve());
+  _familyMembersRefetch = jest.fn(() => Promise.resolve());
+  _peopleRefetch = jest.fn(() => Promise.resolve());
+  _tasksRefetch = jest.fn(() => Promise.resolve());
+  _communityEventsRefetch = jest.fn(() => Promise.resolve());
+  _legacyLettersRefetch = jest.fn(() => Promise.resolve());
+  _gratitudeRefetch = jest.fn(() => Promise.resolve());
+  _messagesRefetch = jest.fn(() => Promise.resolve());
+  _eventsRefetch = jest.fn(() => Promise.resolve());
+}
+
 function buildMutations() {
   _createMutateAsync = jest.fn(async (args: any) => {
     if (_createError) throw _createError;
@@ -170,7 +226,31 @@ export function __reset() {
   _habitsLoading = false;
   _checkInError = null;
   _createHabitError = null;
+  // isError flags
+  _intentionsError = false;
+  _memosError = false;
+  _habitsError = false;
+  _memoriesError = false;
+  _lifeEventsError = false;
+  _familyMembersError = false;
+  _peopleError = false;
+  _tasksError = false;
+  _communityEventsError = false;
+  _legacyLettersError = false;
+  _gratitudeError = false;
+  _messagesError = false;
+  _eventsError = false;
+  // data for new hooks
+  _memos = [];
+  _tasks = [];
+  _communityEvents = [];
+  _legacyLetters = [];
+  _gratitudeEntries = [];
+  _todayGratitudeEntry = null;
+  _messages = [];
+  _relationshipMoments = [];
   buildMutations();
+  buildRefetchSpies();
 }
 
 export function __setIntentions(intentions: Intention[]) { _intentions = intentions; }
@@ -195,6 +275,31 @@ export function __setHabitsLoading(v: boolean) { _habitsLoading = v; }
 export function __setCheckInError(err: Error | null) { _checkInError = err; buildMutations(); }
 export function __setCreateHabitError(err: Error | null) { _createHabitError = err; buildMutations(); }
 
+// ── isError setters ────────────────────────────────────────────────────────
+export function __setIntentionsError(v: boolean) { _intentionsError = v; }
+export function __setMemosError(v: boolean) { _memosError = v; }
+export function __setHabitsError(v: boolean) { _habitsError = v; }
+export function __setMemoriesError(v: boolean) { _memoriesError = v; }
+export function __setLifeEventsError(v: boolean) { _lifeEventsError = v; }
+export function __setFamilyMembersError(v: boolean) { _familyMembersError = v; }
+export function __setPeopleError(v: boolean) { _peopleError = v; }
+export function __setTasksError(v: boolean) { _tasksError = v; }
+export function __setCommunityEventsError(v: boolean) { _communityEventsError = v; }
+export function __setLegacyLettersError(v: boolean) { _legacyLettersError = v; }
+export function __setGratitudeError(v: boolean) { _gratitudeError = v; }
+export function __setMessagesError(v: boolean) { _messagesError = v; }
+export function __setEventsError(v: boolean) { _eventsError = v; }
+
+// Data setters for new hooks
+export function __setMemos(memos: any[]) { _memos = memos; }
+export function __setTasks(tasks: any[]) { _tasks = tasks; }
+export function __setCommunityEvents(events: any[]) { _communityEvents = events; }
+export function __setLegacyLetters(letters: any[]) { _legacyLetters = letters; }
+export function __setGratitudeEntries(entries: any[]) { _gratitudeEntries = entries; }
+export function __setTodayGratitudeEntry(entry: any) { _todayGratitudeEntry = entry; }
+export function __setMessages(messages: any[]) { _messages = messages; }
+export function __setRelationshipMoments(moments: any[]) { _relationshipMoments = moments; }
+
 // Expose mutation spies for assertions
 export function __getDeletePost() { return _deletePost; }
 export function __getReactToPost() { return _reactToPost; }
@@ -214,6 +319,21 @@ export function __getCheckInHabit() { return _checkInHabit; }
 export function __getCreateHabit() { return _createHabit; }
 export function __getDeleteHabit() { return _deleteHabit; }
 
+// ── Refetch spy getters (for error-path assertions) ────────────────────────
+export function __getIntentionsRefetch() { return _intentionsRefetch; }
+export function __getMemosRefetch() { return _memosRefetch; }
+export function __getHabitsRefetch() { return _habitsRefetch; }
+export function __getMemoriesRefetch() { return _memoriesRefetch; }
+export function __getLifeEventsRefetch() { return _lifeEventsRefetch; }
+export function __getFamilyMembersRefetch() { return _familyMembersRefetch; }
+export function __getPeopleRefetch() { return _peopleRefetch; }
+export function __getTasksRefetch() { return _tasksRefetch; }
+export function __getCommunityEventsRefetch() { return _communityEventsRefetch; }
+export function __getLegacyLettersRefetch() { return _legacyLettersRefetch; }
+export function __getGratitudeRefetch() { return _gratitudeRefetch; }
+export function __getMessagesRefetch() { return _messagesRefetch; }
+export function __getEventsRefetch() { return _eventsRefetch; }
+
 // ---------------------------------------------------------------------------
 // Query key helpers (exported so component imports resolve)
 // ---------------------------------------------------------------------------
@@ -229,6 +349,15 @@ export const getGetLifeEventsQueryKey = () => ["lifeEvents"];
 export const getGetFamilyMembersQueryKey = () => ["familyMembers"];
 export const getGetFamilyMemberMomentsQueryKey = (id?: number) => ["familyMoments", id];
 export const getGetHabitsQueryKey = () => ["habits"];
+export const getGetVoiceMemosQueryKey = () => ["voiceMemos"];
+export const getGetPeopleQueryKey = () => ["people"];
+export const getGetRelationshipMomentsQueryKey = (id?: number) => ["relationshipMoments", id];
+export const getGetTasksQueryKey = () => ["tasks"];
+export const getGetCommunityEventsQueryKey = () => ["communityEvents"];
+export const getGetLegacyLettersQueryKey = () => ["legacyLetters"];
+export const getGetGratitudeEntriesQueryKey = () => ["gratitudeEntries"];
+export const getGetTodayGratitudeEntryQueryKey = () => ["todayGratitudeEntry"];
+export const getGetMessagesQueryKey = () => ["messages"];
 
 // ---------------------------------------------------------------------------
 // Utility exports
@@ -244,14 +373,21 @@ export const requestUploadUrl = jest.fn(async ({ name }: any) => ({
 // ---------------------------------------------------------------------------
 
 export function useGetEvents() {
-  return { data: _events, isLoading: false, refetch: () => Promise.resolve(), isRefetching: false };
+  return {
+    data: _eventsError ? undefined : _events,
+    isLoading: false,
+    isError: _eventsError,
+    refetch: _eventsRefetch,
+    isRefetching: false,
+  };
 }
 
 export function useGetIntentions() {
   return {
-    data: _intentionsLoading ? undefined : _intentions,
+    data: _intentionsLoading || _intentionsError ? undefined : _intentions,
     isLoading: _intentionsLoading,
-    refetch: () => Promise.resolve(),
+    isError: _intentionsError,
+    refetch: _intentionsRefetch,
     isRefetching: false,
   };
 }
@@ -288,7 +424,12 @@ export function useGetShopProducts() {
 }
 
 export function useGetMemoryCollections() {
-  return { data: _collections, isLoading: false, refetch: () => Promise.resolve() };
+  return {
+    data: _memoriesError ? undefined : _collections,
+    isLoading: false,
+    isError: _memoriesError,
+    refetch: _memoriesRefetch,
+  };
 }
 
 export function useGetCollectionItems(_id: number) {
@@ -300,18 +441,34 @@ export function useGetVaultItems() {
 }
 
 export function useGetPeople() {
-  return { data: _people };
+  return {
+    data: _peopleError ? undefined : _people,
+    isLoading: false,
+    isError: _peopleError,
+    refetch: _peopleRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetRelationshipMoments(_personId: number, _opts?: any) {
+  return { data: _relationshipMoments, isLoading: false, isError: false, refetch: jest.fn() };
 }
 
 export function useGetLifeEvents() {
-  return { data: _lifeEvents, isLoading: false };
+  return {
+    data: _lifeEventsError ? undefined : _lifeEvents,
+    isLoading: false,
+    isError: _lifeEventsError,
+    refetch: _lifeEventsRefetch,
+  };
 }
 
 export function useGetFamilyMembers() {
   return {
-    data: _familyMembers,
+    data: _familyMembersError ? undefined : _familyMembers,
     isLoading: false,
-    refetch: () => Promise.resolve(),
+    isError: _familyMembersError,
+    refetch: _familyMembersRefetch,
     isRefetching: false,
   };
 }
@@ -322,9 +479,76 @@ export function useGetFamilyMemberMoments(_memberId: number, _opts?: any) {
 
 export function useGetHabits() {
   return {
-    data: _habitsLoading ? undefined : _habits,
+    data: _habitsLoading || _habitsError ? undefined : _habits,
     isLoading: _habitsLoading,
-    refetch: () => Promise.resolve(),
+    isError: _habitsError,
+    refetch: _habitsRefetch,
+    isRefetching: false,
+  };
+}
+
+// ── New query hooks ────────────────────────────────────────────────────────
+
+export function useGetVoiceMemos() {
+  return {
+    data: _memosError ? undefined : _memos,
+    isLoading: false,
+    isError: _memosError,
+    refetch: _memosRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetTasks() {
+  return {
+    data: _tasksError ? undefined : _tasks,
+    isLoading: false,
+    isError: _tasksError,
+    refetch: _tasksRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetCommunityEvents() {
+  return {
+    data: _communityEventsError ? undefined : _communityEvents,
+    isLoading: false,
+    isError: _communityEventsError,
+    refetch: _communityEventsRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetLegacyLetters() {
+  return {
+    data: _legacyLettersError ? undefined : _legacyLetters,
+    isLoading: false,
+    isError: _legacyLettersError,
+    refetch: _legacyLettersRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetGratitudeEntries() {
+  return {
+    data: _gratitudeError ? undefined : _gratitudeEntries,
+    isLoading: false,
+    isError: _gratitudeError,
+    refetch: _gratitudeRefetch,
+    isRefetching: false,
+  };
+}
+
+export function useGetTodayGratitudeEntry() {
+  return { data: _todayGratitudeEntry, isLoading: false };
+}
+
+export function useGetMessages() {
+  return {
+    data: _messagesError ? undefined : _messages,
+    isLoading: false,
+    isError: _messagesError,
+    refetch: _messagesRefetch,
     isRefetching: false,
   };
 }
@@ -420,6 +644,49 @@ export const useDeleteHabit = jest.fn(() => ({
   mutate: _deleteHabit,
   isPending: false,
 }));
+
+// ── New mutation stubs (screens import these; stub with no-op jest.fn()) ───
+
+// Voice memos
+export const useCreateVoiceMemo = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUpdateVoiceMemo = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeleteVoiceMemo = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+
+// People / relationship moments
+export const useCreatePerson = jest.fn(() => ({ mutateAsync: jest.fn(async () => ({ id: 1 })), isPending: false }));
+export const useUpdatePerson = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeletePerson = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useCreateRelationshipMoment = jest.fn(() => ({ mutateAsync: jest.fn(async () => ({ id: 1 })), isPending: false }));
+
+// Tasks
+export const useCreateTask = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUpdateTask = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeleteTask = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+
+// Community events
+export const useCreateCommunityEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUpdateCommunityEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeleteCommunityEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useRespondToCommunityEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+
+// Legacy letters
+export const useCreateLegacyLetter = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUpdateLegacyLetter = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeleteLegacyLetter = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useSealLegacyLetter = jest.fn(() => ({ mutateAsync: jest.fn(async () => {}), isPending: false }));
+export const useUnsealLegacyLetter = jest.fn(() => ({ mutateAsync: jest.fn(async () => {}), isPending: false }));
+
+// Gratitude entries
+export const useCreateGratitudeEntry = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUpdateGratitudeEntry = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+
+// Future messages
+export const useCreateMessage = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useUnlockMessage = jest.fn(() => ({ mutateAsync: jest.fn(async () => ({ content: "" })), isPending: false }));
+
+// Calendar events
+export const useCreateEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
+export const useDeleteEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: false }));
 
 // Initialize
 __reset();
