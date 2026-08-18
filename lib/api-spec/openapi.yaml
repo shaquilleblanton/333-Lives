@@ -442,6 +442,173 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /vault/family/items:
+    get:
+      operationId: getVaultFamilyItems
+      tags: [vault]
+      summary: List family-visibility items from linked family members
+      responses:
+        "200":
+          description: Family vault items with owner names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultFamilyItem"
+
+  /vault/family/members:
+    get:
+      operationId: getVaultFamilyMembers
+      tags: [vault]
+      summary: List accepted family members linked to the current user
+      responses:
+        "200":
+          description: List of linked family members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultFamilyMember"
+
+  /vault/family/invite:
+    post:
+      operationId: createVaultFamilyInvite
+      tags: [vault]
+      summary: Create a family invite token
+      responses:
+        "201":
+          description: Invite token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultFamilyInvite"
+
+  /vault/family/invite/{token}/accept:
+    post:
+      operationId: acceptVaultFamilyInvite
+      tags: [vault]
+      summary: Accept a family invite token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Link accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Already accepted or already linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vault/family/members/{linkId}:
+    delete:
+      operationId: deleteVaultFamilyMember
+      tags: [vault]
+      summary: Remove a family link
+      parameters:
+        - in: path
+          name: linkId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unlinked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /vault/{id}/upload:
+    post:
+      operationId: uploadVaultFile
+      tags: [vault]
+      summary: Upload and encrypt a file for a vault item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: X-Filename
+          required: false
+          schema:
+            type: string
+        - in: header
+          name: X-Mime-Type
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Updated vault item with file metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vault/{id}/file:
+    get:
+      operationId: getVaultFile
+      tags: [vault]
+      summary: Download and decrypt a vault file (owner or family member)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Decrypted file bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /vault/{id}:
     get:
       operationId: getVaultItem
@@ -3173,6 +3340,9 @@ components:
         category:
           type: string
           enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
+        visibility:
+          type: string
+          enum: [private, family]
         fileUrl:
           type: string
           nullable: true
@@ -3188,7 +3358,7 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, name, category, createdAt]
+      required: [id, name, category, visibility, createdAt]
 
     CreateVaultItemBody:
       type: object
@@ -3198,8 +3368,9 @@ components:
         category:
           type: string
           enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
-        fileUrl:
+        visibility:
           type: string
+          enum: [private, family]
         content:
           type: string
         mimeType:
@@ -3216,14 +3387,74 @@ components:
         category:
           type: string
           enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
-        fileUrl:
+        visibility:
           type: string
+          enum: [private, family]
         content:
           type: string
         mimeType:
           type: string
         sizeBytes:
           type: integer
+
+    VaultFamilyMember:
+      type: object
+      properties:
+        linkId:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        linkedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [linkId, userId, name]
+
+    VaultFamilyItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+          enum: [document, photo, journal, voice_note, important_info, final_letter, will, insurance, medical_directive, funeral_wishes, digital_assets]
+        visibility:
+          type: string
+          enum: [private, family]
+        fileUrl:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        mimeType:
+          type: string
+          nullable: true
+        sizeBytes:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        ownerName:
+          type: string
+      required: [id, userId, name, category, visibility, createdAt, ownerName]
+
+    VaultFamilyInvite:
+      type: object
+      properties:
+        token:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [token, createdAt]
 
     VaultContact:
       type: object

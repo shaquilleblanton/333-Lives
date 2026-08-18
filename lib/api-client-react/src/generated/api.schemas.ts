@@ -125,10 +125,19 @@ export const VaultItemCategory = {
   digital_assets: 'digital_assets',
 } as const;
 
+export type VaultItemVisibility = typeof VaultItemVisibility[keyof typeof VaultItemVisibility];
+
+
+export const VaultItemVisibility = {
+  private: 'private',
+  family: 'family',
+} as const;
+
 export interface VaultItem {
   id: number;
   name: string;
   category: VaultItemCategory;
+  visibility: VaultItemVisibility;
   fileUrl?: string | null;
   content?: string | null;
   mimeType?: string | null;
@@ -153,10 +162,18 @@ export const CreateVaultItemBodyCategory = {
   digital_assets: 'digital_assets',
 } as const;
 
+export type CreateVaultItemBodyVisibility = typeof CreateVaultItemBodyVisibility[keyof typeof CreateVaultItemBodyVisibility];
+
+
+export const CreateVaultItemBodyVisibility = {
+  private: 'private',
+  family: 'family',
+} as const;
+
 export interface CreateVaultItemBody {
   name: string;
   category: CreateVaultItemBodyCategory;
-  fileUrl?: string;
+  visibility?: CreateVaultItemBodyVisibility;
   content?: string;
   mimeType?: string;
   sizeBytes?: number;
@@ -179,13 +196,72 @@ export const UpdateVaultItemBodyCategory = {
   digital_assets: 'digital_assets',
 } as const;
 
+export type UpdateVaultItemBodyVisibility = typeof UpdateVaultItemBodyVisibility[keyof typeof UpdateVaultItemBodyVisibility];
+
+
+export const UpdateVaultItemBodyVisibility = {
+  private: 'private',
+  family: 'family',
+} as const;
+
 export interface UpdateVaultItemBody {
   name?: string;
   category?: UpdateVaultItemBodyCategory;
-  fileUrl?: string;
+  visibility?: UpdateVaultItemBodyVisibility;
   content?: string;
   mimeType?: string;
   sizeBytes?: number;
+}
+
+export interface VaultFamilyMember {
+  linkId: number;
+  userId: number;
+  name: string;
+  linkedAt?: string | null;
+}
+
+export type VaultFamilyItemCategory = typeof VaultFamilyItemCategory[keyof typeof VaultFamilyItemCategory];
+
+
+export const VaultFamilyItemCategory = {
+  document: 'document',
+  photo: 'photo',
+  journal: 'journal',
+  voice_note: 'voice_note',
+  important_info: 'important_info',
+  final_letter: 'final_letter',
+  will: 'will',
+  insurance: 'insurance',
+  medical_directive: 'medical_directive',
+  funeral_wishes: 'funeral_wishes',
+  digital_assets: 'digital_assets',
+} as const;
+
+export type VaultFamilyItemVisibility = typeof VaultFamilyItemVisibility[keyof typeof VaultFamilyItemVisibility];
+
+
+export const VaultFamilyItemVisibility = {
+  private: 'private',
+  family: 'family',
+} as const;
+
+export interface VaultFamilyItem {
+  id: number;
+  userId: number;
+  name: string;
+  category: VaultFamilyItemCategory;
+  visibility: VaultFamilyItemVisibility;
+  fileUrl?: string | null;
+  content?: string | null;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  createdAt: string;
+  ownerName: string;
+}
+
+export interface VaultFamilyInvite {
+  token: string;
+  createdAt: string;
 }
 
 export type VaultContactType = typeof VaultContactType[keyof typeof VaultContactType];

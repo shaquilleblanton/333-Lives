@@ -8,16 +8,30 @@ import {
   useCreateVaultContact,
   useUpdateVaultContact,
   useDeleteVaultContact,
+  useGetVaultFamilyItems,
+  useGetVaultFamilyMembers,
+  useCreateVaultFamilyInvite,
+  useAcceptVaultFamilyInvite,
+  useDeleteVaultFamilyMember,
   getGetVaultItemsQueryKey,
   getGetVaultContactsQueryKey,
+  getGetVaultFamilyMembersQueryKey,
+  getGetVaultFamilyItemsQueryKey,
+  getUploadVaultFileUrl,
+  getGetVaultFileUrl,
+  getBaseUrl,
 } from "@workspace/api-client-react";
-import type { VaultItem, VaultContact } from "@workspace/api-client-react";
+import type { VaultItem, VaultContact, VaultFamilyItem, VaultFamilyMember } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
+import * as Sharing from "expo-sharing";
+import { uploadAsync, downloadAsync, cacheDirectory, FileSystemUploadType } from "expo-file-system/legacy";
+import { useAuth } from "@clerk/expo";
 import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform,
-  Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
+  Pressable, RefreshControl, ScrollView, Share, StyleSheet, Switch, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
@@ -25,39 +39,24 @@ import { useColors } from "@/hooks/useColors";
 
 type VaultCategory = "document" | "photo" | "journal" | "voice_note" | "important_info"
   | "final_letter" | "will" | "insurance" | "medical_directive" | "funeral_wishes" | "digital_assets";
-
+type VaultVisibility = "private" | "family";
 type ContactType = "person" | "attorney" | "executor";
-type ActiveTab = "general" | "estate";
+type ActiveTab = "general" | "estate" | "family";
 
 const GENERAL_CATEGORIES: VaultCategory[] = ["document", "photo", "journal", "voice_note", "important_info"];
 const ESTATE_CATEGORIES: VaultCategory[] = ["final_letter", "will", "insurance", "medical_directive", "funeral_wishes", "digital_assets"];
 
 const CATEGORY_ICONS: Record<VaultCategory, keyof typeof Feather.glyphMap> = {
-  document: "file-text",
-  photo: "image",
-  journal: "book",
-  voice_note: "mic",
-  important_info: "info",
-  final_letter: "edit-3",
-  will: "clipboard",
-  insurance: "shield",
-  medical_directive: "heart",
-  funeral_wishes: "sun",
-  digital_assets: "cpu",
+  document: "file-text", photo: "image", journal: "book", voice_note: "mic",
+  important_info: "info", final_letter: "edit-3", will: "clipboard",
+  insurance: "shield", medical_directive: "heart", funeral_wishes: "sun", digital_assets: "cpu",
 };
 
 const CATEGORY_LABELS: Record<VaultCategory, string> = {
-  document: "Document",
-  photo: "Photo",
-  journal: "Journal",
-  voice_note: "Voice Note",
-  important_info: "Important Info",
-  final_letter: "Final Letter",
-  will: "Will & Testament",
-  insurance: "Insurance",
-  medical_directive: "Medical Directive",
-  funeral_wishes: "Funeral Wishes",
-  digital_assets: "Digital Assets",
+  document: "Document", photo: "Photo", journal: "Journal", voice_note: "Voice Note",
+  important_info: "Important Info", final_letter: "Final Letter", will: "Will & Testament",
+  insurance: "Insurance", medical_directive: "Medical Directive",
+  funeral_wishes: "Funeral Wishes", digital_assets: "Digital Assets",
 };
 
 const ESTATE_PROMPTS: Record<string, string> = {
@@ -69,22 +68,27 @@ const ESTATE_PROMPTS: Record<string, string> = {
   digital_assets: "Email, social media, bank logins, crypto wallets, streaming accounts.",
 };
 
-const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
-  person: "Trusted Person",
-  attorney: "Attorney / Lawyer",
-  executor: "Estate Executor",
-};
-
-const CONTACT_ICONS: Record<ContactType, keyof typeof Feather.glyphMap> = {
-  person: "user",
-  attorney: "briefcase",
-  executor: "user-check",
-};
+const CONTACT_TYPE_LABELS: Record<ContactType, string> = { person: "Trusted Person", attorney: "Attorney / Lawyer", executor: "Estate Executor" };
+const CONTACT_ICONS: Record<ContactType, keyof typeof Feather.glyphMap> = { person: "user", attorney: "briefcase", executor: "user-check" };
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
+function getExtFromMime(mimeType?: string | null): string {
+  if (!mimeType) return "";
+  const sub = mimeType.split("/")[1]?.split(";")[0]?.split("+")[0] ?? "";
+  const map: Record<string, string> = {
+    pdf: ".pdf", jpeg: ".jpg", jpg: ".jpg", png: ".png", mp4: ".mp4",
+    msword: ".doc", plain: ".txt",
+    "vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+  };
+  return map[sub] ?? (sub ? `.${sub}` : "");
+}
+
 // ── Item Form Modal ──────────────────────────────────────────────────────────
+type PendingFile = { uri: string; name: string; mimeType?: string };
+
 function VaultItemModal({
   visible, item, defaultCategory, onClose, onSave, isSaving,
 }: {
@@ -92,93 +96,128 @@ function VaultItemModal({
   item: VaultItem | null;
   defaultCategory: VaultCategory;
   onClose: () => void;
-  onSave: (data: { name: string; category: VaultCategory; content: string }) => void;
+  onSave: (data: { name: string; category: VaultCategory; content: string; visibility: VaultVisibility }, file?: PendingFile) => void;
   isSaving: boolean;
 }) {
   const colors = useColors();
   const [name, setName] = useState("");
   const [category, setCategory] = useState<VaultCategory>(defaultCategory);
   const [content, setContent] = useState("");
+  const [visibility, setVisibility] = useState<VaultVisibility>("private");
+  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
 
   useEffect(() => {
     if (visible) {
       setName(item?.name ?? "");
       setCategory((item?.category as VaultCategory) ?? defaultCategory);
       setContent(item?.content ?? "");
+      setVisibility((item?.visibility as VaultVisibility) ?? "private");
+      setPendingFile(null);
     }
   }, [visible, item, defaultCategory]);
 
   const isEstate = ESTATE_CATEGORIES.includes(category);
   const allCats = [...GENERAL_CATEGORIES, ...ESTATE_CATEGORIES];
 
+  async function pickFile() {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setPendingFile({ uri: asset.uri, name: asset.name, mimeType: asset.mimeType ?? undefined });
+      }
+    } catch {
+      Alert.alert("Couldn't open picker", "Please try again.");
+    }
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView
-          style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
-          contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{item ? "Edit Item" : "Store Item"}</Text>
+          <ScrollView
+            style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
+            contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{item ? "Edit Item" : "Store Item"}</Text>
 
-          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }} contentContainerStyle={{ paddingHorizontal: 24, gap: 8 }}>
-            {allCats.map(c => (
+            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }} contentContainerStyle={{ paddingHorizontal: 24, gap: 8 }}>
+              {allCats.map(c => (
+                <Pressable key={c} onPress={() => setCategory(c)}
+                  style={[styles.pill, { borderColor: category === c ? colors.primary : colors.border, backgroundColor: category === c ? colors.primary + "1A" : "transparent" }]}
+                >
+                  <Text style={[styles.pillText, { color: category === c ? colors.primary : colors.mutedForeground }]}>{CATEGORY_LABELS[c]}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <TextInput
+              value={name} onChangeText={setName}
+              placeholder="Title…" placeholderTextColor={colors.mutedForeground + "99"}
+              style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              autoFocus={!item}
+            />
+
+            {/* Visibility toggle */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Visibility</Text>
               <Pressable
-                key={c}
-                onPress={() => setCategory(c)}
-                style={[styles.pill, {
-                  borderColor: category === c ? colors.primary : colors.border,
-                  backgroundColor: category === c ? colors.primary + "1A" : "transparent",
-                }]}
+                onPress={() => setVisibility(v => v === "private" ? "family" : "private")}
+                style={[styles.visibilityBtn, { borderColor: visibility === "family" ? colors.primary + "60" : colors.border, backgroundColor: visibility === "family" ? colors.primary + "15" : "transparent" }]}
               >
-                <Text style={[styles.pillText, { color: category === c ? colors.primary : colors.mutedForeground }]}>
-                  {CATEGORY_LABELS[c]}
+                <Feather name={visibility === "private" ? "lock" : "users"} size={12} color={visibility === "family" ? colors.primary : colors.mutedForeground} />
+                <Text style={[styles.pillText, { color: visibility === "family" ? colors.primary : colors.mutedForeground }]}>
+                  {visibility === "private" ? "Private" : "Family"}
                 </Text>
               </Pressable>
-            ))}
-          </ScrollView>
-
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Title…"
-            placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            autoFocus={!item}
-          />
-
-          {isEstate && ESTATE_PROMPTS[category] && (
-            <View style={[styles.promptBox, { backgroundColor: colors.muted + "30", borderColor: colors.border }]}>
-              <Text style={[styles.promptText, { color: colors.mutedForeground }]}>{ESTATE_PROMPTS[category]}</Text>
-            </View>
-          )}
-
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder={isEstate ? "Write your thoughts here…" : "Notes / content…"}
-            placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            multiline
-            numberOfLines={isEstate ? 8 : 4}
-            textAlignVertical="top"
-          />
-
-          <Pressable
-            onPress={() => onSave({ name: name.trim(), category, content: content.trim() })}
-            disabled={!name.trim() || isSaving}
-            style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
-          >
-            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
-              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
-                {item ? "Save Changes" : "Store Securely"}
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground + "80", textTransform: "none", letterSpacing: 0, fontSize: 11 }]}>
+                {visibility === "private" ? "Only you can see this" : "Linked family can see this"}
               </Text>
+            </View>
+
+            {isEstate && ESTATE_PROMPTS[category] && (
+              <View style={[styles.promptBox, { backgroundColor: colors.muted + "30", borderColor: colors.border }]}>
+                <Text style={[styles.promptText, { color: colors.mutedForeground }]}>{ESTATE_PROMPTS[category]}</Text>
+              </View>
             )}
-          </Pressable>
-        </ScrollView>
+
+            <TextInput
+              value={content} onChangeText={setContent}
+              placeholder={isEstate ? "Write your thoughts here…" : "Notes / content…"}
+              placeholderTextColor={colors.mutedForeground + "99"}
+              style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              multiline numberOfLines={isEstate ? 8 : 4} textAlignVertical="top"
+            />
+
+            {/* File attachment */}
+            <Pressable
+              onPress={pickFile}
+              style={[styles.filePickerBtn, { borderColor: pendingFile ? colors.primary + "50" : colors.border, backgroundColor: pendingFile ? colors.primary + "08" : "transparent" }]}
+            >
+              <Feather name="paperclip" size={14} color={pendingFile ? colors.primary : colors.mutedForeground} />
+              <Text style={[styles.pillText, { color: pendingFile ? colors.primary : colors.mutedForeground }]}>
+                {pendingFile ? pendingFile.name : (item?.fileUrl ? "Replace file…" : "Attach file…")}
+              </Text>
+              {pendingFile && (
+                <Pressable onPress={() => setPendingFile(null)} hitSlop={8}>
+                  <Feather name="x" size={13} color={colors.mutedForeground} />
+                </Pressable>
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => onSave({ name: name.trim(), category, content: content.trim(), visibility }, pendingFile ?? undefined)}
+              disabled={!name.trim() || isSaving}
+              style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
+            >
+              {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
+                <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{item ? "Save Changes" : "Store Securely"}</Text>
+              )}
+            </Pressable>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -189,14 +228,9 @@ function VaultItemModal({
 function ContactModal({
   visible, contact, defaultPriority, onClose, onSave, isSaving,
 }: {
-  visible: boolean;
-  contact: VaultContact | null;
-  defaultPriority: 1 | 2;
+  visible: boolean; contact: VaultContact | null; defaultPriority: 1 | 2;
   onClose: () => void;
-  onSave: (data: {
-    priority: number; type: ContactType; name: string; relationship?: string;
-    email: string; phone?: string; firmName?: string; notes?: string;
-  }) => void;
+  onSave: (data: any) => void;
   isSaving: boolean;
 }) {
   const colors = useColors();
@@ -228,73 +262,127 @@ function ContactModal({
       <View style={{ flex: 1 }}>
         <Pressable style={styles.overlay} onPress={onClose} />
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView
-          style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
-          contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
-            {contact ? "Edit Contact" : `Add ${priority === 1 ? "First" : "Second"} Contact`}
-          </Text>
-          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
-            {priority === 1 ? "Primary contact — receives your estate vault first" : "Backup contact — receives vault if first is unreachable"}
-          </Text>
-
-          <Text style={[styles.fieldLabel, { color: colors.mutedForeground, marginTop: 4 }]}>Contact Type</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            {contactTypes.map(t => (
-              <Pressable
-                key={t}
-                onPress={() => setType(t)}
-                style={[styles.pill, {
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderColor: type === t ? colors.primary : colors.border,
-                  backgroundColor: type === t ? colors.primary + "1A" : "transparent",
-                }]}
-              >
-                <Feather name={CONTACT_ICONS[t]} size={13} color={type === t ? colors.primary : colors.mutedForeground} />
-                <Text style={[styles.pillText, { color: type === t ? colors.primary : colors.mutedForeground, marginTop: 2 }]}>
-                  {t === "person" ? "Person" : t === "attorney" ? "Attorney" : "Executor"}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <TextInput value={name} onChangeText={setName} placeholder="Full name *" placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <TextInput value={relationship} onChangeText={setRelationship} placeholder="Relationship (e.g. Spouse, Sister, Attorney)" placeholderTextColor={colors.mutedForeground + "99"}
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <TextInput value={email} onChangeText={setEmail} placeholder="Email address *" placeholderTextColor={colors.mutedForeground + "99"}
-            keyboardType="email-address" autoCapitalize="none"
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          <TextInput value={phone} onChangeText={setPhone} placeholder="Phone number" placeholderTextColor={colors.mutedForeground + "99"}
-            keyboardType="phone-pad"
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          {(type === "attorney" || type === "executor") && (
-            <TextInput value={firmName} onChangeText={setFirmName} placeholder="Firm / Organization name" placeholderTextColor={colors.mutedForeground + "99"}
-              style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-          )}
-          <TextInput value={notes} onChangeText={setNotes} placeholder="Any notes or instructions…" placeholderTextColor={colors.mutedForeground + "99"}
-            multiline numberOfLines={3} textAlignVertical="top"
-            style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-
-          <Pressable
-            onPress={() => onSave({ priority, type, name: name.trim(), relationship: relationship.trim() || undefined, email: email.trim(), phone: phone.trim() || undefined, firmName: firmName.trim() || undefined, notes: notes.trim() || undefined })}
-            disabled={!name.trim() || !email.trim() || isSaving}
-            style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || !email.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
+          <ScrollView
+            style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}
+            contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
+            keyboardShouldPersistTaps="handled"
           >
-            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
-              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
-                {contact ? "Save Changes" : "Add Contact"}
-              </Text>
+            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
+              {contact ? "Edit Contact" : `Add ${priority === 1 ? "First" : "Second"} Contact`}
+            </Text>
+            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+              {priority === 1 ? "Primary contact — receives your estate vault first" : "Backup contact — receives vault if first is unreachable"}
+            </Text>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {contactTypes.map(t => (
+                <Pressable key={t} onPress={() => setType(t)}
+                  style={[styles.pill, { flex: 1, justifyContent: "center", alignItems: "center",
+                    borderColor: type === t ? colors.primary : colors.border,
+                    backgroundColor: type === t ? colors.primary + "1A" : "transparent" }]}
+                >
+                  <Feather name={CONTACT_ICONS[t]} size={13} color={type === t ? colors.primary : colors.mutedForeground} />
+                  <Text style={[styles.pillText, { color: type === t ? colors.primary : colors.mutedForeground, marginTop: 2 }]}>
+                    {t === "person" ? "Person" : t === "attorney" ? "Attorney" : "Executor"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {[
+              { value: name, set: setName, placeholder: "Full name *", key: "phone-pad" as any },
+              { value: relationship, set: setRelationship, placeholder: "Relationship (e.g. Spouse, Sister)" },
+              { value: email, set: setEmail, placeholder: "Email address *", key: "email-address" as any },
+              { value: phone, set: setPhone, placeholder: "Phone number", key: "phone-pad" as any },
+            ].map(({ value, set, placeholder, key }) => (
+              <TextInput key={placeholder} value={value} onChangeText={set} placeholder={placeholder}
+                placeholderTextColor={colors.mutedForeground + "99"} keyboardType={key}
+                autoCapitalize={key === "email-address" ? "none" : "words"}
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              />
+            ))}
+            {(type === "attorney" || type === "executor") && (
+              <TextInput value={firmName} onChangeText={setFirmName} placeholder="Firm / Organization name"
+                placeholderTextColor={colors.mutedForeground + "99"}
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+              />
             )}
-          </Pressable>
-        </ScrollView>
+            <TextInput value={notes} onChangeText={setNotes} placeholder="Notes or instructions…"
+              placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={3} textAlignVertical="top"
+              style={[styles.input, styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+            />
+
+            <Pressable
+              onPress={() => onSave({ priority, type, name: name.trim(), relationship: relationship.trim() || undefined, email: email.trim(), phone: phone.trim() || undefined, firmName: firmName.trim() || undefined, notes: notes.trim() || undefined })}
+              disabled={!name.trim() || !email.trim() || isSaving}
+              style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || !email.trim() || isSaving ? 0.5 : pressed ? 0.85 : 1 }]}
+            >
+              {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
+                <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{contact ? "Save Changes" : "Add Contact"}</Text>
+              )}
+            </Pressable>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </Modal>
+  );
+}
+
+// ── Item Card ────────────────────────────────────────────────────────────────
+function ItemCard({ item, colors, onEdit, onDelete, onOpen }: {
+  item: VaultItem; colors: any; onEdit: () => void; onDelete: () => void; onOpen?: () => void;
+}) {
+  const icon = CATEGORY_ICONS[item.category as VaultCategory] ?? "file";
+  const hasFile = !!item.fileUrl;
+  const isFamily = item.visibility === "family";
+
+  return (
+    <Pressable onPress={onEdit} style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={[styles.itemIcon, { backgroundColor: colors.primary + "1A" }]}>
+        <Feather name={icon} size={18} color={colors.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={[styles.itemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
+          <Feather name={isFamily ? "users" : "lock"} size={11} color={isFamily ? colors.primary : colors.mutedForeground + "80"} />
+          {hasFile && <Feather name="paperclip" size={11} color={colors.mutedForeground + "80"} />}
+        </View>
+        <Text style={[styles.itemCat, { color: colors.mutedForeground }]}>{CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</Text>
+        {item.content && <Text style={[styles.itemContent, { color: colors.mutedForeground }]} numberOfLines={2}>{item.content}</Text>}
+      </View>
+      <View style={{ gap: 8, alignItems: "center" }}>
+        {hasFile && onOpen && (
+          <Pressable onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
+            <Feather name="download" size={12} color={colors.primary} />
+          </Pressable>
+        )}
+        <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4 }}>
+          <Feather name="trash-2" size={14} color={colors.mutedForeground + "80"} />
+        </Pressable>
+      </View>
+    </Pressable>
+  );
+}
+
+// ── Family Item Card ─────────────────────────────────────────────────────────
+function FamilyItemCard({ item, colors, onOpen }: { item: VaultFamilyItem; colors: any; onOpen: () => void }) {
+  const icon = CATEGORY_ICONS[item.category as VaultCategory] ?? "file";
+  return (
+    <View style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View style={[styles.itemIcon, { backgroundColor: colors.primary + "1A" }]}>
+        <Feather name={icon} size={18} color={colors.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.itemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
+        <Text style={[styles.itemCat, { color: colors.mutedForeground }]}>{(item as any).ownerName} · {CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</Text>
+        {item.content && <Text style={[styles.itemContent, { color: colors.mutedForeground }]} numberOfLines={1}>{item.content}</Text>}
+      </View>
+      {item.fileUrl && (
+        <Pressable onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
+          <Feather name="download" size={12} color={colors.primary} />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -303,15 +391,21 @@ export default function VaultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const { getToken } = useAuth();
 
   const { data: items, isLoading, refetch, isRefetching } = useGetVaultItems();
-  const { data: contacts, isLoading: contactsLoading, isError: contactsError, refetch: refetchContacts } = useGetVaultContacts();
+  const { data: contacts, isLoading: contactsLoading, refetch: refetchContacts } = useGetVaultContacts();
+  const { data: familyItems = [], refetch: refetchFamilyItems } = useGetVaultFamilyItems();
+  const { data: familyMembers = [], refetch: refetchFamilyMembers } = useGetVaultFamilyMembers();
   const createItem = useCreateVaultItem();
   const updateItem = useUpdateVaultItem();
   const deleteItem = useDeleteVaultItem();
   const createContact = useCreateVaultContact();
   const updateContact = useUpdateVaultContact();
   const deleteContact = useDeleteVaultContact();
+  const createInvite = useCreateVaultFamilyInvite();
+  const acceptInvite = useAcceptVaultFamilyInvite();
+  const deleteFamily = useDeleteVaultFamilyMember();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("general");
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -320,50 +414,148 @@ export default function VaultScreen() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<VaultContact | null>(null);
   const [contactPriority, setContactPriority] = useState<1 | 2>(1);
+  const [uploadingItemId, setUploadingItemId] = useState<number | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [acceptInput, setAcceptInput] = useState("");
+  const [acceptingInvite, setAcceptingInvite] = useState(false);
 
   function invalidateItems() { qc.invalidateQueries({ queryKey: getGetVaultItemsQueryKey() }); }
   function invalidateContacts() { qc.invalidateQueries({ queryKey: getGetVaultContactsQueryKey() }); }
+  function invalidateFamily() {
+    qc.invalidateQueries({ queryKey: getGetVaultFamilyMembersQueryKey() });
+    qc.invalidateQueries({ queryKey: getGetVaultFamilyItemsQueryKey() });
+  }
 
   function openCreateItem(cat: VaultCategory) { setEditingItem(null); setDefaultCat(cat); setItemModalOpen(true); }
   function openEditItem(item: VaultItem) { setEditingItem(item); setDefaultCat(item.category as VaultCategory); setItemModalOpen(true); }
   function openCreateContact(priority: 1 | 2) { setEditingContact(null); setContactPriority(priority); setContactModalOpen(true); }
   function openEditContact(contact: VaultContact) { setEditingContact(contact); setContactModalOpen(true); }
 
+  async function uploadFileToItem(itemId: number, file: PendingFile) {
+    setUploadingItemId(itemId);
+    try {
+      const token = await getToken();
+      const uploadUrl = `${getBaseUrl()}${getUploadVaultFileUrl(itemId)}`;
+      const result = await uploadAsync(uploadUrl, file.uri, {
+        uploadType: FileSystemUploadType.BINARY_CONTENT,
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
+          "X-Filename": file.name,
+          "Content-Type": file.mimeType ?? "application/octet-stream",
+        },
+      });
+      if (result.status >= 400) throw new Error(`Upload failed: ${result.status}`);
+    } finally {
+      setUploadingItemId(null);
+    }
+  }
+
+  async function handleOpenFile(item: { id: number; name: string; fileUrl?: string | null; mimeType?: string | null }) {
+    if (!item.fileUrl) return;
+    try {
+      const token = await getToken();
+      const downloadUrl = `${getBaseUrl()}${getGetVaultFileUrl(item.id)}`;
+      const ext = getExtFromMime(item.mimeType);
+      const safeName = (item.name || "vault_file").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const localUri = `${cacheDirectory ?? ""}${safeName}${ext}`;
+      const downloaded = await downloadAsync(downloadUrl, localUri, {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+      });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(downloaded.uri, { mimeType: item.mimeType ?? "application/octet-stream", dialogTitle: item.name });
+      }
+    } catch {
+      Alert.alert("Couldn't open file", "Please try again.");
+    }
+  }
+
   function confirmDeleteItem(item: VaultItem) {
     Alert.alert("Delete item?", `"${item.name}" will be removed permanently.`, [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => { try { await deleteItem.mutateAsync({ id: item.id }); invalidateItems(); } catch { Alert.alert("Couldn't delete", "Please try again."); } } },
+      {
+        text: "Delete", style: "destructive", onPress: async () => {
+          try { await deleteItem.mutateAsync({ id: item.id }); invalidateItems(); }
+          catch { Alert.alert("Couldn't delete", "Please try again."); }
+        },
+      },
     ]);
   }
 
   function confirmDeleteContact(contact: VaultContact) {
     Alert.alert("Remove contact?", `${contact.name} will be removed.`, [
       { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: async () => { try { await deleteContact.mutateAsync({ id: contact.id }); invalidateContacts(); } catch { Alert.alert("Couldn't remove", "Please try again."); } } },
+      {
+        text: "Remove", style: "destructive", onPress: async () => {
+          try { await deleteContact.mutateAsync({ id: contact.id }); invalidateContacts(); }
+          catch { Alert.alert("Couldn't remove", "Please try again."); }
+        },
+      },
     ]);
   }
 
-  async function handleSaveItem(data: { name: string; category: VaultCategory; content: string }) {
+  async function handleSaveItem(
+    data: { name: string; category: VaultCategory; content: string; visibility: VaultVisibility },
+    file?: PendingFile,
+  ) {
     try {
-      if (editingItem) { await updateItem.mutateAsync({ id: editingItem.id, data }); }
-      else { await createItem.mutateAsync({ data }); }
-      invalidateItems(); setItemModalOpen(false);
-    } catch { Alert.alert("Couldn't save", "Please try again."); }
+      let saved: VaultItem;
+      if (editingItem) {
+        saved = await updateItem.mutateAsync({ id: editingItem.id, data });
+      } else {
+        saved = await createItem.mutateAsync({ data });
+      }
+      if (file) {
+        await uploadFileToItem(saved.id, file);
+      }
+      invalidateItems();
+      setItemModalOpen(false);
+    } catch {
+      Alert.alert("Couldn't save", "Please try again.");
+    }
   }
 
   async function handleSaveContact(data: any) {
     try {
       if (editingContact) { await updateContact.mutateAsync({ id: editingContact.id, data }); }
       else { await createContact.mutateAsync({ data }); }
-      invalidateContacts(); setContactModalOpen(false);
+      invalidateContacts();
+      setContactModalOpen(false);
     } catch { Alert.alert("Couldn't save", "Please try again."); }
+  }
+
+  async function handleCreateInvite() {
+    try {
+      const result = await createInvite.mutateAsync(undefined as any);
+      setInviteToken(result.token);
+    } catch { Alert.alert("Couldn't create invite", "Please try again."); }
+  }
+
+  async function handleShareInvite() {
+    if (!inviteToken) return;
+    await Share.share({ message: `Join my family vault on 333 Lives! Use this invite code: ${inviteToken}` });
+  }
+
+  async function handleAcceptInvite() {
+    const token = acceptInput.trim();
+    if (!token) return;
+    setAcceptingInvite(true);
+    try {
+      await acceptInvite.mutateAsync({ token });
+      invalidateFamily();
+      setAcceptInput("");
+      Alert.alert("Linked!", "You are now connected with this family member.");
+    } catch (e: any) {
+      Alert.alert("Couldn't accept invite", e?.message ?? "Invalid or expired invite.");
+    } finally {
+      setAcceptingInvite(false);
+    }
   }
 
   const generalItems = items?.filter(i => GENERAL_CATEGORIES.includes(i.category as VaultCategory)) ?? [];
   const estateItems = items?.filter(i => ESTATE_CATEGORIES.includes(i.category as VaultCategory)) ?? [];
   const firstContact = contacts?.find(c => c.priority === 1);
   const secondContact = contacts?.find(c => c.priority === 2);
-
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
@@ -372,7 +564,13 @@ export default function VaultScreen() {
       <ScrollView
         contentContainerStyle={{ paddingTop: topPad, paddingBottom: botPad, paddingHorizontal: 20, gap: 20 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => { refetch(); refetchContacts(); }} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => { refetch(); refetchContacts(); refetchFamilyItems(); refetchFamilyMembers(); }}
+            tintColor={colors.primary}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.pageHeader}>
@@ -391,14 +589,12 @@ export default function VaultScreen() {
 
         {/* Tabs */}
         <View style={[styles.tabBar, { backgroundColor: colors.muted + "30" }]}>
-          {(["general", "estate"] as ActiveTab[]).map(tab => (
-            <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
+          {(["general", "estate", "family"] as ActiveTab[]).map(tab => (
+            <Pressable key={tab} onPress={() => setActiveTab(tab)}
               style={[styles.tabBtn, activeTab === tab && { backgroundColor: colors.card }]}
             >
               <Text style={[styles.tabText, { color: activeTab === tab ? colors.foreground : colors.mutedForeground }]}>
-                {tab === "general" ? "General" : "Estate"}
+                {tab === "general" ? "General" : tab === "estate" ? "Estate" : "Family"}
               </Text>
             </Pressable>
           ))}
@@ -411,9 +607,7 @@ export default function VaultScreen() {
               {GENERAL_CATEGORIES.map(cat => {
                 const count = generalItems.filter(i => i.category === cat).length;
                 return (
-                  <Pressable
-                    key={cat}
-                    onPress={() => openCreateItem(cat)}
+                  <Pressable key={cat} onPress={() => openCreateItem(cat)}
                     style={({ pressed }) => [styles.catCard, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
                   >
                     <Feather name={CATEGORY_ICONS[cat]} size={18} color={colors.primary} />
@@ -435,7 +629,11 @@ export default function VaultScreen() {
             ) : (
               <View style={{ gap: 10 }}>
                 {generalItems.map(item => (
-                  <ItemCard key={item.id} item={item} colors={colors} onEdit={() => openEditItem(item)} onDelete={() => confirmDeleteItem(item)} />
+                  <ItemCard key={item.id} item={item} colors={colors}
+                    onEdit={() => openEditItem(item)}
+                    onDelete={() => confirmDeleteItem(item)}
+                    onOpen={item.fileUrl ? () => handleOpenFile(item) : undefined}
+                  />
                 ))}
               </View>
             )}
@@ -445,7 +643,6 @@ export default function VaultScreen() {
         {/* ── ESTATE TAB ── */}
         {activeTab === "estate" && (
           <>
-            {/* Intro */}
             <View style={[styles.infoBanner, { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" }]}>
               <Feather name="shield" size={16} color={colors.primary} style={{ marginTop: 1 }} />
               <Text style={[styles.infoText, { color: colors.foreground }]}>
@@ -461,9 +658,7 @@ export default function VaultScreen() {
               const sublabel = priority === 1 ? "Primary — receives your vault first" : "Backup — if first is unreachable";
               if (!contact) {
                 return (
-                  <Pressable
-                    key={priority}
-                    onPress={() => openCreateContact(priority as 1 | 2)}
+                  <Pressable key={priority} onPress={() => openCreateContact(priority as 1 | 2)}
                     style={({ pressed }) => [styles.contactSlot, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
                   >
                     <View style={[styles.contactIcon, { backgroundColor: colors.muted + "30" }]}>
@@ -484,23 +679,18 @@ export default function VaultScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={[{ fontFamily: fonts.sub, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: colors.primary }]}>{label}</Text>
                     <Text style={[styles.contactName, { color: colors.foreground }]}>{contact.name}</Text>
-                    {contact.relationship && <Text style={[styles.contactSub, { color: colors.mutedForeground }]}>{contact.relationship} · {CONTACT_TYPE_LABELS[contact.type as ContactType]}</Text>}
+                    {contact.relationship && <Text style={[styles.contactSub, { color: colors.mutedForeground }]}>{contact.relationship}</Text>}
                     <Text style={[styles.contactSub, { color: colors.mutedForeground, marginTop: 2 }]}>{contact.email}</Text>
-                    {contact.phone && <Text style={[styles.contactSub, { color: colors.mutedForeground }]}>{contact.phone}</Text>}
                   </View>
                   <View style={{ gap: 6 }}>
-                    <Pressable onPress={() => openEditContact(contact)} hitSlop={8}>
-                      <Feather name="edit-2" size={14} color={colors.mutedForeground} />
-                    </Pressable>
-                    <Pressable onPress={() => confirmDeleteContact(contact)} hitSlop={8}>
-                      <Feather name="trash-2" size={14} color={colors.mutedForeground} />
-                    </Pressable>
+                    <Pressable onPress={() => openEditContact(contact)} hitSlop={8}><Feather name="edit-2" size={14} color={colors.mutedForeground} /></Pressable>
+                    <Pressable onPress={() => confirmDeleteContact(contact)} hitSlop={8}><Feather name="trash-2" size={14} color={colors.mutedForeground} /></Pressable>
                   </View>
                 </View>
               );
             })}
 
-            {/* Estate Document Types */}
+            {/* Estate Documents */}
             <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 4 }]}>Your Estate Documents</Text>
             {ESTATE_CATEGORIES.map(cat => {
               const catItems = estateItems.filter(i => i.category === cat);
@@ -514,25 +704,32 @@ export default function VaultScreen() {
                       <Text style={[styles.estateCatLabel, { color: colors.foreground }]}>{CATEGORY_LABELS[cat]}</Text>
                       <Text style={[styles.estateCatCount, { color: colors.mutedForeground }]}>{catItems.length} document{catItems.length !== 1 ? "s" : ""}</Text>
                     </View>
-                    <Pressable onPress={() => openCreateItem(cat)} hitSlop={8}>
-                      <Feather name="plus" size={18} color={colors.primary} />
-                    </Pressable>
+                    <Pressable onPress={() => openCreateItem(cat)} hitSlop={8}><Feather name="plus" size={18} color={colors.primary} /></Pressable>
                   </View>
                   {catItems.length > 0 ? (
                     <View style={{ gap: 8, marginTop: 8 }}>
                       {catItems.map(item => (
-                        <Pressable
-                          key={item.id}
-                          onPress={() => openEditItem(item)}
+                        <Pressable key={item.id} onPress={() => openEditItem(item)}
                           style={({ pressed }) => [styles.estateItem, { backgroundColor: colors.background, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
                         >
                           <View style={{ flex: 1 }}>
-                            <Text style={[styles.estateItemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                              <Text style={[styles.estateItemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
+                              <Feather name={item.visibility === "family" ? "users" : "lock"} size={10} color={item.visibility === "family" ? colors.primary : colors.mutedForeground + "80"} />
+                              {item.fileUrl && <Feather name="paperclip" size={10} color={colors.mutedForeground + "70"} />}
+                            </View>
                             {item.content && <Text style={[styles.estateItemContent, { color: colors.mutedForeground }]} numberOfLines={1}>{item.content}</Text>}
                           </View>
-                          <Pressable onPress={() => confirmDeleteItem(item)} hitSlop={8}>
-                            <Feather name="trash-2" size={13} color={colors.mutedForeground + "80"} />
-                          </Pressable>
+                          <View style={{ flexDirection: "row", gap: 8 }}>
+                            {item.fileUrl && (
+                              <Pressable onPress={() => handleOpenFile(item)} hitSlop={8}>
+                                <Feather name="download" size={13} color={colors.primary} />
+                              </Pressable>
+                            )}
+                            <Pressable onPress={() => confirmDeleteItem(item)} hitSlop={8}>
+                              <Feather name="trash-2" size={13} color={colors.mutedForeground + "80"} />
+                            </Pressable>
+                          </View>
                         </Pressable>
                       ))}
                     </View>
@@ -545,46 +742,123 @@ export default function VaultScreen() {
                 </View>
               );
             })}
+
+            {/* Family Access */}
+            <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 4 }]}>Family Access</Text>
+            <View style={[styles.familyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.infoText, { color: colors.mutedForeground, marginBottom: 12 }]}>
+                Link family members so they can view documents you mark as "Family" visible.
+              </Text>
+
+              {/* Linked members */}
+              {(familyMembers as VaultFamilyMember[]).map(m => (
+                <View key={m.linkId} style={[styles.memberRow, { borderColor: colors.border }]}>
+                  <View style={[styles.memberAvatar, { backgroundColor: colors.primary + "1A" }]}>
+                    <Feather name="user" size={14} color={colors.primary} />
+                  </View>
+                  <Text style={[{ fontFamily: fonts.sub, fontSize: 13, flex: 1, color: colors.foreground }]}>{m.name}</Text>
+                  <Pressable onPress={() => { deleteFamily.mutateAsync({ linkId: m.linkId }).then(() => invalidateFamily()); }} hitSlop={8}>
+                    <Feather name="user-minus" size={14} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+              ))}
+
+              {/* Invite button */}
+              <Pressable onPress={handleCreateInvite} disabled={createInvite.isPending}
+                style={[styles.inviteBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "08" }]}
+              >
+                {createInvite.isPending ? <ActivityIndicator size="small" color={colors.primary} /> : (
+                  <>
+                    <Feather name="user-plus" size={14} color={colors.primary} />
+                    <Text style={[styles.pillText, { color: colors.primary }]}>Create invite link</Text>
+                  </>
+                )}
+              </Pressable>
+
+              {inviteToken && (
+                <View style={[styles.inviteTokenBox, { backgroundColor: colors.muted + "30", borderColor: colors.border }]}>
+                  <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Share this code:</Text>
+                  <Text style={[{ fontFamily: fonts.body, fontSize: 12, color: colors.foreground, marginTop: 4, marginBottom: 8, letterSpacing: 0.5 }]} selectable>
+                    {inviteToken}
+                  </Text>
+                  <Pressable onPress={handleShareInvite}
+                    style={[styles.inviteBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}
+                  >
+                    <Feather name="share-2" size={13} color={colors.primary} />
+                    <Text style={[styles.pillText, { color: colors.primary }]}>Share invite</Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {/* Accept invite */}
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Accept an invite</Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <TextInput
+                    value={acceptInput} onChangeText={setAcceptInput}
+                    placeholder="Paste invite code…" placeholderTextColor={colors.mutedForeground + "80"}
+                    style={[styles.input, { flex: 1, backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground, paddingVertical: 8 }]}
+                    autoCapitalize="none"
+                  />
+                  <Pressable onPress={handleAcceptInvite} disabled={!acceptInput.trim() || acceptingInvite}
+                    style={[styles.saveBtn, { paddingHorizontal: 16, paddingVertical: 10, marginTop: 0, opacity: !acceptInput.trim() || acceptingInvite ? 0.5 : 1, backgroundColor: colors.primary }]}
+                  >
+                    {acceptingInvite ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : (
+                      <Text style={[styles.saveBtnText, { color: colors.primaryForeground, fontSize: 13 }]}>Link</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* ── FAMILY TAB ── */}
+        {activeTab === "family" && (
+          <>
+            <View style={[styles.infoBanner, { backgroundColor: colors.primary + "10", borderColor: colors.primary + "30" }]}>
+              <Feather name="users" size={16} color={colors.primary} style={{ marginTop: 1 }} />
+              <Text style={[styles.infoText, { color: colors.foreground }]}>
+                Documents your linked family members have shared with you.
+              </Text>
+            </View>
+            {(familyItems as VaultFamilyItem[]).length === 0 ? (
+              <View style={styles.empty}>
+                <Feather name="users" size={40} color={colors.mutedForeground + "50"} />
+                <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No shared documents yet</Text>
+                <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
+                  When a family member marks a document as "Family", it will appear here.
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 10 }}>
+                {(familyItems as VaultFamilyItem[]).map(item => (
+                  <FamilyItemCard key={item.id} item={item} colors={colors} onOpen={() => handleOpenFile(item)} />
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
 
+      {uploadingItemId !== null && (
+        <View style={[styles.uploadOverlay, { backgroundColor: colors.card + "EE" }]}>
+          <ActivityIndicator color={colors.primary} size="large" />
+          <Text style={[styles.emptySub, { color: colors.foreground, marginTop: 8 }]}>Encrypting & uploading…</Text>
+        </View>
+      )}
+
       <VaultItemModal
-        visible={itemModalOpen}
-        item={editingItem}
-        defaultCategory={defaultCat}
-        onClose={() => setItemModalOpen(false)}
-        onSave={handleSaveItem}
-        isSaving={createItem.isPending || updateItem.isPending}
+        visible={itemModalOpen} item={editingItem} defaultCategory={defaultCat}
+        onClose={() => setItemModalOpen(false)} onSave={handleSaveItem}
+        isSaving={createItem.isPending || updateItem.isPending || uploadingItemId !== null}
       />
       <ContactModal
-        visible={contactModalOpen}
-        contact={editingContact}
-        defaultPriority={contactPriority}
-        onClose={() => setContactModalOpen(false)}
-        onSave={handleSaveContact}
+        visible={contactModalOpen} contact={editingContact} defaultPriority={contactPriority}
+        onClose={() => setContactModalOpen(false)} onSave={handleSaveContact}
         isSaving={createContact.isPending || updateContact.isPending}
       />
     </View>
-  );
-}
-
-function ItemCard({ item, colors, onEdit, onDelete }: { item: VaultItem; colors: any; onEdit: () => void; onDelete: () => void }) {
-  const icon = CATEGORY_ICONS[item.category as VaultCategory] ?? "file";
-  return (
-    <Pressable onPress={onEdit} style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={[styles.itemIcon, { backgroundColor: colors.primary + "1A" }]}>
-        <Feather name={icon} size={18} color={colors.primary} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.itemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
-        <Text style={[styles.itemCat, { color: colors.mutedForeground }]}>{CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</Text>
-        {item.content && <Text style={[styles.itemContent, { color: colors.mutedForeground }]} numberOfLines={2}>{item.content}</Text>}
-      </View>
-      <Pressable onPress={onDelete} hitSlop={8} style={{ padding: 4 }}>
-        <Feather name="trash-2" size={15} color={colors.mutedForeground + "80"} />
-      </Pressable>
-    </Pressable>
   );
 }
 
@@ -623,6 +897,12 @@ const styles = StyleSheet.create({
   itemName: { fontFamily: fonts.serif, fontSize: 16 },
   itemCat: { fontFamily: fonts.sub, fontSize: 11, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },
   itemContent: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, marginTop: 4 },
+  openBtn: { width: 28, height: 28, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  familyCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
+  memberRow: { flexDirection: "row", alignItems: "center", gap: 10, borderBottomWidth: 1, paddingBottom: 10, marginBottom: 10 },
+  memberAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  inviteBtn: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  inviteTokenBox: { borderRadius: 10, borderWidth: 1, padding: 12, marginTop: 10 },
   empty: { alignItems: "center", paddingTop: 60, gap: 12 },
   emptyTitle: { fontFamily: fonts.serif, fontSize: 20 },
   emptySub: { fontFamily: fonts.sub, fontSize: 14, textAlign: "center" },
@@ -634,8 +914,11 @@ const styles = StyleSheet.create({
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
   pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
   pillText: { fontFamily: fonts.sub, fontSize: 12 },
+  visibilityBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1 },
+  filePickerBtn: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, borderWidth: 1, borderStyle: "dashed", paddingHorizontal: 14, paddingVertical: 10 },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center", marginTop: 4 },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
   promptBox: { borderRadius: 10, borderWidth: 1, padding: 12 },
   promptText: { fontFamily: fonts.body, fontSize: 12, lineHeight: 17, fontStyle: "italic" },
+  uploadOverlay: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
 });

@@ -133,6 +133,9 @@ import type {
   UpsertStoryAnswerBody,
   User,
   VaultContact,
+  VaultFamilyInvite,
+  VaultFamilyItem,
+  VaultFamilyMember,
   VaultItem,
   VoiceMemo,
   WorkoutSession
@@ -1431,6 +1434,518 @@ export const useDeleteVaultContact = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteVaultContactMutationOptions(options));
     }
+
+export const getGetVaultFamilyItemsUrl = () => {
+
+
+
+
+  return `/api/vault/family/items`
+}
+
+/**
+ * @summary List family-visibility items from linked family members
+ */
+export const getVaultFamilyItems = async ( options?: RequestInit): Promise<VaultFamilyItem[]> => {
+
+  return customFetch<VaultFamilyItem[]>(getGetVaultFamilyItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVaultFamilyItemsQueryKey = () => {
+    return [
+    `/api/vault/family/items`
+    ] as const;
+    }
+
+
+export const getGetVaultFamilyItemsQueryOptions = <TData = Awaited<ReturnType<typeof getVaultFamilyItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVaultFamilyItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVaultFamilyItems>>> = ({ signal }) => getVaultFamilyItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVaultFamilyItemsQueryResult = NonNullable<Awaited<ReturnType<typeof getVaultFamilyItems>>>
+export type GetVaultFamilyItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List family-visibility items from linked family members
+ */
+
+export function useGetVaultFamilyItems<TData = Awaited<ReturnType<typeof getVaultFamilyItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVaultFamilyItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVaultFamilyMembersUrl = () => {
+
+
+
+
+  return `/api/vault/family/members`
+}
+
+/**
+ * @summary List accepted family members linked to the current user
+ */
+export const getVaultFamilyMembers = async ( options?: RequestInit): Promise<VaultFamilyMember[]> => {
+
+  return customFetch<VaultFamilyMember[]>(getGetVaultFamilyMembersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVaultFamilyMembersQueryKey = () => {
+    return [
+    `/api/vault/family/members`
+    ] as const;
+    }
+
+
+export const getGetVaultFamilyMembersQueryOptions = <TData = Awaited<ReturnType<typeof getVaultFamilyMembers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyMembers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVaultFamilyMembersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVaultFamilyMembers>>> = ({ signal }) => getVaultFamilyMembers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVaultFamilyMembersQueryResult = NonNullable<Awaited<ReturnType<typeof getVaultFamilyMembers>>>
+export type GetVaultFamilyMembersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List accepted family members linked to the current user
+ */
+
+export function useGetVaultFamilyMembers<TData = Awaited<ReturnType<typeof getVaultFamilyMembers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyMembers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVaultFamilyMembersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVaultFamilyInviteUrl = () => {
+
+
+
+
+  return `/api/vault/family/invite`
+}
+
+/**
+ * @summary Create a family invite token
+ */
+export const createVaultFamilyInvite = async ( options?: RequestInit): Promise<VaultFamilyInvite> => {
+
+  return customFetch<VaultFamilyInvite>(getCreateVaultFamilyInviteUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateVaultFamilyInviteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVaultFamilyInvite>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVaultFamilyInvite>>, TError,void, TContext> => {
+
+const mutationKey = ['createVaultFamilyInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVaultFamilyInvite>>, void> = () => {
+
+
+          return  createVaultFamilyInvite(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVaultFamilyInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createVaultFamilyInvite>>>
+
+    export type CreateVaultFamilyInviteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a family invite token
+ */
+export const useCreateVaultFamilyInvite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVaultFamilyInvite>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVaultFamilyInvite>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateVaultFamilyInviteMutationOptions(options));
+    }
+
+export const getAcceptVaultFamilyInviteUrl = (token: string,) => {
+
+
+
+
+  return `/api/vault/family/invite/${token}/accept`
+}
+
+/**
+ * @summary Accept a family invite token
+ */
+export const acceptVaultFamilyInvite = async (token: string, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getAcceptVaultFamilyInviteUrl(token),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getAcceptVaultFamilyInviteMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptVaultFamilyInvite>>, TError,{token: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptVaultFamilyInvite>>, TError,{token: string}, TContext> => {
+
+const mutationKey = ['acceptVaultFamilyInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptVaultFamilyInvite>>, {token: string}> = (props) => {
+          const {token} = props ?? {};
+
+          return  acceptVaultFamilyInvite(token,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptVaultFamilyInviteMutationResult = NonNullable<Awaited<ReturnType<typeof acceptVaultFamilyInvite>>>
+
+    export type AcceptVaultFamilyInviteMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Accept a family invite token
+ */
+export const useAcceptVaultFamilyInvite = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptVaultFamilyInvite>>, TError,{token: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptVaultFamilyInvite>>,
+        TError,
+        {token: string},
+        TContext
+      > => {
+      return useMutation(getAcceptVaultFamilyInviteMutationOptions(options));
+    }
+
+export const getDeleteVaultFamilyMemberUrl = (linkId: number,) => {
+
+
+
+
+  return `/api/vault/family/members/${linkId}`
+}
+
+/**
+ * @summary Remove a family link
+ */
+export const deleteVaultFamilyMember = async (linkId: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteVaultFamilyMemberUrl(linkId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVaultFamilyMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVaultFamilyMember>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVaultFamilyMember>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['deleteVaultFamilyMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVaultFamilyMember>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  deleteVaultFamilyMember(linkId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVaultFamilyMemberMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVaultFamilyMember>>>
+
+    export type DeleteVaultFamilyMemberMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a family link
+ */
+export const useDeleteVaultFamilyMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVaultFamilyMember>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVaultFamilyMember>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVaultFamilyMemberMutationOptions(options));
+    }
+
+export const getUploadVaultFileUrl = (id: number,) => {
+
+
+
+
+  return `/api/vault/${id}/upload`
+}
+
+/**
+ * @summary Upload and encrypt a file for a vault item
+ */
+export const uploadVaultFile = async (id: number,
+    uploadVaultFileBody: Blob, options?: RequestInit): Promise<VaultItem> => {
+
+  return customFetch<VaultItem>(getUploadVaultFileUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', ...options?.headers },
+    body: uploadVaultFileBody
+  }
+);}
+
+
+
+
+export const getUploadVaultFileMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadVaultFile>>, TError,{id: number;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadVaultFile>>, TError,{id: number;data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['uploadVaultFile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadVaultFile>>, {id: number;data: BodyType<Blob>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  uploadVaultFile(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadVaultFileMutationResult = NonNullable<Awaited<ReturnType<typeof uploadVaultFile>>>
+    export type UploadVaultFileMutationBody = BodyType<Blob>
+    export type UploadVaultFileMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Upload and encrypt a file for a vault item
+ */
+export const useUploadVaultFile = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadVaultFile>>, TError,{id: number;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadVaultFile>>,
+        TError,
+        {id: number;data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getUploadVaultFileMutationOptions(options));
+    }
+
+export const getGetVaultFileUrl = (id: number,) => {
+
+
+
+
+  return `/api/vault/${id}/file`
+}
+
+/**
+ * @summary Download and decrypt a vault file (owner or family member)
+ */
+export const getVaultFile = async (id: number, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetVaultFileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVaultFileQueryKey = (id: number,) => {
+    return [
+    `/api/vault/${id}/file`
+    ] as const;
+    }
+
+
+export const getGetVaultFileQueryOptions = <TData = Awaited<ReturnType<typeof getVaultFile>>, TError = ErrorType<ErrorResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVaultFileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVaultFile>>> = ({ signal }) => getVaultFile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVaultFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVaultFileQueryResult = NonNullable<Awaited<ReturnType<typeof getVaultFile>>>
+export type GetVaultFileQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Download and decrypt a vault file (owner or family member)
+ */
+
+export function useGetVaultFile<TData = Awaited<ReturnType<typeof getVaultFile>>, TError = ErrorType<ErrorResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVaultFileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetVaultItemUrl = (id: number,) => {
 

@@ -40,6 +40,66 @@ export class ObjectNotFoundError extends Error {
 export class ObjectStorageService {
   constructor() {}
 
+  // ── Vault-specific helpers ─────────────────────────────────────────────────
+
+  /**
+   * Store an encrypted Buffer for a vault document.
+   * Returns the full GCS path stored as file_url on the vault item.
+   */
+  async saveVaultFile(
+    userId: number,
+    itemId: number,
+    filename: string,
+    buffer: Buffer,
+    contentType: string,
+  ): Promise<string> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    // Sanitise filename — no path traversal
+    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 200);
+    // Include a UUID so every upload gets an immutable, unique object key.
+    // Same-filename replacements write to a different key, so the old object
+    // is never silently overwritten before the DB update succeeds.
+    const uploadId = randomUUID();
+    const subPath = `vault/${userId}/${itemId}/${uploadId}_${safeName}`;
+    const fullPath = `${privateObjectDir.replace(/\/$/, "")}/${subPath}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    const bucket = objectStorageClient.bucket(bucketName);
+    await bucket.file(objectName).save(buffer, {
+      contentType: "application/octet-stream", // always octet-stream — content is encrypted
+      resumable: false,
+      metadata: { originalContentType: contentType },
+    });
+    return fullPath;
+  }
+
+  /**
+   * Download a vault file as a raw Buffer (still encrypted).
+   * Caller is responsible for decryption.
+   */
+  async loadVaultFile(filePath: string): Promise<{ data: Buffer; originalContentType?: string }> {
+    const { bucketName, objectName } = parseObjectPath(filePath);
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    const [exists] = await file.exists();
+    if (!exists) throw new ObjectNotFoundError();
+    const [[data], [metadata]] = await Promise.all([file.download(), file.getMetadata()]);
+    const originalContentType = (metadata?.metadata as Record<string, string> | undefined)?.originalContentType;
+    return { data, originalContentType };
+  }
+
+  /**
+   * Delete a vault file from GCS. Silently ignores missing files.
+   */
+  async deleteVaultFile(filePath: string): Promise<void> {
+    try {
+      const { bucketName, objectName } = parseObjectPath(filePath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      await bucket.file(objectName).delete({ ignoreNotFound: true });
+    } catch {
+      // best-effort
+    }
+  }
+
   getPublicObjectSearchPaths(): Array<string> {
     const pathsStr = process.env.PUBLIC_OBJECT_SEARCH_PATHS || "";
     const paths = Array.from(

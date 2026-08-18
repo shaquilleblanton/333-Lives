@@ -238,6 +238,7 @@ export const GetVaultItemsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
@@ -253,7 +254,7 @@ export const GetVaultItemsResponse = zod.array(GetVaultItemsResponseItem)
 export const CreateVaultItemBody = zod.object({
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
-  "fileUrl": zod.string().optional(),
+  "visibility": zod.enum(['private', 'family']).optional(),
   "content": zod.string().optional(),
   "mimeType": zod.string().optional(),
   "sizeBytes": zod.number().optional()
@@ -263,6 +264,7 @@ export const CreateVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
@@ -368,6 +370,105 @@ export const DeleteVaultContactResponse = zod.object({
 
 
 /**
+ * @summary List family-visibility items from linked family members
+ */
+export const GetVaultFamilyItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
+  "fileUrl": zod.string().nullish(),
+  "content": zod.string().nullish(),
+  "mimeType": zod.string().nullish(),
+  "sizeBytes": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "ownerName": zod.string()
+})
+export const GetVaultFamilyItemsResponse = zod.array(GetVaultFamilyItemsResponseItem)
+
+
+/**
+ * @summary List accepted family members linked to the current user
+ */
+export const GetVaultFamilyMembersResponseItem = zod.object({
+  "linkId": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "linkedAt": zod.coerce.date().nullish()
+})
+export const GetVaultFamilyMembersResponse = zod.array(GetVaultFamilyMembersResponseItem)
+
+
+/**
+ * @summary Create a family invite token
+ */
+export const CreateVaultFamilyInviteResponse = zod.object({
+  "token": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Accept a family invite token
+ */
+export const AcceptVaultFamilyInviteParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const AcceptVaultFamilyInviteResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Remove a family link
+ */
+export const DeleteVaultFamilyMemberParams = zod.object({
+  "linkId": zod.coerce.number()
+})
+
+export const DeleteVaultFamilyMemberResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Upload and encrypt a file for a vault item
+ */
+export const UploadVaultFileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UploadVaultFileHeader = zod.object({
+  "X-Filename": zod.string().optional(),
+  "X-Mime-Type": zod.string().optional()
+})
+
+export const UploadVaultFileResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
+  "fileUrl": zod.string().nullish(),
+  "content": zod.string().nullish(),
+  "mimeType": zod.string().nullish(),
+  "sizeBytes": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Download and decrypt a vault file (owner or family member)
+ */
+export const GetVaultFileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetVaultFileResponse = zod.unknown()
+
+
+/**
  * @summary Get a single vault item
  */
 export const GetVaultItemParams = zod.object({
@@ -378,6 +479,7 @@ export const GetVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
@@ -396,7 +498,7 @@ export const UpdateVaultItemParams = zod.object({
 export const UpdateVaultItemBody = zod.object({
   "name": zod.string().optional(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']).optional(),
-  "fileUrl": zod.string().optional(),
+  "visibility": zod.enum(['private', 'family']).optional(),
   "content": zod.string().optional(),
   "mimeType": zod.string().optional(),
   "sizeBytes": zod.number().optional()
@@ -406,6 +508,7 @@ export const UpdateVaultItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
+  "visibility": zod.enum(['private', 'family']),
   "fileUrl": zod.string().nullish(),
   "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),

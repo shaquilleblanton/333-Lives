@@ -20,11 +20,15 @@ export const VAULT_CATEGORIES = [
 
 export type VaultCategory = (typeof VAULT_CATEGORIES)[number];
 
+export const VAULT_VISIBILITY = ["private", "family"] as const;
+export type VaultVisibility = (typeof VAULT_VISIBILITY)[number];
+
 export const vaultItemsTable = pgTable("vault_items", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   category: text("category", { enum: VAULT_CATEGORIES }).notNull(),
+  visibility: text("visibility", { enum: VAULT_VISIBILITY }).notNull().default("private"),
   fileUrl: text("file_url"),
   content: text("content"),
   mimeType: text("mime_type"),
@@ -35,6 +39,20 @@ export const vaultItemsTable = pgTable("vault_items", {
 export const insertVaultItemSchema = createInsertSchema(vaultItemsTable).omit({ id: true, createdAt: true });
 export type InsertVaultItem = z.infer<typeof insertVaultItemSchema>;
 export type VaultItem = typeof vaultItemsTable.$inferSelect;
+
+// ── Family Links ──────────────────────────────────────────────────────────────
+// Bidirectional cross-user linking. An invite starts with invitee_id = NULL;
+// accepting the invite sets invitee_id and accepted_at.
+export const familyLinksTable = pgTable("family_links", {
+  id: serial("id").primaryKey(),
+  inviterId: integer("inviter_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  inviteeId: integer("invitee_id").references(() => usersTable.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type FamilyLink = typeof familyLinksTable.$inferSelect;
 
 // ── Trusted Contacts (for Estate Vault access after death) ───────────────────
 export const VAULT_CONTACT_TYPES = ["person", "attorney", "executor"] as const;

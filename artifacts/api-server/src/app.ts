@@ -40,6 +40,12 @@ app.use(
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 app.use(cors({ credentials: true, origin: true }));
+
+// Vault file uploads are raw binary (any content-type, including application/json).
+// This must be mounted BEFORE express.json() so the JSON body parser never
+// consumes an upload stream — once a readable stream is drained it cannot be re-read.
+app.use("/api/vault/:id/upload", express.raw({ type: "*/*", limit: "50mb" }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
