@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
-const AVAILABLE_YEARS = Array.from({ length: CURRENT_YEAR - 2023 }, (_, i) => CURRENT_YEAR - i);
+// Include 2023 as the earliest available year.
+const AVAILABLE_YEARS = Array.from({ length: Math.max(1, CURRENT_YEAR - 2022) }, (_, i) => CURRENT_YEAR - i);
 
 const MOOD_EMOJI: Record<string, string> = {
   great: "🌟",
@@ -67,7 +69,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 export default function ReviewPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [, setLocation] = useLocation();
-  const { data, isLoading } = useGetAnnualReview(year);
+  const { data, isLoading, isError, refetch } = useGetAnnualReview(year);
 
   const moodEntries = data ? Object.entries(data.growth.moodBreakdown).sort((a, b) => b[1] - a[1]) : [];
   const totalMoodCount = moodEntries.reduce((s, [, v]) => s + v, 0);
@@ -117,7 +119,26 @@ export default function ReviewPage() {
               </div>
             ))}
           </div>
-        ) : !data ? null : (
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-4 py-20 text-center">
+            <AlertCircle className="w-10 h-10 text-muted-foreground/50" />
+            <p className="text-muted-foreground font-subheading text-sm">
+              We couldn't load your annual review.<br />Check your connection and try again.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Try again
+            </Button>
+          </div>
+        ) : !data ? (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <p className="text-muted-foreground font-subheading text-sm">
+              No review data yet for {year}.
+            </p>
+            <p className="text-muted-foreground/60 font-subheading text-xs">
+              Keep building your story and check back at the end of the year.
+            </p>
+          </div>
+        ) : (
           <div className="space-y-14">
 
             <section>
@@ -193,7 +214,7 @@ export default function ReviewPage() {
                           <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-primary/70 rounded-full transition-all duration-700"
-                              style={{ width: `${Math.round((count / totalMoodCount) * 100)}%` }}
+                              style={{ width: `${totalMoodCount > 0 ? Math.round((count / totalMoodCount) * 100) : 0}%` }}
                             />
                           </div>
                           <span className="text-xs text-muted-foreground font-subheading w-16 text-right">

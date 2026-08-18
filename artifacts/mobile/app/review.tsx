@@ -21,7 +21,8 @@ const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 const CURRENT_YEAR = new Date().getFullYear();
-const AVAILABLE_YEARS = Array.from({ length: Math.max(1, CURRENT_YEAR - 2023) }, (_, i) => CURRENT_YEAR - i);
+// Include 2023 as the earliest available year (CURRENT_YEAR - 2022 gives correct count).
+const AVAILABLE_YEARS = Array.from({ length: Math.max(1, CURRENT_YEAR - 2022) }, (_, i) => CURRENT_YEAR - i);
 
 const MOOD_EMOJI: Record<string, string> = {
   great: "🌟",
@@ -134,7 +135,12 @@ export default function ReviewScreen() {
           <ActivityIndicator color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>Gathering your year…</Text>
         </View>
-      ) : !data ? null : (
+      ) : !data ? (
+        <View style={styles.loadingWrap}>
+          <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>No review data yet for {year}.</Text>
+          <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>Keep building your story and check back at the end of the year.</Text>
+        </View>
+      ) : (
         <>
           <View style={styles.section}>
             <SectionHeader label="THE NUMBERS" />
@@ -200,7 +206,7 @@ export default function ReviewScreen() {
               <Text style={[styles.bigNum, { color: colors.foreground }]}>{(data?.growth ?? {}).journalEntries ?? 0}</Text>
               <Text style={[styles.bigNumLabel, { color: colors.mutedForeground }]}>Journal entries written</Text>
             </View>
-            {moodEntries.length > 0 && (
+            {moodEntries.length > 0 && totalMoods > 0 && (
               <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <Text style={[styles.subLabel, { color: colors.mutedForeground }]}>MOOD BREAKDOWN</Text>
                 {moodEntries.map(([mood, cnt]) => (

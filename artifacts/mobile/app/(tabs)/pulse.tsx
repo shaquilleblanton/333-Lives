@@ -5,6 +5,7 @@ import {
   ScrollView,
   FlatList,
   Pressable,
+  RefreshControl,
   TextInput,
   Modal,
   KeyboardAvoidingView,
@@ -94,7 +95,7 @@ export default function PulseScreen() {
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
   const queryClient = useQueryClient();
-  const { data: posts = [], isLoading } = useGetPulseFeed();
+  const { data: posts = [], isLoading, isError, refetch } = useGetPulseFeed();
   const deletePost = useDeletePulsePost();
   const reactMutation = useReactToPulsePost();
   const unreactMutation = useRemovePulseReaction();
@@ -145,6 +146,15 @@ export default function PulseScreen() {
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
         </View>
+      ) : isError ? (
+        <View style={styles.empty}>
+          <Feather name="wifi-off" size={40} color={colors.mutedForeground + "60"} />
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Couldn't load the feed</Text>
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Check your connection and try again.</Text>
+          <Pressable onPress={() => refetch()} style={[styles.emptyBtn, { borderColor: colors.primary + "40" }]}>
+            <Text style={[styles.emptyBtnText, { color: colors.primary }]}>Retry</Text>
+          </Pressable>
+        </View>
       ) : (posts as PulsePost[]).length === 0 ? (
         <View style={styles.empty}>
           <Feather name="zap" size={40} color={colors.mutedForeground + "60"} />
@@ -161,6 +171,14 @@ export default function PulseScreen() {
           renderItem={renderPost}
           contentContainerStyle={{ padding: 16, paddingBottom: botPad }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refetch}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
         />
       )}
 

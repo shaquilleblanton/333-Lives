@@ -45,6 +45,7 @@ export default function SignInScreen() {
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [ssoError, setSsoError] = useState<string | null>(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
 
   const handleSubmit = async () => {
     const { error } = await signIn.password({ emailAddress, password });
@@ -66,6 +67,8 @@ export default function SignInScreen() {
   };
 
   const handleGoogle = useCallback(async () => {
+    if (ssoLoading) return;
+    setSsoLoading(true);
     setSsoError(null);
     try {
       const { createdSessionId, setActive } = await startSSOFlow({
@@ -83,8 +86,10 @@ export default function SignInScreen() {
       }
     } catch {
       setSsoError("Google sign-in didn't complete. Please try again.");
+    } finally {
+      setSsoLoading(false);
     }
-  }, [startSSOFlow, router]);
+  }, [startSSOFlow, router, ssoLoading]);
 
   const busy = fetchStatus === "fetching";
 
@@ -111,13 +116,19 @@ export default function SignInScreen() {
         style={({ pressed }) => [
           styles.ssoButton,
           { backgroundColor: colors.card, borderColor: colors.border },
+          ssoLoading && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}
         onPress={handleGoogle}
+        disabled={ssoLoading || busy}
       >
-        <Text style={[styles.ssoButtonText, { color: colors.foreground }]}>
-          Continue with Google
-        </Text>
+        {ssoLoading ? (
+          <ActivityIndicator color={colors.foreground} size="small" />
+        ) : (
+          <Text style={[styles.ssoButtonText, { color: colors.foreground }]}>
+            Continue with Google
+          </Text>
+        )}
       </Pressable>
       {ssoError && <Text style={[styles.error, { color: colors.destructive }]}>{ssoError}</Text>}
 

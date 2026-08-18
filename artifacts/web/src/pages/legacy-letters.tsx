@@ -192,7 +192,7 @@ export default function LegacyLetters() {
         await updateLetter.mutateAsync({ id: editingId, data: payload as any });
         if (seal) await sealLetter.mutateAsync({ id: editingId });
       } else {
-        const created = await createLetter.mutateAsync({ data: { ...payload, userId: 1 } as any });
+        const created = await createLetter.mutateAsync({ data: payload as any });
         if (seal) await sealLetter.mutateAsync({ id: (created as LegacyLetter).id });
       }
       invalidate();

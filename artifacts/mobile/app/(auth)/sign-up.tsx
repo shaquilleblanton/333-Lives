@@ -2,7 +2,7 @@ import { useAuth, useSignUp, useSSO } from "@clerk/expo";
 import * as AuthSession from "expo-auth-session";
 import { type Href, Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -37,6 +37,7 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [ssoError, setSsoError] = useState<string | null>(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
 
   const handleSubmit = async () => {
     const { error } = await signUp.password({ emailAddress, password });
@@ -62,6 +63,8 @@ export default function SignUpScreen() {
   };
 
   const handleGoogle = useCallback(async () => {
+    if (ssoLoading) return;
+    setSsoLoading(true);
     setSsoError(null);
     try {
       const { createdSessionId, setActive } = await startSSOFlow({
@@ -79,13 +82,21 @@ export default function SignUpScreen() {
       }
     } catch {
       setSsoError("Google sign-up didn't complete. Please try again.");
+    } finally {
+      setSsoLoading(false);
     }
-  }, [startSSOFlow, router]);
+  }, [startSSOFlow, router, ssoLoading]);
 
   const busy = fetchStatus === "fetching";
 
+  // After sign-up completes, show a spinner while Expo Router fires the redirect.
+  // Returning null here caused a blank screen if navigation was delayed.
   if (signUp.status === "complete" || isSignedIn) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
   }
 
   const awaitingCode =
@@ -180,13 +191,19 @@ export default function SignUpScreen() {
         style={({ pressed }) => [
           styles.ssoButton,
           { backgroundColor: colors.card, borderColor: colors.border },
+          ssoLoading && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}
         onPress={handleGoogle}
+        disabled={ssoLoading || busy}
       >
-        <Text style={[styles.ssoButtonText, { color: colors.foreground }]}>
-          Continue with Google
-        </Text>
+        {ssoLoading ? (
+          <ActivityIndicator color={colors.foreground} size="small" />
+        ) : (
+          <Text style={[styles.ssoButtonText, { color: colors.foreground }]}>
+            Continue with Google
+          </Text>
+        )}
       </Pressable>
       {ssoError && <Text style={[styles.error, { color: colors.destructive }]}>{ssoError}</Text>}
 

@@ -130,7 +130,7 @@ export default function TellYourStoryScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const { data: answers, isLoading } = useGetStoryAnswers();
+  const { data: answers, isLoading, isError, refetch } = useGetStoryAnswers();
   const upsert = useUpsertStoryAnswer();
   const del = useDeleteStoryAnswer();
 
@@ -360,6 +360,23 @@ export default function TellYourStoryScreen() {
     );
   };
 
+  if (isError) {
+    return (
+      <View style={[styles.screen, { backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: 32 }]}>
+        <Feather name="alert-circle" size={36} color={colors.mutedForeground + "80"} />
+        <Text style={[styles.subtitle, { color: colors.mutedForeground, textAlign: "center", marginTop: 12 }]}>
+          Couldn't load your story. Check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={() => refetch()}
+          style={[styles.saveBtn, { backgroundColor: colors.primary, marginTop: 20, paddingHorizontal: 28 }]}
+        >
+          <Text style={[styles.saveBtnText, { color: colors.background }]}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
@@ -374,18 +391,24 @@ export default function TellYourStoryScreen() {
               A living autobiography — answer in your own time, at your own pace.
             </Text>
             {/* Progress */}
-            <View style={[styles.progressCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.progressRow}>
-                <Text style={[styles.progressLabel, { color: colors.mutedForeground }]}>Your story</Text>
-                <Text style={[styles.progressPct, { color: colors.primary }]}>{progressPct}%</Text>
+            {isLoading ? (
+              <View style={[styles.progressCard, { backgroundColor: colors.card, borderColor: colors.border, alignItems: "center", justifyContent: "center" }]}>
+                <ActivityIndicator color={colors.primary} />
               </View>
-              <View style={[styles.progressTrack, { backgroundColor: colors.border + "60" }]}>
-                <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${progressPct}%` as any }]} />
+            ) : (
+              <View style={[styles.progressCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View style={styles.progressRow}>
+                  <Text style={[styles.progressLabel, { color: colors.mutedForeground }]}>Your story</Text>
+                  <Text style={[styles.progressPct, { color: colors.primary }]}>{progressPct}%</Text>
+                </View>
+                <View style={[styles.progressTrack, { backgroundColor: colors.border + "60" }]}>
+                  <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${progressPct}%` as any }]} />
+                </View>
+                <Text style={[styles.progressSub, { color: colors.mutedForeground }]}>
+                  {totalAnswered} of {TOTAL_PROMPTS} prompts answered
+                </Text>
               </View>
-              <Text style={[styles.progressSub, { color: colors.mutedForeground }]}>
-                {totalAnswered} of {TOTAL_PROMPTS} prompts answered
-              </Text>
-            </View>
+            )}
           </View>
         }
         renderItem={renderChapter}
