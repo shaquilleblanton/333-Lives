@@ -1,9 +1,15 @@
 import * as Sentry from "@sentry/node";
 
-// Crash reporting — no-ops when SENTRY_DSN is absent.
+const sentryDsn = process.env.SENTRY_DSN;
+const hasValidSentryDsn =
+  typeof sentryDsn === "string" &&
+  /^https?:\/\/[^@]+@[^/]+\/\d+/.test(sentryDsn);
+
+// Crash reporting is disabled when the DSN is absent or malformed. This keeps
+// the API available while configuration is being corrected.
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  enabled: !!process.env.SENTRY_DSN,
+  dsn: sentryDsn,
+  enabled: hasValidSentryDsn,
   tracesSampleRate: 0.1,
   environment: process.env.NODE_ENV ?? "development",
 });
