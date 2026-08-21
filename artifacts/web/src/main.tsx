@@ -17,12 +17,25 @@ if (hasValidSentryDsn) {
       Sentry.browserTracingIntegration(),
       // Capture a session replay on every error so you can see exactly what
       // the user was doing when it crashed.
-      Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
+      // Privacy: mask all text and block all media so journals, Vault content,
+      // family data, and voice recordings never appear in replay recordings.
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+        maskAllInputs: true,
+      }),
     ],
     tracesSampleRate: 0.1,
-    replaysSessionSampleRate: 0.05, // 5 % of sessions in background
-    replaysOnErrorSampleRate: 1.0, // 100 % of sessions that hit an error
+    replaysSessionSampleRate: 0.02, // 2 % of sessions in background
+    replaysOnErrorSampleRate: 1.0,  // 100 % of sessions that hit an error
     environment: import.meta.env.MODE,
+    // Never attach user-generated text content to error reports.
+    beforeSend(event) {
+      // Breadcrumbs can include route and interaction data. Replays already
+      // mask visual content; omitting breadcrumbs keeps error events private.
+      event.breadcrumbs = undefined;
+      return event;
+    },
   });
 }
 

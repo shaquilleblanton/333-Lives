@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
+import * as Sentry from "@sentry/node";
 import {
   CLERK_PROXY_PATH,
   clerkProxyMiddleware,
@@ -57,6 +58,25 @@ app.use(
     publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
   })),
 );
+
+// Development-only observability check. It is intentionally unavailable in
+// production so no public route can generate artificial production incidents.
+if (process.env.NODE_ENV !== "production") {
+  app.post("/api/_internal/sentry-verification", async (_req, res) => {
+    Sentry.captureException(
+      new Error("333 Lives controlled Sentry verification (development only)"),
+      {
+        tags: {
+          source: "api-verification-route",
+          test_event: "true",
+        },
+      },
+    );
+
+    await Sentry.flush(2_000);
+    res.status(204).end();
+  });
+}
 
 app.use("/api", router);
 

@@ -18,6 +18,11 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { purgeCloudflareCache } from "./lib/cloudflareCachePurge";
 
+logger.info(
+  { sentryEnabled: hasValidSentryDsn },
+  "Sentry crash reporting configuration loaded",
+);
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {

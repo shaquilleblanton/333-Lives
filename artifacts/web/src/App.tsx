@@ -43,6 +43,8 @@ import Memories from "@/pages/memories";
 import Review from "@/pages/review";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import Support from "@/pages/support";
+import Terms from "@/pages/terms";
+import Help from "@/pages/help";
 
 const queryClient = new QueryClient();
 
@@ -139,7 +141,9 @@ function Router() {
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms" component={Terms} />
       <Route path="/support" component={Support} />
+      <Route path="/help" component={Help} />
       {APP_ROUTES.map(({ path, component }) => (
         <Route key={path} path={path}>
           <ProtectedPage component={component} />
