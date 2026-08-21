@@ -617,24 +617,6 @@ const ARTICLES: Article[] = [
     ),
   },
 
-  // ── Shop ──────────────────────────────────────────────────────────────────
-  {
-    id: "shop",
-    title: "Shop and purchases",
-    category: "Shop",
-    tags: ["shop", "purchase", "subscription", "billing", "restore"],
-    body: (
-      <>
-        <p>The 333 Lives Shop offers products and optional features that enhance your experience. Purchases
-          are processed through the Apple App Store or Google Play Store — we do not store your payment details.</p>
-        <p className="mt-3"><strong>To restore a purchase:</strong> on iOS, go to the App Store → your profile
-          → Purchases. Make sure you're signed in with the same Apple ID used for the original purchase.</p>
-        <p className="mt-3">Questions about a charge? Email{" "}
-          <a href="mailto:support@333lives.app" className="text-primary hover:underline">support@333lives.app</a> with
-          your receipt and we'll help investigate.</p>
-      </>
-    ),
-  },
 ];
 
 const CATEGORIES = [
@@ -650,7 +632,6 @@ const CATEGORIES = [
   "Review",
   "Account & Settings",
   "Privacy & Data",
-  "Shop",
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────

@@ -35,10 +35,6 @@ const FAQS = [
     a: "AI coaching, affirmations, and insights are powered by Anthropic's Claude. When you use an AI feature, your message is sent to Anthropic's servers to generate a response. We do not automatically share your private reflections with any AI service — only what you explicitly send in a conversation.",
   },
   {
-    q: "How do I restore a purchase?",
-    a: "On iOS, go to the App Store → your profile → Purchases. On Android, open the Play Store → My apps & games. If you still have issues, contact us with your receipt and we'll help.",
-  },
-  {
     q: "The app is crashing. How do I fix it?",
     a: "Close the app fully and reopen it. If crashes continue, reinstall the app from the App Store or Play Store (your data is saved to your account). Contact us if the issue persists.",
   },
