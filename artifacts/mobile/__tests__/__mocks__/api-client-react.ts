@@ -22,10 +22,6 @@ let _createError: Error | null = null;
 // Pulse state
 let _pulsePosts: any[] = [];
 
-// Shop state
-let _shopProducts: any[] = [];
-let _shopError = false;
-
 // Memories state
 let _collections: any[] = [];
 let _collectionItems: any[] = [];
@@ -64,9 +60,6 @@ let _deletePost: jest.Mock;
 let _reactToPost: jest.Mock;
 let _unreactPost: jest.Mock;
 let _createPost: jest.Mock;
-
-// Shop mutation spies
-let _createCheckout: jest.Mock;
 
 // Memories mutation spies
 let _deleteCollection: jest.Mock;
@@ -171,9 +164,6 @@ function buildMutations() {
   _unreactPost = jest.fn();
   _createPost = jest.fn();
 
-  // Shop
-  _createCheckout = jest.fn();
-
   // Memories
   _deleteCollection = jest.fn();
   _createCollection = jest.fn();
@@ -209,8 +199,6 @@ export function __reset() {
   _history = { currentStreak: 0, longestStreak: 0, completedDays: [] };
   _createError = null;
   _pulsePosts = [];
-  _shopProducts = [];
-  _shopError = false;
   _collections = [];
   _collectionItems = [];
   _vaultItems = [];
@@ -257,8 +245,6 @@ export function __setIntentions(intentions: Intention[]) { _intentions = intenti
 export function __setHistory(h: typeof _history) { _history = h; }
 export function __setCreateError(err: Error | null) { _createError = err; buildMutations(); }
 export function __setPulsePosts(posts: any[]) { _pulsePosts = posts; }
-export function __setShopProducts(products: any[]) { _shopProducts = products; }
-export function __setShopError(v: boolean) { _shopError = v; }
 export function __setCollections(c: any[]) { _collections = c; }
 export function __setCollectionItems(items: any[]) { _collectionItems = items; }
 export function __setVaultItems(items: any[]) { _vaultItems = items; }
@@ -305,7 +291,6 @@ export function __getDeletePost() { return _deletePost; }
 export function __getReactToPost() { return _reactToPost; }
 export function __getUnreactPost() { return _unreactPost; }
 export function __getCreatePost() { return _createPost; }
-export function __getCreateCheckout() { return _createCheckout; }
 export function __getDeleteCollection() { return _deleteCollection; }
 export function __getDeleteCollectionItem() { return _deleteCollectionItem; }
 export function __getUpdateCollectionItem() { return _updateCollectionItem; }
@@ -411,16 +396,6 @@ export function useGetPeopleReminders() {
 
 export function useGetPulseFeed() {
   return { data: _pulsePosts, isLoading: false, refetch: () => Promise.resolve(), isRefetching: false };
-}
-
-export function useGetShopProducts() {
-  return {
-    data: _shopProducts,
-    isLoading: false,
-    isError: _shopError,
-    refetch: () => Promise.resolve(),
-    isRefetching: false,
-  };
 }
 
 export function useGetMemoryCollections() {
@@ -579,9 +554,6 @@ export const useCreatePulsePost = jest.fn(() => ({ mutate: _createPost, isPendin
 export const useDeletePulsePost = jest.fn(() => ({ mutate: _deletePost, isPending: false }));
 export const useReactToPulsePost = jest.fn(() => ({ mutate: _reactToPost, isPending: false }));
 export const useRemovePulseReaction = jest.fn(() => ({ mutate: _unreactPost, isPending: false }));
-
-// Shop mutations
-export const useCreateShopCheckout = jest.fn(() => ({ mutate: _createCheckout, isPending: false }));
 
 // Memories mutations
 export const useDeleteMemoryCollection = jest.fn(() => ({ mutate: _deleteCollection, isPending: false }));

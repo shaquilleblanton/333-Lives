@@ -38,7 +38,7 @@ const TYPE_OPTIONS: Array<{ value: FeedbackType; label: string; icon: keyof type
 ];
 
 const APP_AREAS = [
-  "Today", "Streak", "Memos", "Shop", "Tasks", "Future", "Vault", "Growth",
+  "Today", "Streak", "Memos", "Tasks", "Future", "Vault", "Growth",
   "Gratitude", "People", "Legacy Letters", "Workouts", "Community",
   "Calendar", "Profile", "Other",
 ];

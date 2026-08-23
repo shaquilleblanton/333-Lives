@@ -132,8 +132,6 @@ function ClassicTabLayout() {
             ),
         }}
       />
-      {/* Shop tab hidden until product catalog is confirmed */}
-      <Tabs.Screen name="shop" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

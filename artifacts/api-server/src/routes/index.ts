@@ -19,7 +19,6 @@ import legacyLettersRouter from "./legacy-letters";
 import relationshipMomentsRouter from "./relationship-moments";
 import workoutsRouter from "./workouts";
 import tasksRouter from "./tasks";
-import shopRouter from "./shop";
 import voiceMemosRouter from "./voice-memos";
 import feedbackRouter from "./feedback";
 import familyMembersRouter from "./family-members";
@@ -33,11 +32,10 @@ import anthropicRouter from "./anthropic";
 
 const router: IRouter = Router();
 
-// Public routes: health checks, storage (handles its own auth per-route so
-// public assets stay public), and the read-only shop catalog.
+// Public routes: health checks and storage (which handles its own auth
+// per-route so public assets stay public).
 router.use(healthRouter);
 router.use(storageRouter);
-router.use(shopRouter);
 
 // Everything below is per-user data and requires a signed-in user.
 router.use(requireAuth);
