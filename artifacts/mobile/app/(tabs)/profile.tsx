@@ -1,5 +1,6 @@
 import { useClerk } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   useGetMe,
@@ -26,6 +27,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fonts } from "@/constants/fonts";
+import { WEB_URLS } from "@/constants/links";
 import { THEMES, useTheme } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -218,6 +220,14 @@ export default function ProfileScreen() {
     router.push("/onboarding" as any);
   }
 
+  async function handleOpenWebResource(url: string) {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Couldn’t open this page", "Please try again or visit 333lives.app in your browser.");
+    }
+  }
+
   function confirmSignOut() {
     if (Platform.OS === "web") { void signOut(); return; }
     Alert.alert("Sign out", "Are you sure?", [
@@ -285,6 +295,39 @@ export default function ProfileScreen() {
         <MenuItem icon="play-circle" label="View App Tour" sub="Replay the intro walkthrough"
           onPress={handleViewAppTour} />
         <MenuItem icon="info" label="Version" rightLabel="333 Lives" />
+      </Section>
+
+      <Section title="HELP & LEGAL">
+        <MenuItem
+          icon="book-open"
+          label="Help Center"
+          sub="Guides, answers, and support resources"
+          onPress={() => router.push("/help" as any)}
+        />
+        <MenuItem
+          icon="compass"
+          label="How 333 Lives Works"
+          sub="A quick guide to the core features"
+          onPress={() => router.push("/instructions" as any)}
+        />
+        <MenuItem
+          icon="shield"
+          label="Privacy Policy"
+          sub="How we protect your information"
+          onPress={() => void handleOpenWebResource(WEB_URLS.privacy)}
+        />
+        <MenuItem
+          icon="file-text"
+          label="Terms of Service"
+          sub="The terms for using 333 Lives"
+          onPress={() => void handleOpenWebResource(WEB_URLS.terms)}
+        />
+        <MenuItem
+          icon="mail"
+          label="Contact Support"
+          sub="Get help from the 333 Lives team"
+          onPress={() => void handleOpenWebResource(WEB_URLS.support)}
+        />
       </Section>
 
       <Section title="SESSION">
