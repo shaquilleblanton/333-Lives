@@ -70,6 +70,14 @@ let server: http.Server;
 let baseUrl: string;
 let testUserId: number;
 
+type IntentionResponse = {
+  id: number;
+  text: string;
+  isCompleted: boolean;
+  date: string;
+  order: number;
+};
+
 /** Make a JSON request to the test server with the x-timezone header so the
  *  server resolves "today" in UTC, matching the TODAY constant above. */
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
@@ -145,7 +153,7 @@ describe("333 flow — end-to-end against real API", () => {
 
       expect(res.status, `POST #${i + 1} should return 201`).toBe(201);
 
-      const body = await res.json();
+      const body = (await res.json()) as IntentionResponse;
       expect(body.text).toBe(texts[i]);
       expect(body.isCompleted).toBe(false);
       expect(body.date).toBe(TODAY);
@@ -166,7 +174,7 @@ describe("333 flow — end-to-end against real API", () => {
 
       expect(res.status, `PUT intention ${id} should return 200`).toBe(200);
 
-      const body = await res.json();
+      const body = (await res.json()) as IntentionResponse;
       expect(body.id).toBe(id);
       expect(body.isCompleted).toBe(true);
     }
