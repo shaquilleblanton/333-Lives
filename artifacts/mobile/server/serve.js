@@ -82,10 +82,31 @@ function serveLandingPage(req, res, landingPageTemplate, appName) {
 }
 
 function serveStaticFile(urlPath, res) {
-  const safePath = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, "");
-  const filePath = path.join(STATIC_ROOT, safePath);
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400);
+    res.end("Bad Request");
+    return;
+  }
 
-  if (!filePath.startsWith(STATIC_ROOT)) {
+  if (decodedPath.includes("\0")) {
+    res.writeHead(400);
+    res.end("Bad Request");
+    return;
+  }
+
+  // Resolve only a relative path beneath the static build root. Stripping
+  // leading separators prevents an absolute request path from escaping it;
+  // the containment check rejects traversal sequences after normalization.
+  const relativePath = decodedPath.replace(/^[/\\]+/, "");
+  const filePath = path.resolve(STATIC_ROOT, relativePath);
+
+  if (
+    filePath === STATIC_ROOT ||
+    !filePath.startsWith(`${STATIC_ROOT}${path.sep}`)
+  ) {
     res.writeHead(403);
     res.end("Forbidden");
     return;
