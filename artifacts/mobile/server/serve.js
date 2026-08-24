@@ -15,6 +15,12 @@ const path = require("path");
 
 const STATIC_ROOT = path.resolve(__dirname, "..", "static-build");
 const TEMPLATE_PATH = path.resolve(__dirname, "templates", "landing-page.html");
+const IOS_MANIFEST_PATH = path.join(STATIC_ROOT, "ios", "manifest.json");
+const ANDROID_MANIFEST_PATH = path.join(
+  STATIC_ROOT,
+  "android",
+  "manifest.json",
+);
 const basePath = (process.env.BASE_PATH || "/").replace(/\/+$/, "");
 
 const MIME_TYPES = {
@@ -46,7 +52,8 @@ function getAppName() {
 }
 
 function serveManifest(platform, res) {
-  const manifestPath = path.join(STATIC_ROOT, platform, "manifest.json");
+  const manifestPath =
+    platform === "ios" ? IOS_MANIFEST_PATH : ANDROID_MANIFEST_PATH;
 
   if (!fs.existsSync(manifestPath)) {
     res.writeHead(404, { "content-type": "application/json" });
@@ -81,6 +88,38 @@ function serveLandingPage(req, res, landingPageTemplate, appName) {
   res.end(html);
 }
 
+function createStaticFileIndex(directory, relativePath = "") {
+  const files = new Map();
+
+  if (!fs.existsSync(directory)) {
+    return files;
+  }
+
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const nextRelativePath = path.posix.join(relativePath, entry.name);
+    const absolutePath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      for (const [urlPath, asset] of createStaticFileIndex(
+        absolutePath,
+        nextRelativePath,
+      )) {
+        files.set(urlPath, asset);
+      }
+    } else if (entry.isFile()) {
+      const extension = path.extname(entry.name).toLowerCase();
+      files.set(`/${nextRelativePath}`, {
+        content: fs.readFileSync(absolutePath),
+        contentType: MIME_TYPES[extension] || "application/octet-stream",
+      });
+    }
+  }
+
+  return files;
+}
+
+const STATIC_FILES = createStaticFileIndex(STATIC_ROOT);
+
 function serveStaticFile(urlPath, res) {
   let decodedPath;
   try {
@@ -97,32 +136,17 @@ function serveStaticFile(urlPath, res) {
     return;
   }
 
-  // Resolve only a relative path beneath the static build root. Stripping
-  // leading separators prevents an absolute request path from escaping it;
-  // the containment check rejects traversal sequences after normalization.
-  const relativePath = decodedPath.replace(/^[/\\]+/, "");
-  const filePath = path.resolve(STATIC_ROOT, relativePath);
-
-  if (
-    filePath === STATIC_ROOT ||
-    !filePath.startsWith(`${STATIC_ROOT}${path.sep}`)
-  ) {
-    res.writeHead(403);
-    res.end("Forbidden");
-    return;
-  }
-
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  // Requests can only select files discovered under static-build at startup.
+  // No request value is ever used to construct a filesystem path.
+  const asset = STATIC_FILES.get(decodedPath);
+  if (!asset) {
     res.writeHead(404);
     res.end("Not Found");
     return;
   }
 
-  const ext = path.extname(filePath).toLowerCase();
-  const contentType = MIME_TYPES[ext] || "application/octet-stream";
-  const content = fs.readFileSync(filePath);
-  res.writeHead(200, { "content-type": contentType });
-  res.end(content);
+  res.writeHead(200, { "content-type": asset.contentType });
+  res.end(asset.content);
 }
 
 const landingPageTemplate = fs.readFileSync(TEMPLATE_PATH, "utf-8");
