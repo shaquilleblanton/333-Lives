@@ -20,7 +20,7 @@
           "daily",
           "planner"
         ],
-        "releaseNotes": "Build 33 — App-wide polish:\n• New onboarding walkthrough on first launch\n• 7-day streak dot history on every habit card\n• Error and retry states across all screens\n• Support page and privacy policy now live\n• Keyboard fixes across all forms",
+        "releaseNotes": "A more dependable 333 Lives experience:\n• Refined onboarding and first-launch guidance\n• Clearer streak history across habit cards\n• Improved loading, error, and retry states\n• Help, support, privacy, and terms are easy to find\n• Smoother keyboard behavior across forms",
         "supportUrl": "https://333lives.app/support",
         "privacyPolicyUrl": "https://333lives.app/privacy-policy",
         "marketingUrl": "https://333lives.app"
