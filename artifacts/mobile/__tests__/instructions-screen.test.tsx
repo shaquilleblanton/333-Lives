@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react-native";
 import InstructionsScreen from "../app/instructions";
 
 jest.mock("expo-router", () => ({
-  router: { back: jest.fn() },
+  router: { back: jest.fn(), push: jest.fn() },
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -30,23 +30,44 @@ const mockRouter = require("expo-router").router;
 describe("Instructions screen", () => {
   beforeEach(() => {
     mockRouter.back.mockClear();
+    mockRouter.push.mockClear();
   });
 
   afterEach(async () => {
     await cleanup();
   });
 
-  it("explains every core feature and supports back navigation", async () => {
+  it("covers the daily practice, story, life hub, sharing, legacy, and privacy features", async () => {
     const { getByText, getByTestId } = await render(<InstructionsScreen />);
 
     expect(getByText("Today · The 333 Method")).toBeTruthy();
+    expect(getByText("Gratitude")).toBeTruthy();
     expect(getByText("Streak")).toBeTruthy();
+    expect(getByText("Habits")).toBeTruthy();
+    expect(getByText("Goals")).toBeTruthy();
+    expect(getByText("Journal")).toBeTruthy();
+    expect(getByText("Life Coach, Affirmations & AI Chat")).toBeTruthy();
     expect(getByText("Memos")).toBeTruthy();
-    expect(getByText("Vault")).toBeTruthy();
+    expect(getByText("Memories")).toBeTruthy();
+    expect(getByText("Life Timeline")).toBeTruthy();
+    expect(getByText("Tell Your Story")).toBeTruthy();
+    expect(getByText("Tasks")).toBeTruthy();
+    expect(getByText("My Circle")).toBeTruthy();
+    expect(getByText("Schedule")).toBeTruthy();
+    expect(getByText("Workouts")).toBeTruthy();
     expect(getByText("Pulse")).toBeTruthy();
-    expect(getByText("Family")).toBeTruthy();
+    expect(getByText("Community")).toBeTruthy();
+    expect(getByText("Family Tree")).toBeTruthy();
+    expect(getByText("Legacy Letters")).toBeTruthy();
+    expect(getByText("Future Messages")).toBeTruthy();
+    expect(getByText("Secure Vault")).toBeTruthy();
+    expect(getByText("Review")).toBeTruthy();
+    expect(getByText("Profile, Help & Privacy")).toBeTruthy();
 
     fireEvent.press(getByTestId("instructions-back"));
     expect(mockRouter.back).toHaveBeenCalled();
+
+    fireEvent.press(getByTestId("instructions-help"));
+    expect(mockRouter.push).toHaveBeenCalledWith("/help");
   });
 });

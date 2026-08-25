@@ -115,7 +115,7 @@ export default function HelpScreen() {
           <View style={styles.orientationCopy}>
             <Text style={[styles.orientationLabel, { color: colors.foreground }]}>How 333 Lives Works</Text>
             <Text style={[styles.orientationDescription, { color: colors.mutedForeground }]}>
-              A quick orientation to Today, Streak, Memos, Vault, Pulse, and Family.
+              A detailed guide to every major feature, from Today and Growth to Vault, Legacy, Community, and Family.
             </Text>
           </View>
           <Feather name="chevron-right" size={18} color={colors.primary} />

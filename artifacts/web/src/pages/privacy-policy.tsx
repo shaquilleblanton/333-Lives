@@ -11,10 +11,6 @@ const SECTIONS = [
           website (collectively, the "Service"). This Privacy Policy explains what personal information we collect, how
           we use it, with whom we share it, and the choices you have over your data.
         </p>
-        <p className="mt-3 text-sm italic text-amber-300/70">
-          ⚠ This document is a working template. It should be reviewed and approved by a licensed attorney before
-          public launch or distribution.
-        </p>
         <p className="mt-3">
           By using the Service you agree to the practices described here. If you do not agree, please discontinue use
           and contact us to request deletion of your data.
@@ -35,17 +31,26 @@ const SECTIONS = [
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Personal Reflections and Content</h3>
         <p>Anything you choose to write or record: daily intentions, gratitude entries, journal entries, life events,
-          goals, habits, tasks, workout logs, legacy letters, future messages, and Secure Vault files. This content
-          is private to you unless you explicitly choose to share it (see Section 5).</p>
+          goals, habits, tasks, workout logs, legacy letters, future messages, Community events, and Secure Vault
+          information. This content is private to you unless you use a sharing feature or choose Family visibility
+          for an eligible Vault item (see Section 5).</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Media and Uploaded Files</h3>
-        <p>Photos, audio memos, and documents you upload. Media linked to personal reflections is stored securely
-          and is private to you. Vault files are encrypted at rest using AES-256-GCM before being stored.</p>
+        <p>Photos, audio memos, voice-story answers, Pulse media, and documents you upload. We store these files in
+          access-controlled object storage to provide the feature you selected. Vault files receive an additional
+          server-side AES-256-GCM encryption layer before storage.</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Family and Circle Information</h3>
-        <p>Names and relationships of people you add to your People list (private). If you invite someone to your
-          Family group or Pulse circle, we collect their email address to send the invitation and link the accounts
-          upon acceptance.</p>
+        <p>Names, relationships, birthdays, anniversaries, photos, notes, and other details you add to My Circle or
+          Family Tree. If you invite someone to your Family group, we collect their email address to send the invitation
+          and link accounts after acceptance. Circle sharing is based on people you designate for Circle sharing who
+          also have a linked 333 Lives account.</p>
+
+        <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Vault and Estate Information</h3>
+        <p>Secure Vault can contain highly sensitive documents and details, including trusted-contact names,
+          relationships, email addresses, phone numbers, firms, notes, and estate-planning information such as wills,
+          insurance, medical directives, funeral wishes, and digital-asset information. Please only add information
+          you are authorized to provide.</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Health and Activity Data</h3>
         <p>Workout logs, streak history, and habit completion records that you enter manually. We do not currently
@@ -55,9 +60,9 @@ const SECTIONS = [
         <p>Device type, operating system, app version, crash reports, and performance data collected automatically
           to support and improve the Service. See Section 7 for details on crash monitoring.</p>
 
-        <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Usage Data</h3>
-        <p>Features you interact with and how often, used anonymously to understand which parts of the product
-          are most useful. We do not build individual behavioral profiles for advertising purposes.</p>
+        <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Support and Feedback</h3>
+        <p>When you send feedback or contact support, we collect the details you provide along with the account
+          information needed to respond and investigate the request.</p>
       </>
     ),
   },
@@ -71,7 +76,6 @@ const SECTIONS = [
         <li>Sync your data across devices signed in to the same account</li>
         <li>Deliver AI-generated coaching, affirmations, and insights when you use those features (see Section 6)</li>
         <li>Fulfill family and circle sharing when you initiate it (see Section 5)</li>
-        <li>Send push notifications and email reminders if you have enabled them</li>
         <li>Investigate bugs, diagnose crashes, and monitor service health (see Section 7)</li>
         <li>Respond to your support requests</li>
         <li>Comply with legal obligations and enforce our Terms of Service</li>
@@ -83,13 +87,15 @@ const SECTIONS = [
     title: "4. Data Retention",
     body: (
       <>
-        <p>We retain your data for as long as your account is active.</p>
-        <p className="mt-3">When you delete your account we will delete or anonymize your personal data within
-          30 days, except where we are required to retain it for legal, tax, or fraud-prevention purposes. Backup
-          copies may persist for up to 90 days before being purged from our systems.</p>
-        <p className="mt-3">You may request deletion of specific content (a journal entry, a Vault file, a life event)
-          at any time from within the app. Deleted content is removed immediately from the live database; it may
-          remain in encrypted backups for up to 90 days.</p>
+        <p>We retain account data while your account remains active and as needed to operate the Service, meet legal
+          obligations, resolve disputes, and enforce our agreements.</p>
+        <p className="mt-3">You can delete many entries from within the app. Deleting an entry removes its record from
+          the active app experience. Some features attempt to remove their associated files at the same time; not
+          every feature has an automated file-cleanup workflow. Encrypted backup copies and unlinked storage objects
+          may persist until they are removed through operational storage maintenance.</p>
+        <p className="mt-3">Account deletion and data-export requests are currently handled by our support team rather
+          than through an automated in-app tool. Contact us using the address in Section 11; we will verify the request
+          and explain the scope and timing of the action before processing it.</p>
       </>
     ),
   },
@@ -102,23 +108,27 @@ const SECTIONS = [
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Private (default)</h3>
         <p>Intentions, gratitude, journals, life events, goals, habits, tasks, workouts, calendar events, legacy
-          letters, future messages, memos, memories, family tree entries, and Secure Vault files are visible only
-          to you. No family member or other user can access them.</p>
+          letters, future messages, memos, memories, Family Tree entries, and private Secure Vault items are visible
+          only to you. No family member or other user can access them through the Service.</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Family-visible</h3>
-        <p>When you mark Secure Vault content as "Family" or post to the Family Pulse feed, only people who have
-          accepted your family invitation can see that content. Accepted family members can view family-scoped Vault
-          files and Pulse posts. They cannot see your private reflections, habits, or any other personal content.</p>
+        <p>When you mark an eligible Secure Vault item as "Family," only people with an accepted family link can
+          access it. Family-visible Vault records can reveal the item's owner name, category, title, details, file
+          presence, and the shared file itself. Family access does not grant access to your private reflections,
+          habits, or other private content.</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Pulse / Circle</h3>
-        <p>Pulse posts are visible to the members of your circle at the time of posting. You can delete a post at
-          any time; deletion removes it for all members immediately.</p>
+        <p>Pulse posts are visible to the linked 333 Lives accounts in your Circle—not automatically to every accepted
+          Family member. Circle members can see the post, its author name, and reactions as the feature displays them.
+          You can delete your own post. Non-persistent posts stop appearing after 24 hours; persistent posts remain
+          available until deleted. Expired or deleted media may remain in protected storage temporarily as described
+          in Section 4.</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Service Providers</h3>
-        <p>We share data with third-party service providers only as necessary to operate the Service. These
-          providers are contractually prohibited from using your data for any other purpose. Current providers
-          include: Clerk Inc. (authentication), object storage providers (file hosting), and Anthropic PBC
-          (AI features — see Section 6).</p>
+        <p>We share data with third-party service providers only as needed to operate the Service. Current providers
+          include Clerk, Inc. (authentication), Replit-provided object storage and its Google Cloud infrastructure
+          (file hosting), Anthropic PBC (AI features — see Section 6), and Sentry (crash and performance monitoring
+          — see Section 7).</p>
 
         <h3 className="font-semibold text-amber-300/90 mt-4 mb-1">Legal Disclosures</h3>
         <p>We may disclose your information when required by law, subpoena, or court order, or when we believe
@@ -140,16 +150,17 @@ const SECTIONS = [
       <>
         <p>333 Lives offers optional AI-powered features including coaching conversations, daily affirmations, and
           reflective insights. These features are powered by the Anthropic Claude API.</p>
-        <p className="mt-3">When you use an AI feature, the content of your messages and any context you choose to
-          share (for example, a recent intention you wish to discuss) is sent to Anthropic's servers to generate a
-          response. This content is subject to{" "}
+        <p className="mt-3">When you use AI Chat, the message you submit is sent to Anthropic's servers to generate a
+          response. Life Coach and Affirmations also send a limited, feature-specific summary from your account: your
+          name and streak count, plus relevant recent intentions, active goal titles/progress, and habit names or
+          check-in summaries. This content is subject to{" "}
           <a href="https://www.anthropic.com/privacy" className="text-amber-400 hover:underline" target="_blank" rel="noopener noreferrer">
             Anthropic's Privacy Policy
           </a>. We have enabled the "do not train on customer data" setting available under our agreement.</p>
         <p className="mt-3">AI conversations are stored in your account so you can review them later. You can delete
-          individual conversations from within the app. Your private reflections (journal entries, intentions, etc.)
-          are not automatically sent to any AI service; only content you explicitly submit in an AI conversation
-          is processed.</p>
+          individual conversations from within the app. We do not automatically send journals, Vault content, Family
+          Tree information, or other private content to AI; Coach and Affirmations use only the limited summaries
+          described above to provide their requested feature.</p>
       </>
     ),
   },
@@ -159,17 +170,19 @@ const SECTIONS = [
     body: (
       <>
         <p>We use Sentry (Functional Software, Inc.) to collect crash reports and performance data. When the app
-          encounters an error, Sentry captures technical information such as the error message, stack trace, device
-          type, OS version, and app version.</p>
-        <p className="mt-3">We have configured Sentry with the following privacy protections:</p>
+          encounters an error, Sentry may receive technical information such as the error message, stack trace,
+          device type, operating-system version, app version, browser/runtime context, and performance traces.</p>
+        <p className="mt-3">The web app has the following additional replay protections:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Session replays mask all text and block all media — your journals, Vault files, and personal content
             are never captured in replay recordings</li>
           <li>All input fields are masked in replays</li>
           <li>Breadcrumb data (a log of UI interactions before a crash) has any attached data values stripped</li>
-          <li>Only 2 % of normal sessions are sampled for background replay; 100 % of error sessions are captured
+          <li>Only 2 % of normal web sessions are sampled for background replay; web error sessions may be captured
             with the masking settings above</li>
         </ul>
+        <p className="mt-3">The mobile app does not use session replay. It sends crash and performance diagnostics
+          when Sentry is enabled in the installed build.</p>
         <p className="mt-3">Crash data is subject to{" "}
           <a href="https://sentry.io/privacy/" className="text-amber-400 hover:underline" target="_blank" rel="noopener noreferrer">
             Sentry's Privacy Policy
@@ -188,11 +201,10 @@ const SECTIONS = [
             in the background. Audio files are stored in your account.</li>
           <li><strong>Camera / Photo Library</strong> — used to attach photos to life events, memories, or Vault
             files. Photos are stored in your account and are private to you unless you explicitly share them.</li>
-          <li><strong>Notifications</strong> — used to send optional daily reminders and streak alerts. You can
-            revoke this permission at any time in your device Settings.</li>
         </ul>
         <p className="mt-3">If you deny a permission, the app continues to work; only the specific feature
-          requiring that permission will be unavailable until you grant it.</p>
+          requiring that permission will be unavailable until you grant it. The current release does not collect push
+          notification tokens or send push notifications.</p>
       </>
     ),
   },
@@ -207,8 +219,10 @@ const SECTIONS = [
           <li>Secure Vault files are encrypted at rest with AES-256-GCM before storage</li>
           <li>Authentication is managed by Clerk Inc., which uses industry-standard OAuth 2.0 / OIDC flows</li>
           <li>Server-side access controls enforce ownership and family-link boundaries on every request</li>
-          <li>We regularly review dependencies for known security vulnerabilities</li>
         </ul>
+        <p className="mt-3">Secure Vault encryption is managed by the Service so authorized server processes can
+          retrieve files for you and, when you choose, your accepted family links. It is not end-to-end encryption
+          controlled solely by your device.</p>
         <p className="mt-3">No method of electronic transmission or storage is 100 % secure. If you believe your
           account has been compromised, please contact us immediately at{" "}
           <a href="mailto:support@333lives.app" className="text-amber-400 hover:underline">support@333lives.app</a>.</p>
@@ -226,36 +240,27 @@ const SECTIONS = [
   },
   {
     id: "your-rights",
-    title: "11. Your Rights",
+    title: "11. Your Rights and Requests",
     body: (
       <>
         <p className="mb-2">Depending on where you live, you may have certain rights regarding your personal data:</p>
         <ul className="list-disc pl-5 space-y-1">
           <li><strong>Access</strong> — request a copy of the data we hold about you</li>
           <li><strong>Correction</strong> — request correction of inaccurate or incomplete data</li>
-          <li><strong>Deletion</strong> — request deletion of your account and all associated data</li>
+          <li><strong>Deletion</strong> — request deletion of your account and associated data</li>
           <li><strong>Portability</strong> — request an export of your data in a machine-readable format</li>
           <li><strong>Opt-out of communications</strong> — unsubscribe from non-essential emails at any time</li>
         </ul>
         <p className="mt-3">To exercise any of these rights, contact us at{" "}
           <a href="mailto:support@333lives.app" className="text-amber-400 hover:underline">support@333lives.app</a>.
-          We will respond within 30 days. We may need to verify your identity before fulfilling a request.</p>
+          We may need to verify your identity before fulfilling a request. We currently process deletion and export
+          requests through support rather than an automated in-app control.</p>
       </>
     ),
   },
   {
-    id: "purchases",
-    title: "12. Purchases and Billing",
-    body: (
-      <p>In-app purchases are processed through the Apple App Store or Google Play Store. We do not collect or
-        store your payment card details. Billing information is subject to the respective platform's privacy policy.
-        If you have questions about a charge, contact us at{" "}
-        <a href="mailto:support@333lives.app" className="text-amber-400 hover:underline">support@333lives.app</a>.</p>
-    ),
-  },
-  {
     id: "changes",
-    title: "13. Changes to This Policy",
+    title: "12. Changes to This Policy",
     body: (
       <p>We may update this Privacy Policy from time to time. We will notify you of material changes by posting
         the updated policy with a revised effective date and, where appropriate, by email or in-app notification.
@@ -264,7 +269,7 @@ const SECTIONS = [
   },
   {
     id: "contact",
-    title: "14. Contact Us",
+    title: "13. Contact Us",
     body: (
       <>
         <p>Questions, requests, or concerns about this Privacy Policy:</p>
@@ -294,7 +299,7 @@ export default function PrivacyPolicy() {
         </div>
 
         <h1 className="text-4xl font-bold text-amber-400 mb-2">Privacy Policy</h1>
-        <p className="text-gray-500 text-sm mb-2">Effective date: August 21, 2026</p>
+        <p className="text-gray-500 text-sm mb-2">Effective date: August 25, 2026</p>
         <p className="text-amber-300/60 text-xs italic mb-12">
           333 Lives Enterprises. LLC · North Carolina, USA
         </p>
