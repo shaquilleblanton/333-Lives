@@ -154,7 +154,7 @@ export default function HelpScreen() {
         </View>
 
         <Text style={[styles.footer, { color: colors.mutedForeground }]}>
-          Still need help? The Support page includes account deletion and data export instructions.
+          Still need help? The Support page includes account deletion and data-request instructions.
         </Text>
       </ScrollView>
     </View>

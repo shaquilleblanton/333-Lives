@@ -202,10 +202,8 @@ router.post("/pulse/posts", async (req, res) => {
   // proxying any bytes. This ensures media is never accessible outside the circle.
   if (mediaUrl) {
     try {
-      await objectStorage.trySetObjectEntityAclPolicy(mediaUrl, {
-        owner: String(getUserId(req)),
-        visibility: "private",
-      });
+      const boundMediaUrl = await objectStorage.associateObjectEntity(mediaUrl, getUserId(req));
+      parsed.data.mediaUrl = boundMediaUrl;
     } catch (err) {
       req.log.error({ err }, "Pulse post media ACL set failed");
       return res.status(400).json({ error: "Uploaded file not found — please re-upload" });

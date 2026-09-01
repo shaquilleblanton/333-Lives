@@ -384,8 +384,6 @@ export const GetVaultFamilyItemsResponseItem = zod.object({
   "name": zod.string(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']),
   "visibility": zod.enum(['private', 'family']),
-  "fileUrl": zod.string().nullish(),
-  "content": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
   "sizeBytes": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
@@ -505,9 +503,7 @@ export const UpdateVaultItemBody = zod.object({
   "name": zod.string().optional(),
   "category": zod.enum(['document', 'photo', 'journal', 'voice_note', 'important_info', 'final_letter', 'will', 'insurance', 'medical_directive', 'funeral_wishes', 'digital_assets']).optional(),
   "visibility": zod.enum(['private', 'family']).optional(),
-  "content": zod.string().optional(),
-  "mimeType": zod.string().optional(),
-  "sizeBytes": zod.number().optional()
+  "content": zod.string().nullish()
 })
 
 export const UpdateVaultItemResponse = zod.object({

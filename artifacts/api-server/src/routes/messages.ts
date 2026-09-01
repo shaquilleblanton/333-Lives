@@ -4,8 +4,10 @@ import crypto from "node:crypto";
 import { db } from "@workspace/db";
 import { messagesTable, insertMessageSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
+import { ObjectStorageService } from "../lib/objectStorage";
 
 const router = Router();
+const objectStorageService = new ObjectStorageService();
 
 type MessageRow = typeof messagesTable.$inferSelect;
 
@@ -89,6 +91,13 @@ router.post("/messages", async (req, res) => {
     userId: getUserId(req),
   });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
+  if (parsed.data.audioUrl) {
+    try {
+      parsed.data.audioUrl = await objectStorageService.associateObjectEntity(parsed.data.audioUrl, getUserId(req));
+    } catch {
+      return res.status(400).json({ error: "Uploaded audio is invalid or belongs to another user" });
+    }
+  }
 
   const values: typeof messagesTable.$inferInsert = { ...parsed.data };
   if (typeof passcode === "string" && passcode.trim().length > 0) {
@@ -163,7 +172,11 @@ router.post("/messages/:id/unlock", async (req, res) => {
 router.delete("/messages/:id", async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ error: "Invalid message id" });
+  const existing = await db.select({ audioUrl: messagesTable.audioUrl }).from(messagesTable)
+    .where(and(eq(messagesTable.id, id), eq(messagesTable.userId, getUserId(req)))).limit(1);
   await db.delete(messagesTable).where(and(eq(messagesTable.id, id), eq(messagesTable.userId, getUserId(req))));
+  if (existing[0]?.audioUrl) objectStorageService.deleteObjectEntityFile(existing[0].audioUrl)
+    .catch((err) => req.log.warn({ err }, "Message audio cleanup failed"));
   return res.json({ success: true });
 });
 

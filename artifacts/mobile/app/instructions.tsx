@@ -33,14 +33,38 @@ type GuideSection = {
 
 const GUIDE_SECTIONS: GuideSection[] = [
   {
+    title: "Begin here",
+    intro: "Onboarding gets you oriented, and authentication keeps your private life records connected to you.",
+    items: [
+      {
+        icon: "compass",
+        title: "Onboarding",
+        description: "The onboarding tour introduces the daily practice and the main spaces in the app. It exists so you can understand where to begin; you can replay it from Profile → View App Tour.",
+        accent: "primary",
+      },
+      {
+        icon: "log-in",
+        title: "Sign in & create an account",
+        description: "Use the sign-in or sign-up screens to access your account through Clerk. Authentication lets your data sync across signed-in devices and keeps private content associated with the right account.",
+        accent: "secondary",
+      },
+    ],
+  },
+  {
     title: "Start with today",
     intro: "The 333 practice is a small daily reset: choose what matters, notice what is good, and return tomorrow.",
     items: [
       {
         icon: "sun",
         title: "Today · The 333 Method",
-        description: "Set three intentions for the day, mark them complete as you go, and use the day’s overview to stay grounded. Completing all three intentions closes the day and counts toward your streak.",
+        description: "Set three intentions for the day, mark them complete as you go, and use Today’s overview to stay grounded. Completing all three intentions closes the day and counts toward your streak.",
         accent: "primary",
+      },
+      {
+        icon: "calendar",
+        title: "Day detail",
+        description: "Open a day from Today or your history to review that day’s intentions, gratitude, journal, events, and other activity. It exists to help you see the context of one day without searching through every section.",
+        accent: "secondary",
       },
       {
         icon: "heart",
@@ -200,15 +224,33 @@ const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         icon: "file-text",
-        title: "Review",
+        title: "Review · Annual Review",
         description: "Use Review to look back across your year and notice the intentions, habits, reflections, and moments that shaped it. It is a space for perspective before you set your next direction.",
         accent: "accent",
       },
       {
+        icon: "message-square",
+        title: "Feedback & help",
+        description: "Use Profile → Feedback to report an issue or share an idea, and Profile → Help for this guide and support links. These spaces exist so you can get unstuck and tell the team what would make 333 Lives better.",
+        accent: "primary",
+      },
+      {
+        icon: "moon",
+        title: "Appearance & themes",
+        description: "Choose a visual theme from Profile → Appearance → Choose Theme. The preference is saved locally on that device so the app feels comfortable to use.",
+        accent: "secondary",
+      },
+      {
         icon: "user",
         title: "Profile, Help & Privacy",
-        description: "Profile is where you manage your account, revisit your streak, share feedback, and open Help. Help includes this guide plus links to the Privacy Policy, Terms, Support, account deletion, and data-export requests.",
+        description: "Profile is where you manage your account, revisit your streak, choose appearance, share feedback, and open Help. From there you can also review the Privacy Policy and Terms, or contact Support.",
         accent: "secondary",
+      },
+      {
+        icon: "log-out",
+        title: "Delete account or sign out",
+        description: "Profile → Delete account permanently removes account records and local app data, then signs you out; media cleanup is best effort and Clerk deletion may be retried. If it fails after a retry, contact Support. Sign out ends the current session without deleting your account.",
+        accent: "accent",
       },
     ],
   },

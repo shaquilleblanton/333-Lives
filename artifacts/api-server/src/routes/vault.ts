@@ -98,12 +98,20 @@ router.post(
     if (!Buffer.isBuffer(body) || body.length === 0) {
       return res.status(400).json({ error: "No file body received" });
     }
+    if (body.length > 50 * 1024 * 1024) {
+      return res.status(413).json({ error: "File is too large (maximum 50 MB)" });
+    }
 
     const filename = (req.headers["x-filename"] as string | undefined) ?? "file";
     const mimeType =
       (req.headers["x-mime-type"] as string | undefined) ??
       (req.headers["content-type"] as string | undefined) ??
       "application/octet-stream";
+    const allowedMime = /^(application\/(pdf|msword|vnd\.openxmlformats-officedocument\.[^;]+|rtf|json)|image\/(jpeg|png|gif|webp)|audio\/(mpeg|wav|ogg|webm|mp4)|video\/(mp4|webm|quicktime)|text\/plain)(;|$)/i;
+    if (!allowedMime.test(mimeType)) return res.status(400).json({ error: "Unsupported file type" });
+    if (!filename || filename.length > 200 || /[\u0000-\u001f\u007f]/.test(filename)) {
+      return res.status(400).json({ error: "Invalid filename" });
+    }
 
     // Encrypt before storing — files in GCS are ciphertext-only
     const encrypted = encryptBuffer(body);
@@ -131,14 +139,14 @@ router.post(
     } catch (dbErr) {
       // DB update failed — clean up the newly uploaded object so we don't
       // leave orphaned ciphertext in storage, then re-throw.
-      await objectStorageService.deleteVaultFile(filePath).catch(() => {});
+      await objectStorageService.deleteVaultFile(filePath, userId, id).catch((err) => req.log.warn({ err }, "Vault upload cleanup failed"));
       throw dbErr;
     }
 
     // 3. Only after a successful DB commit, best-effort delete the old object.
     //    A failure here leaves an orphan in storage but never loses user data.
     if (oldFileUrl) {
-      objectStorageService.deleteVaultFile(oldFileUrl).catch(() => {});
+      objectStorageService.deleteVaultFile(oldFileUrl, userId, id).catch((err) => req.log.warn({ err }, "Vault replacement cleanup failed"));
     }
 
     return res.json(updated[0]);
@@ -173,7 +181,7 @@ router.get("/vault/:id/file", async (req, res) => {
 
   try {
     const { data: encrypted, originalContentType } = await objectStorageService.loadVaultFile(
-      item.fileUrl,
+      item.fileUrl, item.userId, item.id,
     );
     const plaintext = decryptBuffer(encrypted);
 
@@ -207,7 +215,12 @@ router.get("/vault/:id", async (req, res) => {
   return res.json(rows[0]);
 });
 
-const updateVaultItemSchema = insertVaultItemSchema.partial().omit({ userId: true });
+const updateVaultItemSchema = z.object({
+  name: z.string().min(1).optional(),
+  category: z.enum(["document", "photo", "journal", "voice_note", "important_info", "final_letter", "will", "insurance", "medical_directive", "funeral_wishes", "digital_assets"]).optional(),
+  visibility: z.enum(["private", "family"]).optional(),
+  content: z.string().nullable().optional(),
+}).strict();
 
 router.patch("/vault/:id", async (req, res) => {
   const id = parseIntParam(req.params.id, "id");
@@ -243,7 +256,7 @@ router.delete("/vault/:id", async (req, res) => {
 
   // Best-effort: clean up the encrypted blob from GCS.
   if (rows[0]?.fileUrl) {
-    objectStorageService.deleteVaultFile(rows[0].fileUrl).catch(() => {});
+    objectStorageService.deleteVaultFile(rows[0].fileUrl, getUserId(req), id).catch((err) => req.log.warn({ err }, "Vault deletion cleanup failed"));
   }
 
   return res.json({ success: true });
@@ -291,8 +304,6 @@ router.get("/vault/family/items", async (req, res) => {
       name: vaultItemsTable.name,
       category: vaultItemsTable.category,
       visibility: vaultItemsTable.visibility,
-      fileUrl: vaultItemsTable.fileUrl,
-      content: vaultItemsTable.content,
       mimeType: vaultItemsTable.mimeType,
       sizeBytes: vaultItemsTable.sizeBytes,
       createdAt: vaultItemsTable.createdAt,

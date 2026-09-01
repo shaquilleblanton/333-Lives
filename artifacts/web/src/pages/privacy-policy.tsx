@@ -93,9 +93,11 @@ const SECTIONS = [
           the active app experience. Some features attempt to remove their associated files at the same time; not
           every feature has an automated file-cleanup workflow. Encrypted backup copies and unlinked storage objects
           may persist until they are removed through operational storage maintenance.</p>
-        <p className="mt-3">Account deletion and data-export requests are currently handled by our support team rather
-          than through an automated in-app tool. Contact us using the address in Section 11; we will verify the request
-          and explain the scope and timing of the action before processing it.</p>
+        <p className="mt-3">You can start account deletion from Profile → Delete account in the app. The app removes
+          your account records and local app data, then signs you out. Associated media cleanup is best effort and
+          may require additional time. Authentication-account deletion is requested through Clerk and the app retries
+          that request when appropriate. If deletion does not complete after a retry, or you cannot use the in-app
+          control, contact us using the address in Section 13 so we can help verify and complete the request.</p>
       </>
     ),
   },
@@ -263,7 +265,7 @@ const SECTIONS = [
     title: "12. Changes to This Policy",
     body: (
       <p>We may update this Privacy Policy from time to time. We will notify you of material changes by posting
-        the updated policy with a revised effective date and, where appropriate, by email or in-app notification.
+        the updated policy with a revised effective date and, where appropriate, by email.
         Continued use of the Service after the effective date constitutes acceptance of the revised policy.</p>
     ),
   },

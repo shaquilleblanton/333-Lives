@@ -213,7 +213,8 @@ function DeleteAccountModal({
           <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.sheetTitle, { color: "#f87171" }]}>Delete account?</Text>
             <Text style={[styles.deleteCopy, { color: colors.mutedForeground }]}>
-              This permanently deletes your account, entries, files, and shared content. This cannot be undone.
+              This permanently deletes your account records and local app data. Associated media cleanup is best effort,
+              and authentication deletion may be retried. This cannot be undone.
             </Text>
             <Text style={[styles.deletePrompt, { color: colors.foreground }]}>
               Type DELETE to confirm.
@@ -322,7 +323,7 @@ export default function ProfileScreen() {
     } catch {
       Alert.alert(
         "Couldn't delete account",
-        "Your account is still signed in. Please try again shortly or contact support if this continues.",
+        "Your account is still signed in. Please try again shortly. If it continues to fail, contact support for help completing the request.",
       );
     }
   }

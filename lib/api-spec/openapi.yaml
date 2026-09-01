@@ -3357,10 +3357,7 @@ components:
           enum: [private, family]
         content:
           type: string
-        mimeType:
-          type: string
-        sizeBytes:
-          type: integer
+          nullable: true
 
     VaultFamilyMember:
       type: object
@@ -3392,12 +3389,7 @@ components:
         visibility:
           type: string
           enum: [private, family]
-        fileUrl:
-          type: string
-          nullable: true
-        content:
-          type: string
-          nullable: true
+        # File bytes and private content are available only through authorized endpoints.
         mimeType:
           type: string
           nullable: true

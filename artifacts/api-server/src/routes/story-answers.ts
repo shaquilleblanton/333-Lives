@@ -28,20 +28,15 @@ router.put("/story-answers/:chapterId/:promptId", async (req, res) => {
 
   const audioUrl = parsed.data.audioUrl;
   if (audioUrl) {
-    if (!audioUrl.startsWith("/objects/")) {
-      return res.status(400).json({ error: "audioUrl must be a valid object path" });
-    }
     try {
-      await objectStorageService.trySetObjectEntityAclPolicy(audioUrl, {
-        owner: String(getUserId(req)),
-        visibility: "private",
-      });
+      parsed.data.audioUrl = await objectStorageService.associateObjectEntity(audioUrl, getUserId(req));
     } catch (err) {
       req.log.error({ err }, "Story audio ACL set failed");
       return res.status(400).json({ error: "Uploaded audio not found — please record again" });
     }
   }
 
+  const previous = await db.select({ audioUrl: storyAnswersTable.audioUrl }).from(storyAnswersTable).where(and(eq(storyAnswersTable.userId, getUserId(req)), eq(storyAnswersTable.chapterId, chapterId), eq(storyAnswersTable.promptId, promptId))).limit(1);
   const rows = await db
     .insert(storyAnswersTable)
     .values(parsed.data)
@@ -54,11 +49,13 @@ router.put("/story-answers/:chapterId/:promptId", async (req, res) => {
       },
     })
     .returning();
+  if (previous[0]?.audioUrl && previous[0].audioUrl !== rows[0].audioUrl) objectStorageService.deleteObjectEntityFile(previous[0].audioUrl).catch((err) => req.log.warn({ err }, "Story audio cleanup failed"));
   return res.json(rows[0]);
 });
 
 router.delete("/story-answers/:chapterId/:promptId", async (req, res) => {
   const { chapterId, promptId } = req.params;
+  const previous = await db.select({ audioUrl: storyAnswersTable.audioUrl }).from(storyAnswersTable).where(and(eq(storyAnswersTable.userId, getUserId(req)), eq(storyAnswersTable.chapterId, chapterId), eq(storyAnswersTable.promptId, promptId))).limit(1);
   await db
     .delete(storyAnswersTable)
     .where(
@@ -68,6 +65,7 @@ router.delete("/story-answers/:chapterId/:promptId", async (req, res) => {
         eq(storyAnswersTable.promptId, promptId),
       ),
     );
+  if (previous[0]?.audioUrl) objectStorageService.deleteObjectEntityFile(previous[0].audioUrl).catch((err) => req.log.warn({ err }, "Story audio cleanup failed"));
   return res.json({ success: true });
 });
 

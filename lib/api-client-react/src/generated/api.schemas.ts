@@ -208,9 +208,7 @@ export interface UpdateVaultItemBody {
   name?: string;
   category?: UpdateVaultItemBodyCategory;
   visibility?: UpdateVaultItemBodyVisibility;
-  content?: string;
-  mimeType?: string;
-  sizeBytes?: number;
+  content?: string | null;
 }
 
 export interface VaultFamilyMember {
@@ -251,8 +249,6 @@ export interface VaultFamilyItem {
   name: string;
   category: VaultFamilyItemCategory;
   visibility: VaultFamilyItemVisibility;
-  fileUrl?: string | null;
-  content?: string | null;
   mimeType?: string | null;
   sizeBytes?: number | null;
   createdAt: string;

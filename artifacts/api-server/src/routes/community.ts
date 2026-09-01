@@ -2,8 +2,8 @@ import { parseIntParam } from "../lib/params";
 import { Router } from "express";
 import { getUserId } from "../middlewares/auth";
 import { db } from "@workspace/db";
-import { communityCalendarTable, insertCommunityEventSchema, updateCommunityEventSchema } from "@workspace/db/schema";
-import { eq, and } from "drizzle-orm";
+import { communityCalendarTable, insertCommunityEventSchema, updateCommunityEventSchema, peopleTable } from "@workspace/db/schema";
+import { eq, and, inArray, or } from "drizzle-orm";
 
 const router = Router();
 
@@ -67,10 +67,30 @@ function legacyFields(wt: string) {
   return { isOpenDay: wt === "open", isPublic: wt !== "private" };
 }
 
+/**
+ * A community event is visible to its owner and to users represented by the
+ * viewer's explicitly linked circle People entries (rather than by an invite
+ * or a user-wide flag).
+ */
+async function circleMemberIds(userId: number): Promise<number[]> {
+  const links = await db.select({ linkedUserId: peopleTable.linkedUserId })
+    .from(peopleTable)
+    .where(and(eq(peopleTable.userId, userId), eq(peopleTable.isCircle, true)));
+  return links.flatMap(({ linkedUserId }) => linkedUserId === null ? [] : [linkedUserId]);
+}
+
+function ownerOrCircleWhere(circleIds: number[], userId: number) {
+  return circleIds.length > 0
+    ? or(eq(communityCalendarTable.userId, userId), inArray(communityCalendarTable.userId, circleIds))
+    : eq(communityCalendarTable.userId, userId);
+}
+
 router.get("/community", async (req, res) => {
   const { startDate, endDate, category } = req.query as Record<string, string>;
+  const userId = getUserId(req);
+  const circleIds = await circleMemberIds(userId);
   let rows = await db.select().from(communityCalendarTable)
-    .where(eq(communityCalendarTable.userId, getUserId(req)));
+    .where(ownerOrCircleWhere(circleIds, userId));
   if (startDate) rows = rows.filter(e => e.startDate >= startDate);
   if (endDate)   rows = rows.filter(e => e.startDate <= endDate);
   if (category)  rows = rows.filter(e => e.category === category);
@@ -81,8 +101,10 @@ router.get("/community", async (req, res) => {
 
 router.get("/community/:id", async (req, res) => {
   const id = parseIntParam(req.params.id, "id");
+  const userId = getUserId(req);
+  const circleIds = await circleMemberIds(userId);
   const rows = await db.select().from(communityCalendarTable)
-    .where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req))))
+    .where(and(eq(communityCalendarTable.id, id), ownerOrCircleWhere(circleIds, userId)))
     .limit(1);
   if (rows.length === 0) return res.status(404).json({ error: "Event not found" });
   const visible = applyCircleVisibility(rows[0]!);
@@ -121,9 +143,24 @@ router.post("/community/:id/respond", async (req, res) => {
   if (!["confirmed", "declined", "pending"].includes(status)) {
     return res.status(400).json({ error: "Invalid status" });
   }
+  const userId = getUserId(req);
+  const circleIds = await circleMemberIds(userId);
+  // Responding is deliberately limited to another user's event in the
+  // current user's circle. Owners may edit/delete, but cannot RSVP to their
+  // own event.
+  if (circleIds.length === 0) return res.status(404).json({ error: "Event not found" });
+  const authorized = await db.select().from(communityCalendarTable)
+    .where(and(eq(communityCalendarTable.id, id), inArray(communityCalendarTable.userId, circleIds)))
+    .limit(1);
+  // Private events are never part of the community surface, including
+  // mutation responses. Check before updating so a private row cannot be
+  // changed through this endpoint either.
+  if (authorized.length === 0 || !applyCircleVisibility(authorized[0]!)) {
+    return res.status(404).json({ error: "Event not found" });
+  }
   const updated = await db.update(communityCalendarTable)
     .set({ status, updatedAt: new Date() })
-    .where(and(eq(communityCalendarTable.id, id), eq(communityCalendarTable.userId, getUserId(req))))
+    .where(and(eq(communityCalendarTable.id, id), inArray(communityCalendarTable.userId, circleIds)))
     .returning();
   if (updated.length === 0) return res.status(404).json({ error: "Event not found" });
   return res.json(applyCircleVisibility(updated[0]!));

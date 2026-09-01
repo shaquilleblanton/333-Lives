@@ -8,7 +8,7 @@ const FAQS = [
   },
   {
     q: "How do I delete my account and data?",
-    a: "Email support@333lives.app with the subject \"Account Deletion Request\" and we will permanently delete your account and all associated data within 30 days. We'll confirm once it's done.",
+    a: "Open Profile → Delete account, type DELETE, and confirm. The app removes your account records and local app data, signs you out, and makes a best-effort attempt to clean up associated media. Clerk account deletion is retried when appropriate. If it still fails or you cannot use the app, email support@333lives.app with the subject \"Account Deletion Request\" so we can verify and help complete it.",
   },
   {
     q: "My habits or intentions aren't saving. What should I do?",
@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "How do I request a copy of my data?",
-    a: "Email support@333lives.app with the subject \"Data Export Request\" and we'll send you an export of your account data within 30 days.",
+    a: "Email support@333lives.app with the subject \"Data Request\" and describe what you need. We will review the request and explain the available information and next steps; the app does not currently provide an automated data-export download.",
   },
 ];
 
@@ -92,8 +92,8 @@ export default function Support() {
           <CardContent className="p-7">
             <h2 className="text-lg font-semibold text-primary mb-1">Contact Us</h2>
             <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-              For account issues, bug reports, data requests, or anything else — email us and we&apos;ll respond
-              within one business day.
+              For account issues, bug reports, data requests, or anything else — email us and our team will review
+              your request.
             </p>
             <a
               href="mailto:support@333lives.app"

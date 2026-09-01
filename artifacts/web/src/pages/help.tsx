@@ -66,7 +66,6 @@ const ARTICLES: Article[] = [
         <ul className="list-disc pl-5 mt-1 space-y-1">
           <li>Audio memos (microphone recording)</li>
           <li>Camera/photo-library capture for attachments</li>
-          <li>Push notifications for daily reminders and streaks</li>
         </ul>
         <p className="mt-3">All other features — intentions, gratitude, habits, goals, journal, legacy letters,
           Vault, Pulse, AI coaching, review, and more — are available on both platforms.</p>
@@ -271,8 +270,8 @@ const ARTICLES: Article[] = [
       <>
         <p>Tell Your Story is a structured area for writing your autobiography in chapters — your childhood,
           your career, your defining moments. It's a guided way to capture your full life narrative.</p>
-        <p className="mt-3">Each chapter is saved privately. The Export feature (planned) will let you generate a
-          PDF of your complete story.</p>
+        <p className="mt-3">Each chapter is saved privately. Exporting a complete story is not currently available;
+          use the chapter views in the app to review your writing.</p>
       </>
     ),
   },
@@ -498,9 +497,13 @@ const ARTICLES: Article[] = [
         <p className="mt-3">Account management (email address, password) is handled by Clerk, the authentication
           provider. If you need to change your email or password, use the "Forgot password?" link on the sign-in
           screen.</p>
-        <p className="mt-3">To delete your account and all associated data, email{" "}
-          <a href="mailto:support@333lives.app" className="text-primary hover:underline">support@333lives.app</a> with
-          the subject "Account Deletion Request." We will process it within 30 days.</p>
+        <p className="mt-3">To delete your account, open Profile → Delete account, type DELETE, and confirm. The app
+          removes your account records and local app data, signs you out, and makes a best-effort attempt to remove
+          associated media. Authentication deletion is requested through Clerk and retried when appropriate.</p>
+        <p className="mt-3">If the in-app request still fails after a retry, or you cannot access the app, contact{" "}
+          <a href="mailto:support@333lives.app" className="text-primary hover:underline">support@333lives.app</a>
+          with the subject "Account Deletion Request." Support is the fallback for verifying and completing the
+          request.</p>
       </>
     ),
   },
@@ -527,10 +530,9 @@ const ARTICLES: Article[] = [
     tags: ["notifications", "reminders", "push", "alerts"],
     body: (
       <>
-        <p>333 Lives can send optional push notifications for daily reminders, streak milestones, and family
-          activity. Notification permission is requested when you first use a feature that needs it.</p>
-        <p className="mt-3">To enable or disable notifications, go to your device's Settings → Notifications →
-          333 Lives. You can granularly control which types of notifications you receive.</p>
+        <p>Notifications are not currently supported. The app does not request push-notification permission, collect
+          notification tokens, or send push notifications. Check Today and the app's streak history when you want to
+          review your practice.</p>
       </>
     ),
   },
@@ -543,8 +545,8 @@ const ARTICLES: Article[] = [
       <>
         <p>Your streak counts consecutive days on which you set and completed your daily intentions. A streak
           resets if you miss a day.</p>
-        <p className="mt-3">View your streak history from Profile → Streak (mobile). Streak milestones are
-          celebrated with a notification when you hit significant milestones (7 days, 30 days, etc.).</p>
+        <p className="mt-3">View your streak history from Profile → Streak (mobile). Streak milestones are shown in
+          your history; the current app does not send push notifications.</p>
         <p className="mt-3"><strong>Timezone note:</strong> your streak is calculated based on your local timezone.
           If you travel across timezones, your streak is preserved as long as you set intentions before midnight
           in your current timezone.</p>
@@ -608,9 +610,13 @@ const ARTICLES: Article[] = [
       <>
         <p>You can delete individual items (a journal entry, a Vault file, a life event, a Pulse post) directly
           in the app at any time. Deleted content is removed from the live database immediately.</p>
-        <p className="mt-3">To delete your entire account and all associated data, email{" "}
-          <a href="mailto:support@333lives.app" className="text-primary hover:underline">support@333lives.app</a> with
-          the subject "Account Deletion Request." We will process it within 30 days and confirm by email.</p>
+        <p className="mt-3">To delete your entire account, open Profile → Delete account, type DELETE, and confirm.
+          The app removes your account records and local app data, signs you out, and makes a best-effort attempt to
+          remove associated media. Authentication deletion is requested through Clerk and retried when appropriate.</p>
+        <p className="mt-3">If the in-app request still fails after a retry, or you cannot access the app, contact{" "}
+          <a href="mailto:support@333lives.app" className="text-primary hover:underline">support@333lives.app</a>
+          with the subject "Account Deletion Request." Support is the fallback for verifying and completing the
+          request.</p>
         <p className="mt-3">Encrypted backups may retain deleted content for up to 90 days before being
           permanently purged from our systems.</p>
       </>
@@ -764,7 +770,7 @@ export default function Help() {
         <div className="mt-14 border border-primary/20 rounded-2xl p-7 bg-primary/5 text-center">
           <p className="font-semibold text-foreground mb-1">Still need help?</p>
           <p className="text-sm text-muted-foreground mb-4">
-            We respond to all support requests within one business day.
+             Contact us and our team will review your support request.
           </p>
           <a
             href="mailto:support@333lives.app"

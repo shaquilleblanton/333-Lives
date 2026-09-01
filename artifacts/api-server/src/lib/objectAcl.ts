@@ -91,7 +91,17 @@ export async function getObjectAclPolicy(
   if (!aclPolicy) {
     return null;
   }
-  return JSON.parse(aclPolicy as string);
+  try {
+    return JSON.parse(aclPolicy as string) as ObjectAclPolicy;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns true only when this object already has the requesting user's ACL. */
+export async function canClaimObject(objectFile: File, userId: string): Promise<boolean> {
+  const policy = await getObjectAclPolicy(objectFile);
+  return policy?.owner === userId;
 }
 
 export async function canAccessObject({

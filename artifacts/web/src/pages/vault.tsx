@@ -538,6 +538,7 @@ function ItemCard({ item, onEdit, onDelete, onDownload }: { item: VaultItem; onE
 
 function FamilyItemCard({ item, onDownload }: { item: VaultFamilyItem; onDownload?: () => void }) {
   const Icon = CATEGORY_ICONS[item.category as VaultCategory] ?? FileText;
+  const hasFile = item.sizeBytes !== null && item.sizeBytes !== undefined;
   return (
     <div className="p-5 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm group">
       <div className="flex items-start gap-4">
@@ -551,11 +552,10 @@ function FamilyItemCard({ item, onDownload }: { item: VaultFamilyItem; onDownloa
             <span className="text-muted-foreground/50">·</span>
             <span className="text-xs font-subheading text-muted-foreground">{CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</span>
             <Users className="w-3 h-3 text-primary" />
-            {item.fileUrl && <Paperclip className="w-3 h-3 text-muted-foreground/60" />}
+            {hasFile && <Paperclip className="w-3 h-3 text-muted-foreground/60" />}
           </div>
-          {item.content && <p className="text-sm text-foreground/70 mt-2 line-clamp-2">{item.content}</p>}
         </div>
-        {onDownload && item.fileUrl && (
+        {onDownload && hasFile && (
           <button onClick={onDownload} className="text-primary hover:text-primary/80 p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" title="Download file">
             <Download className="w-4 h-4" />
           </button>

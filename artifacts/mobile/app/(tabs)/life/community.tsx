@@ -323,7 +323,7 @@ export default function CommunityScreen() {
 
   async function handleRespond(eventId: number, rsvp: string) {
     try {
-      await respondEvent.mutateAsync({ id: eventId, data: { rsvp } as any });
+      await respondEvent.mutateAsync({ id: eventId, data: { status: rsvp as "confirmed" | "declined" | "pending" } });
       invalidate();
     } catch { Alert.alert("Couldn't save response", "Please try again."); }
   }

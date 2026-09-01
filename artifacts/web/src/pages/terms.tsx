@@ -11,10 +11,6 @@ const SECTIONS = [
           ("333 Lives," "we," "us," or "our"), a limited liability company organized under the laws of North Carolina,
           USA.
         </p>
-        <p className="mt-3 text-sm italic text-amber-300/70">
-          ⚠ This document is a working template. It should be reviewed and approved by a licensed attorney before
-          public launch or distribution.
-        </p>
         <p className="mt-3">
           By creating an account or using the 333 Lives mobile application or website (the "Service"), you agree to
           these Terms. If you do not agree, do not use the Service.
@@ -244,7 +240,7 @@ const SECTIONS = [
     body: (
       <p>
         We may update these Terms from time to time. We will notify you of material changes by posting the revised
-        Terms with an updated effective date and, where appropriate, by email or in-app notification. Continued use
+        Terms with an updated effective date and, where appropriate, by email. Continued use
         of the Service after the effective date constitutes acceptance of the revised Terms.
       </p>
     ),

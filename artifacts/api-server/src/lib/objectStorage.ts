@@ -5,6 +5,7 @@ import {
   ObjectAclPolicy,
   ObjectPermission,
   canAccessObject,
+  canClaimObject,
   getObjectAclPolicy,
   setObjectAclPolicy,
 } from "./objectAcl";
@@ -76,7 +77,8 @@ export class ObjectStorageService {
    * Download a vault file as a raw Buffer (still encrypted).
    * Caller is responsible for decryption.
    */
-  async loadVaultFile(filePath: string): Promise<{ data: Buffer; originalContentType?: string }> {
+  async loadVaultFile(filePath: string, userId?: number, itemId?: number): Promise<{ data: Buffer; originalContentType?: string }> {
+    this.assertVaultPath(filePath, userId, itemId);
     const { bucketName, objectName } = parseObjectPath(filePath);
     const bucket = objectStorageClient.bucket(bucketName);
     const file = bucket.file(objectName);
@@ -90,16 +92,13 @@ export class ObjectStorageService {
   /**
    * Delete a vault file from GCS. Silently ignores missing files.
    */
-  async deleteVaultFile(filePath: string): Promise<void> {
-    try {
-      await this.removeVaultFile(filePath);
-    } catch {
-      // best-effort
-    }
+  async deleteVaultFile(filePath: string, userId?: number, itemId?: number): Promise<void> {
+    await this.removeVaultFile(filePath, userId, itemId);
   }
 
   /** Removes an encrypted vault object, propagating non-not-found failures. */
-  async removeVaultFile(filePath: string): Promise<void> {
+  async removeVaultFile(filePath: string, userId?: number, itemId?: number): Promise<void> {
+    this.assertVaultPath(filePath, userId, itemId);
     const { bucketName, objectName } = parseObjectPath(filePath);
     const bucket = objectStorageClient.bucket(bucketName);
     await bucket.file(objectName).delete({ ignoreNotFound: true });
@@ -171,7 +170,7 @@ export class ObjectStorageService {
     return new Response(webStream, { headers });
   }
 
-  async getObjectEntityUploadURL(): Promise<string> {
+  async getObjectEntityUploadURL(userId: number): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     if (!privateObjectDir) {
       throw new Error(
@@ -181,7 +180,7 @@ export class ObjectStorageService {
     }
 
     const objectId = randomUUID();
-    const fullPath = `${privateObjectDir}/uploads/${objectId}`;
+    const fullPath = `${privateObjectDir.replace(/\/$/, "")}/uploads/${userId}/${objectId}`;
 
     const { bucketName, objectName } = parseObjectPath(fullPath);
 
@@ -204,6 +203,9 @@ export class ObjectStorageService {
     }
 
     const entityId = parts.slice(1).join("/");
+    if (entityId.includes("..") || entityId.startsWith("/") || entityId.includes("\\")) {
+      throw new ObjectNotFoundError();
+    }
     let entityDir = this.getPrivateObjectDir();
     if (!entityDir.endsWith("/")) {
       entityDir = `${entityDir}/`;
@@ -270,6 +272,37 @@ export class ObjectStorageService {
     const objectFile = await this.getObjectEntityFile(normalizedPath);
     await setObjectAclPolicy(objectFile, aclPolicy);
     return normalizedPath;
+  }
+
+  /** Associate an upload without allowing one user to claim another's object. */
+  async associateObjectEntity(rawPath: string, userId: number): Promise<string> {
+    const normalized = this.normalizeObjectEntityPath(rawPath);
+    if (!normalized.startsWith("/objects/")) throw new ObjectNotFoundError();
+    const ownerPrefix = `/objects/uploads/${userId}/`;
+    const file = await this.getObjectEntityFile(normalized);
+    const policy = await getObjectAclPolicy(file);
+    if ((!normalized.startsWith(ownerPrefix) && !(await canClaimObject(file, String(userId)))) ||
+        (policy && policy.owner !== String(userId))) {
+      throw new Error("Object belongs to another user");
+    }
+    if (!policy || policy.owner === String(userId)) {
+      await setObjectAclPolicy(file, { owner: String(userId), visibility: "private" });
+    }
+    return normalized;
+  }
+
+  private assertVaultPath(filePath: string, userId?: number, itemId?: number): void {
+    const configured = parseObjectPath(this.getPrivateObjectDir());
+    const parsed = parseObjectPath(filePath);
+    if (parsed.bucketName !== configured.bucketName || !parsed.objectName.startsWith(`${configured.objectName.replace(/\/$/, "")}/vault/`)) {
+      throw new ObjectNotFoundError();
+    }
+    if (userId !== undefined && !parsed.objectName.startsWith(`${configured.objectName.replace(/\/$/, "")}/vault/${userId}/`)) {
+      throw new ObjectNotFoundError();
+    }
+    if (itemId !== undefined && !parsed.objectName.startsWith(`${configured.objectName.replace(/\/$/, "")}/vault/${userId}/${itemId}/`)) {
+      throw new ObjectNotFoundError();
+    }
   }
 
   async canAccessObjectEntity({

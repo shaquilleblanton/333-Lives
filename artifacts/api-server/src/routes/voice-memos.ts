@@ -61,10 +61,7 @@ router.post("/voice-memos", async (req, res) => {
   // metadata. If the object doesn't exist the upload never finished — fail
   // loudly rather than saving a memo that can't play.
   try {
-    await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
-      owner: String(getUserId(req)),
-      visibility: "private",
-    });
+    await objectStorageService.associateObjectEntity(objectPath, getUserId(req));
   } catch (err) {
     req.log.error({ err }, "Voice memo ACL set failed");
     return res.status(400).json({ error: "Uploaded audio not found — please record again" });

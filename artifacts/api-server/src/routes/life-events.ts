@@ -19,10 +19,7 @@ async function bindMediaAcl(
   log: typeof router.use extends (...args: any[]) => any ? any : never,
 ) {
   for (const media of mediaUrls) {
-    await objectStorageService.trySetObjectEntityAclPolicy(media.objectPath, {
-      owner: userId,
-      visibility: "private",
-    });
+    await objectStorageService.associateObjectEntity(media.objectPath, Number(userId));
   }
 }
 
@@ -63,6 +60,7 @@ router.put("/life-events/:id", async (req, res) => {
   const parsed = updateLifeEventSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
 
+  const before = await db.select({ mediaUrls: lifeEventsTable.mediaUrls }).from(lifeEventsTable).where(and(eq(lifeEventsTable.id, id), eq(lifeEventsTable.userId, getUserId(req)))).limit(1);
   const media = parsed.data.mediaUrls ?? [];
   if (media.length > 0) {
     try {
@@ -79,6 +77,8 @@ router.put("/life-events/:id", async (req, res) => {
     .where(and(eq(lifeEventsTable.id, id), eq(lifeEventsTable.userId, getUserId(req))))
     .returning();
   if (!row) return res.status(404).json({ error: "Life event not found" });
+  const retained = new Set((row.mediaUrls ?? []).map((m) => m.objectPath));
+  for (const old of before[0]?.mediaUrls ?? []) if (!retained.has(old.objectPath)) objectStorageService.deleteObjectEntityFile(old.objectPath).catch((err) => req.log.warn({ err }, "Life event media cleanup failed"));
   return res.json(row);
 });
 
@@ -91,6 +91,7 @@ router.delete("/life-events/:id", async (req, res) => {
     .where(and(eq(lifeEventsTable.id, id), eq(lifeEventsTable.userId, getUserId(req))))
     .returning();
   if (!row) return res.status(404).json({ error: "Life event not found" });
+  for (const media of row.mediaUrls ?? []) objectStorageService.deleteObjectEntityFile(media.objectPath).catch((err) => req.log.warn({ err }, "Life event media cleanup failed"));
   return res.json({ success: true });
 });
 
