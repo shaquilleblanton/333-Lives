@@ -18,6 +18,21 @@ export const usersTable = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/**
+ * A short-lived retry record for the rare case where local account data is
+ * deleted but the external identity provider is temporarily unavailable.
+ *
+ * This deliberately has no foreign key to users: the user row has already
+ * been removed when this record is needed. It prevents a valid Clerk session
+ * from silently provisioning a new local account while deletion is retried.
+ */
+export const accountDeletionsTable = pgTable("account_deletions", {
+  id: serial("id").primaryKey(),
+  clerkId: text("clerk_id").notNull().unique(),
+  deletedUserId: integer("deleted_user_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
 export const updateUserSchema = insertUserSchema.partial();
 export type InsertUser = z.infer<typeof insertUserSchema>;

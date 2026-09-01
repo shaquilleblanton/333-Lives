@@ -23,7 +23,6 @@
         "NSMicrophoneUsageDescription": "333 Lives uses your microphone to record voice memos and personal reflections.",
         "NSPhotoLibraryUsageDescription": "333 Lives uses your photo library to add photos to memories and profiles.",
         "NSCameraUsageDescription": "333 Lives uses your camera to capture photos for memories and profiles.",
-        "NSLocationWhenInUseUsageDescription": "333 Lives may use your location to enhance life events and memories.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

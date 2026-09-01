@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   useGetMe,
   useUpdateMe,
+  useDeleteMe,
   getGetMeQueryKey,
   getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
@@ -182,6 +183,76 @@ function ThemePickerModal({ visible, onClose }: { visible: boolean; onClose: () 
   );
 }
 
+function DeleteAccountModal({
+  visible,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) {
+  const colors = useColors();
+  const [confirmation, setConfirmation] = useState("");
+
+  React.useEffect(() => {
+    if (!visible) setConfirmation("");
+  }, [visible]);
+
+  const confirmed = confirmation.trim().toUpperCase() === "DELETE";
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1 }}>
+        <Pressable style={styles.overlay} onPress={isDeleting ? undefined : onClose} />
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sheetTitle, { color: "#f87171" }]}>Delete account?</Text>
+            <Text style={[styles.deleteCopy, { color: colors.mutedForeground }]}>
+              This permanently deletes your account, entries, files, and shared content. This cannot be undone.
+            </Text>
+            <Text style={[styles.deletePrompt, { color: colors.foreground }]}>
+              Type DELETE to confirm.
+            </Text>
+            <TextInput
+              value={confirmation}
+              onChangeText={setConfirmation}
+              placeholder="DELETE"
+              placeholderTextColor={colors.mutedForeground + "99"}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              editable={!isDeleting}
+              testID="delete-account-confirmation"
+              style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                disabled={isDeleting}
+                style={[styles.cancelBtn, { borderColor: colors.border, flex: 1, opacity: isDeleting ? 0.5 : 1 }]}
+              >
+                <Text style={[styles.cancelBtnText, { color: colors.mutedForeground }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={onConfirm}
+                disabled={!confirmed || isDeleting}
+                testID="delete-account-submit"
+                style={[styles.deleteBtn, { flex: 1, opacity: !confirmed || isDeleting ? 0.5 : 1 }]}
+              >
+                {isDeleting ? <ActivityIndicator color="#fff" size="small" /> : (
+                  <Text style={styles.deleteBtnText}>Delete account</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ProfileScreen() {
   const colors = useColors();
   const { theme } = useTheme();
@@ -190,8 +261,10 @@ export default function ProfileScreen() {
   const qc = useQueryClient();
   const { data: me, isLoading } = useGetMe();
   const updateMe = useUpdateMe();
+  const deleteMe = useDeleteMe();
   const [editOpen, setEditOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
@@ -234,6 +307,21 @@ export default function ProfileScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "Sign out", style: "destructive", onPress: () => void signOut() },
     ]);
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      await deleteMe.mutateAsync();
+      await AsyncStorage.removeItem("hasSeenOnboarding");
+      qc.clear();
+      setDeleteOpen(false);
+      await signOut();
+    } catch {
+      Alert.alert(
+        "Couldn't delete account",
+        "Your account is still signed in. Please try again shortly or contact support if this continues.",
+      );
+    }
   }
 
   return (
@@ -285,6 +373,13 @@ export default function ProfileScreen() {
           label="Streak"
           sub="Your intention-setting history"
           onPress={() => router.push("/(tabs)/streak" as any)}
+        />
+        <MenuItem
+          icon="trash-2"
+          label="Delete account"
+          sub="Permanently remove your account and data"
+          danger
+          onPress={() => setDeleteOpen(true)}
         />
       </Section>
 
@@ -343,6 +438,12 @@ export default function ProfileScreen() {
         isSaving={updateMe.isPending}
       />
       <ThemePickerModal visible={themeOpen} onClose={() => setThemeOpen(false)} />
+      <DeleteAccountModal
+        visible={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => void handleDeleteAccount()}
+        isDeleting={deleteMe.isPending}
+      />
     </ScrollView>
   );
 }
@@ -372,6 +473,10 @@ const styles = StyleSheet.create({
   cancelBtnText: { fontFamily: fonts.sub, fontSize: 14 },
   saveBtn: { borderRadius: 999, paddingVertical: 14, alignItems: "center" },
   saveBtnText: { fontFamily: fonts.subSemibold, fontSize: 15 },
+  deleteCopy: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
+  deletePrompt: { fontFamily: fonts.bodyMedium, fontSize: 14, marginTop: 4 },
+  deleteBtn: { backgroundColor: "#dc2626", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
+  deleteBtnText: { color: "#fff", fontFamily: fonts.subSemibold, fontSize: 15 },
   themeRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, borderWidth: 1, padding: 12 },
   themePreviews: { flexDirection: "row", gap: 3 },
   themeSwatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1 },

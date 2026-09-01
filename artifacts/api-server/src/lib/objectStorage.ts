@@ -92,12 +92,17 @@ export class ObjectStorageService {
    */
   async deleteVaultFile(filePath: string): Promise<void> {
     try {
-      const { bucketName, objectName } = parseObjectPath(filePath);
-      const bucket = objectStorageClient.bucket(bucketName);
-      await bucket.file(objectName).delete({ ignoreNotFound: true });
+      await this.removeVaultFile(filePath);
     } catch {
       // best-effort
     }
+  }
+
+  /** Removes an encrypted vault object, propagating non-not-found failures. */
+  async removeVaultFile(filePath: string): Promise<void> {
+    const { bucketName, objectName } = parseObjectPath(filePath);
+    const bucket = objectStorageClient.bucket(bucketName);
+    await bucket.file(objectName).delete({ ignoreNotFound: true });
   }
 
   getPublicObjectSearchPaths(): Array<string> {
@@ -212,6 +217,24 @@ export class ObjectStorageService {
       throw new ObjectNotFoundError();
     }
     return objectFile;
+  }
+
+  /**
+   * Remove an entity upload stored under PRIVATE_OBJECT_DIR. Missing objects are
+   * treated as already removed; callers can log other failures and continue
+   * their database operation safely.
+   */
+  async deleteObjectEntityFile(rawPath: string): Promise<void> {
+    const objectPath = this.normalizeObjectEntityPath(rawPath);
+    if (!objectPath.startsWith("/objects/")) return;
+
+    try {
+      const file = await this.getObjectEntityFile(objectPath);
+      await file.delete({ ignoreNotFound: true });
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return;
+      throw error;
+    }
   }
 
   normalizeObjectEntityPath(rawPath: string): string {

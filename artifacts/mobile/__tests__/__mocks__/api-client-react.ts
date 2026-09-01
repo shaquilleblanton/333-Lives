@@ -54,6 +54,7 @@ let _checkInError: Error | null = null;
 let _createMutateAsync: jest.Mock;
 let _updateMutate: jest.Mock;
 let _deleteMutate: jest.Mock;
+let _deleteAccountMutateAsync: jest.Mock;
 
 // Pulse mutation spies
 let _deletePost: jest.Mock;
@@ -157,6 +158,7 @@ function buildMutations() {
   });
   _updateMutate = jest.fn();
   _deleteMutate = jest.fn();
+  _deleteAccountMutateAsync = jest.fn(async () => {});
 
   // Pulse
   _deletePost = jest.fn();
@@ -303,6 +305,7 @@ export function __getCreateMoment() { return _createMoment; }
 export function __getCheckInHabit() { return _checkInHabit; }
 export function __getCreateHabit() { return _createHabit; }
 export function __getDeleteHabit() { return _deleteHabit; }
+export function __getDeleteAccount() { return _deleteAccountMutateAsync; }
 
 // ── Refetch spy getters (for error-path assertions) ────────────────────────
 export function __getIntentionsRefetch() { return _intentionsRefetch; }
@@ -528,6 +531,26 @@ export function useGetMessages() {
   };
 }
 
+export function useGetMe() {
+  return {
+    data: {
+      id: 1,
+      name: "Taylor",
+      email: "taylor@example.com",
+      avatarUrl: null,
+      bio: null,
+      streakDays: 0,
+      messagesSent: 0,
+      goalsActive: 0,
+      isOwner: false,
+      createdAt: new Date().toISOString(),
+    },
+    isLoading: false,
+  };
+}
+
+export const getGetMeQueryKey = () => ["/api/users/me"];
+
 // ---------------------------------------------------------------------------
 // Mutation hooks — jest.fn() spies backed by the current mutation references
 // ---------------------------------------------------------------------------
@@ -541,6 +564,16 @@ export const useUpdateIntention = jest.fn(() => ({
   mutate: _updateMutate,
   isPending: false,
   variables: undefined,
+}));
+
+export const useUpdateMe = jest.fn(() => ({
+  mutateAsync: _updateMutate,
+  isPending: false,
+}));
+
+export const useDeleteMe = jest.fn(() => ({
+  mutateAsync: _deleteAccountMutateAsync,
+  isPending: false,
 }));
 
 export const useDeleteIntention = jest.fn(() => ({

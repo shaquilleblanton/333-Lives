@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { accountDeletionsTable, usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 
 import { logger } from "../lib/logger";
@@ -10,6 +10,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: number;
+      clerkUserId?: string;
     }
   }
 }
@@ -24,6 +25,14 @@ export function getUserId(req: Request): number {
     throw new Error("getUserId called on a request without requireAuth");
   }
   return req.userId;
+}
+
+/** Returns the authenticated Clerk identity attached by requireAuth. */
+export function getClerkUserId(req: Request): string {
+  if (!req.clerkUserId) {
+    throw new Error("getClerkUserId called on a request without requireAuth");
+  }
+  return req.clerkUserId;
 }
 
 /**
@@ -129,6 +138,11 @@ function constraintName(error: unknown): string | undefined {
 // Small in-process cache so we do not hit the users table on every request.
 const localIdCache = new Map<string, number>();
 
+/** Removes a cached local ID once its user row has been deleted. */
+export function clearLocalUserCache(clerkUserId: string): void {
+  localIdCache.delete(clerkUserId);
+}
+
 /**
  * Gate for admin-only routes. Must be mounted after requireAuth. Checks the
  * is_owner flag on the local users row (set only for the app owner's account).
@@ -175,6 +189,30 @@ export async function requireAuth(
         "requireAuth: no userId — auth header present?",
       );
       res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    req.clerkUserId = clerkUserId;
+
+    // Account deletion removes the local row before deleting the external
+    // identity. If Clerk is temporarily unavailable, keep a small retry record
+    // so this valid session cannot silently create a brand-new local account.
+    const pendingDeletion = await db
+      .select({ deletedUserId: accountDeletionsTable.deletedUserId })
+      .from(accountDeletionsTable)
+      .where(eq(accountDeletionsTable.clerkId, clerkUserId))
+      .limit(1);
+    if (pendingDeletion.length > 0) {
+      // The deletion endpoint is the only route allowed to retry cleanup.
+      if (req.method === "DELETE" && req.path === "/users/me") {
+        req.userId = pendingDeletion[0].deletedUserId;
+        next();
+        return;
+      }
+
+      res.status(410).json({
+        error: "Your account deletion is still being completed. Please retry from account settings.",
+      });
       return;
     }
 

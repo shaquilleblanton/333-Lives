@@ -117,6 +117,12 @@ export const UpdateMeResponse = zod.object({
 
 
 /**
+ * @summary Permanently delete the current account and its data
+ */
+export const DeleteMeResponse = zod.void()
+
+
+/**
  * @summary List all future messages
  */
 export const GetMessagesQueryParams = zod.object({
