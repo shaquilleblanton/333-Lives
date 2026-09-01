@@ -36,7 +36,7 @@ const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 function MenuItem({
-  icon, label, sub, onPress, danger, rightLabel,
+  icon, label, sub, onPress, danger, rightLabel, testID,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -44,6 +44,7 @@ function MenuItem({
   onPress?: () => void;
   danger?: boolean;
   rightLabel?: string;
+  testID?: string;
 }) {
   const colors = useColors();
   const iconColor = danger ? "#f87171" : colors.mutedForeground;
@@ -51,6 +52,7 @@ function MenuItem({
   return (
     <Pressable
       onPress={onPress}
+      testID={testID}
       style={({ pressed }) => [
         styles.menuItem,
         { backgroundColor: pressed ? colors.muted + "40" : "transparent", borderBottomColor: colors.border },
@@ -238,6 +240,7 @@ function DeleteAccountModal({
               <Pressable
                 onPress={onConfirm}
                 disabled={!confirmed || isDeleting}
+                accessibilityState={{ disabled: !confirmed || isDeleting }}
                 testID="delete-account-submit"
                 style={[styles.deleteBtn, { flex: 1, opacity: !confirmed || isDeleting ? 0.5 : 1 }]}
               >
@@ -379,6 +382,7 @@ export default function ProfileScreen() {
           label="Delete account"
           sub="Permanently remove your account and data"
           danger
+          testID="delete-account-menu-item"
           onPress={() => setDeleteOpen(true)}
         />
       </Section>

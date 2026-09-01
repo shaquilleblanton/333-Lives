@@ -74,11 +74,12 @@ describe("Profile account deletion", () => {
     const { screen, clear } = await renderScreen();
     const { getByText, getByTestId } = screen;
 
-    fireEvent.press(getByText("Delete account"));
-    expect(getByText("Type DELETE to confirm.")).toBeTruthy();
+    fireEvent.press(getByTestId("delete-account-menu-item"));
+    await waitFor(() => expect(getByText("Type DELETE to confirm.")).toBeTruthy());
     expect(getByTestId("delete-account-submit").props.accessibilityState?.disabled).toBeTruthy();
 
     fireEvent.changeText(getByTestId("delete-account-confirmation"), "DELETE");
+    await waitFor(() => expect(getByTestId("delete-account-submit").props.accessibilityState?.disabled).toBe(false));
     fireEvent.press(getByTestId("delete-account-submit"));
 
     await waitFor(() => expect(__getDeleteAccount()).toHaveBeenCalledTimes(1));
@@ -89,10 +90,12 @@ describe("Profile account deletion", () => {
   it("keeps the session when account deletion fails", async () => {
     __getDeleteAccount().mockRejectedValueOnce(new Error("network"));
     const { screen } = await renderScreen();
-    const { getByText, getByTestId } = screen;
+    const { getByTestId } = screen;
 
-    fireEvent.press(getByText("Delete account"));
+    fireEvent.press(getByTestId("delete-account-menu-item"));
+    await waitFor(() => expect(getByTestId("delete-account-confirmation")).toBeTruthy());
     fireEvent.changeText(getByTestId("delete-account-confirmation"), "DELETE");
+    await waitFor(() => expect(getByTestId("delete-account-submit").props.accessibilityState?.disabled).toBe(false));
     fireEvent.press(getByTestId("delete-account-submit"));
 
     await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith(
