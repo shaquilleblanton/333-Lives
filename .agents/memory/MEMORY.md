@@ -13,3 +13,4 @@
 - [Mobile builds need live Clerk keys](mobile-clerk-live-keys.md) — store builds must bake pk_live in eas.json; pk_test + live API = signup works, then every call 401s (the "broken app" tester bug)
 - [Anthropic AI features](anthropic-ai-features.md) — Coach, Chat, Affirmations; ai_conversations/ai_messages tables (renamed to avoid messages table collision); SSE streaming via raw fetch + getBaseUrl()
 - [Native mobile session boundary](native-mobile-session-boundary.md) — iOS Replit sessions cannot build or validate Expo native changes; finish native work on replit.com
+- [Artifact build environment](artifact-build-env.md) — direct Vite builds require both PORT and BASE_PATH; managed artifact workflows inject them

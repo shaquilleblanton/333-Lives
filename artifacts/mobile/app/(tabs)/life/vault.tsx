@@ -367,6 +367,7 @@ function ItemCard({ item, colors, onEdit, onDelete, onOpen }: {
 // ── Family Item Card ─────────────────────────────────────────────────────────
 function FamilyItemCard({ item, colors, onOpen }: { item: VaultFamilyItem; colors: any; onOpen: () => void }) {
   const icon = CATEGORY_ICONS[item.category as VaultCategory] ?? "file";
+  const hasFile = item.sizeBytes !== null && item.sizeBytes !== undefined;
   return (
     <View style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={[styles.itemIcon, { backgroundColor: colors.primary + "1A" }]}>
@@ -375,9 +376,8 @@ function FamilyItemCard({ item, colors, onOpen }: { item: VaultFamilyItem; color
       <View style={{ flex: 1 }}>
         <Text style={[styles.itemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
         <Text style={[styles.itemCat, { color: colors.mutedForeground }]}>{(item as any).ownerName} · {CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</Text>
-        {item.content && <Text style={[styles.itemContent, { color: colors.mutedForeground }]} numberOfLines={1}>{item.content}</Text>}
       </View>
-      {item.fileUrl && (
+      {hasFile && (
         <Pressable onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
           <Feather name="download" size={12} color={colors.primary} />
         </Pressable>

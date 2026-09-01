@@ -224,7 +224,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         icon: "file-text",
-        title: "Review · Annual Review",
+        title: "Review",
         description: "Use Review to look back across your year and notice the intentions, habits, reflections, and moments that shaped it. It is a space for perspective before you set your next direction.",
         accent: "accent",
       },
