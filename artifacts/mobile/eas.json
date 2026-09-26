@@ -29,7 +29,10 @@
     "production": {
       "ios": {
         "ascAppId": "6791305774",
-        "appleTeamId": "262X7APXYK"
+        "appleTeamId": "262X7APXYK",
+        "ascApiKeyPath": "./.expo/credentials/AuthKey_X3G799GAW4.p8",
+        "ascApiKeyId": "X3G799GAW4",
+        "ascApiKeyIssuerId": "251fab82-cbdc-458f-94b3-0254f3558060"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
