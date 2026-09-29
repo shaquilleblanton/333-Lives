@@ -38,8 +38,11 @@ export default function SignUpScreen() {
   const [code, setCode] = useState("");
   const [ssoError, setSsoError] = useState<string | null>(null);
   const [ssoLoading, setSsoLoading] = useState(false);
+  const [ageAffirmed, setAgeAffirmed] = useState(false);
+  const [underMinimumAge, setUnderMinimumAge] = useState(false);
 
   const handleSubmit = async () => {
+    if (!ageAffirmed || underMinimumAge) return;
     const { error } = await signUp.password({ emailAddress, password });
     if (error) return;
     await signUp.verifications.sendEmailCode();
@@ -63,7 +66,7 @@ export default function SignUpScreen() {
   };
 
   const handleGoogle = useCallback(async () => {
-    if (ssoLoading) return;
+    if (!ageAffirmed || underMinimumAge || ssoLoading) return;
     setSsoLoading(true);
     setSsoError(null);
     try {
@@ -85,7 +88,7 @@ export default function SignUpScreen() {
     } finally {
       setSsoLoading(false);
     }
-  }, [startSSOFlow, router, ssoLoading]);
+  }, [startSSOFlow, router, ssoLoading, ageAffirmed, underMinimumAge]);
 
   const busy = fetchStatus === "fetching";
 
@@ -168,6 +171,8 @@ export default function SignUpScreen() {
     );
   }
 
+  const canCreateAccount = ageAffirmed && !underMinimumAge;
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
     <KeyboardAwareScrollViewCompat
@@ -187,15 +192,63 @@ export default function SignUpScreen() {
         Create your 333 Lives account
       </Text>
 
+      <View style={[styles.ageGate, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable
+          testID="age-affirmation"
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: ageAffirmed }}
+          style={styles.ageCheckboxRow}
+          disabled={underMinimumAge}
+          onPress={() => {
+            setAgeAffirmed((affirmed) => !affirmed);
+          }}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              { borderColor: ageAffirmed ? colors.primary : colors.mutedForeground },
+              ageAffirmed && { backgroundColor: colors.primary },
+            ]}
+          >
+            {ageAffirmed && <Text style={[styles.checkmark, { color: colors.primaryForeground }]}>✓</Text>}
+          </View>
+          <Text style={[styles.ageText, { color: colors.foreground }]}>
+            I confirm I am at least 13 years old, or at least 16 if I live in the European Economic Area (EEA).
+          </Text>
+        </Pressable>
+        <Pressable
+          testID="under-minimum-age"
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.underageButton, pressed && styles.pressed]}
+          onPress={() => {
+            setAgeAffirmed(false);
+            setUnderMinimumAge(true);
+          }}
+        >
+          <Text style={[styles.link, { color: colors.primary }]}>I am under the minimum age</Text>
+        </Pressable>
+        {underMinimumAge && (
+          <View>
+            <Text testID="underage-message" style={[styles.error, { color: colors.destructive }]}>
+              You can’t create an account because you don’t meet the minimum age requirement. If you already have an account, you can sign in.
+            </Text>
+            <Link href="/(auth)/sign-in" testID="underage-sign-in-link">
+              <Text style={[styles.link, { color: colors.primary }]}>Go to sign in</Text>
+            </Link>
+          </View>
+        )}
+      </View>
+
       <Pressable
+        testID="signup-google"
         style={({ pressed }) => [
           styles.ssoButton,
           { backgroundColor: colors.card, borderColor: colors.border },
-          ssoLoading && styles.buttonDisabled,
+          (ssoLoading || !canCreateAccount) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}
         onPress={handleGoogle}
-        disabled={ssoLoading || busy}
+        disabled={ssoLoading || busy || !canCreateAccount}
       >
         {ssoLoading ? (
           <ActivityIndicator color={colors.foreground} size="small" />
@@ -254,14 +307,15 @@ export default function SignUpScreen() {
       )}
 
       <Pressable
+        testID="signup-email-submit"
         style={({ pressed }) => [
           styles.button,
           { backgroundColor: colors.primary },
-          (!emailAddress || !password || busy) && styles.buttonDisabled,
+          (!emailAddress || !password || busy || !canCreateAccount) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || busy}
+        disabled={!emailAddress || !password || busy || !canCreateAccount}
       >
         {busy ? (
           <ActivityIndicator color={colors.primaryForeground} />
@@ -294,6 +348,12 @@ const styles = StyleSheet.create({
   logoImg: { width: 160, height: 160, alignSelf: "center", marginBottom: 12 },
   title: { fontFamily: fonts.serifBold, fontSize: 32, marginBottom: 6 },
   subtitle: { fontFamily: fonts.sub, fontSize: 15, marginBottom: 28 },
+  ageGate: { borderWidth: 1, borderRadius: 10, padding: 14, marginBottom: 18 },
+  ageCheckboxRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  checkbox: { width: 22, height: 22, borderWidth: 1, borderRadius: 5, alignItems: "center", justifyContent: "center" },
+  checkmark: { fontFamily: fonts.subSemibold, fontSize: 15, lineHeight: 19 },
+  ageText: { flex: 1, fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
+  underageButton: { alignSelf: "flex-start", marginTop: 12 },
   ssoButton: {
     borderWidth: 1,
     borderRadius: 10,
