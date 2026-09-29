@@ -15,3 +15,4 @@
 - [Native mobile session boundary](native-mobile-session-boundary.md) — iOS Replit sessions cannot build or validate Expo native changes; finish native work on replit.com
 - [Artifact build environment](artifact-build-env.md) — direct Vite builds require both PORT and BASE_PATH; managed artifact workflows inject them
 - [Development schema push prompts](dev-schema-push-prompts.md) — Drizzle may require an unavailable TTY for rename resolution; avoid force-pushing an unreviewed diff
+- [GitHub authentication paths](github-auth-paths.md) — Git remote credentials and Replit's GitHub connector are separate; reconnecting one does not repair the other
