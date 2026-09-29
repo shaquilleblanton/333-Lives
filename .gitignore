@@ -51,5 +51,16 @@ Thumbs.db
 # Apple App Store Connect private keys
 *.p8
 
+# Mobile signing credentials and certificate requests
+*.p12
+*.pfx
+*.jks
+*.keystore
+*keystore*.zip
+*.certSigningRequest
+*.mobileprovision
+*.key
+*.pem
+
 # Google Play service account credentials
 *service-account*.json
