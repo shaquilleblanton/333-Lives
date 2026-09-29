@@ -6,7 +6,7 @@
 - [Future messages gating](future-messages-gating.md) — sealed content never leaves server (present() sanitizer + unlock endpoint); drizzle-zod timestamps need `new Date()` coercion on create
 - [React types pinning](react-types-pinning.md) — keep @types/react on 19.1.x (catalog + overrides) to match pinned react@19.1.0; dual versions break Radix `--radix-*` CSSProperties augmentation
 - [Owner privilege flag](owner-privilege-flag.md) — admin gating via users.is_owner checked per-request; strip privilege/identity fields in profile update or drizzle-zod schemas make them self-assignable
-- [Legacy account linking](legacy-account-linking.md) — link users by clerkId or unlinked email match ONLY; never "first sign-in claims legacy row"; check parent ownership on nested routes (IDOR)
+- [Legacy account linking](legacy-account-linking.md) — never reassign an already-bound account by email alone; verify the current code enforces this and check nested-route ownership
 - [EAS build from Replit](eas-build-replit.md) — EAS_NO_VCS=1 bypasses git lock; iOS cert creation needs expo.dev credentials UI or ASC API key; metadata:push needs EXPO_APPLE_TEAM_ID/TYPE env vars too
 - [First-login provisioning race](first-login-provisioning-race.md) — JIT user provisioning must catch 23505 and re-read by clerk_id; ON CONFLICT only guards its target constraint
 - [E2E auth for Clerk proxy mode](e2e-clerk-auth.md) — programmatic Clerk login fails with proxyUrl; use backend sign-in tokens via /sign-in?__clerk_ticket=; RN-web forms need real keystrokes
