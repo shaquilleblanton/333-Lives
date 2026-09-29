@@ -1,6 +1,7 @@
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react-native";
 import * as Linking from "expo-linking";
+import { Alert } from "react-native";
 
 import HelpScreen from "../app/help";
 import { WEB_URLS } from "../constants/links";
@@ -54,6 +55,42 @@ describe("Help screen", () => {
     fireEvent.press(getByTestId("help-privacy"));
     await waitFor(() => {
       expect(Linking.openURL).toHaveBeenCalledWith(WEB_URLS.privacy);
+    });
+  });
+
+  it("opens each public web resource at its canonical route", async () => {
+    const { getByTestId } = await render(<HelpScreen />);
+
+    for (const [testID, url] of [
+      ["help-web-center", WEB_URLS.help],
+      ["help-privacy", WEB_URLS.privacy],
+      ["help-terms", WEB_URLS.terms],
+      ["help-support", WEB_URLS.support],
+    ] as const) {
+      fireEvent.press(getByTestId(testID));
+      await waitFor(() => expect(Linking.openURL).toHaveBeenLastCalledWith(url));
+    }
+
+    expect(WEB_URLS).toEqual({
+      help: "https://333lives.app/help",
+      privacy: "https://333lives.app/privacy-policy",
+      terms: "https://333lives.app/terms",
+      support: "https://333lives.app/support",
+    });
+  });
+
+  it("shows a clear fallback when a public resource cannot be opened", async () => {
+    jest.spyOn(Alert, "alert").mockClear();
+    (Linking.openURL as jest.Mock).mockRejectedValueOnce(new Error("unavailable"));
+    const { getByTestId } = await render(<HelpScreen />);
+
+    fireEvent.press(getByTestId("help-terms"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Couldn’t open this page",
+        "Please try again or visit 333lives.app in your browser.",
+      );
     });
   });
 

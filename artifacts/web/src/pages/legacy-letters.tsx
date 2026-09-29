@@ -859,7 +859,7 @@ function VoiceRecorder({ mediaUrl, mediaDurationSec, onRecorded, onCleared }: {
   const startRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const { uploadFile } = useUpload();
+  const { uploadFile } = useUpload({ purpose: "legacy-letter" });
 
   useEffect(() => {
     return () => {

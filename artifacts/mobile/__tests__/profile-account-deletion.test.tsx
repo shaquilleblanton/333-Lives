@@ -2,6 +2,7 @@ import React from "react";
 import { Alert } from "react-native";
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
 
 const mockSignOut = jest.fn(() => Promise.resolve());
 
@@ -11,6 +12,9 @@ jest.mock("react-native-safe-area-context", () => ({
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
   useRouter: () => ({ push: jest.fn() }),
+}));
+jest.mock("expo-linking", () => ({
+  openURL: jest.fn(() => Promise.resolve()),
 }));
 jest.mock("@clerk/expo", () => ({
   useClerk: () => ({ signOut: mockSignOut }),
@@ -50,6 +54,7 @@ jest.mock("@/hooks/useColors", () => ({
 jest.mock("@workspace/api-client-react", () => require("./__mocks__/api-client-react"));
 
 import ProfileScreen from "../app/(tabs)/profile";
+import { WEB_URLS } from "../constants/links";
 import {
   __getDeleteAccount,
   __reset,
@@ -67,6 +72,7 @@ describe("Profile account deletion", () => {
   beforeEach(() => {
     __reset();
     mockSignOut.mockClear();
+    (Linking.openURL as jest.Mock).mockClear();
     jest.spyOn(Alert, "alert").mockClear();
   });
 
@@ -103,5 +109,33 @@ describe("Profile account deletion", () => {
       expect.stringContaining("still signed in"),
     ));
     expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it("opens the privacy, terms, and support destinations from Profile", async () => {
+    const { screen } = await renderScreen();
+    const { getByTestId } = screen;
+
+    for (const [testID, url] of [
+      ["profile-privacy", WEB_URLS.privacy],
+      ["profile-terms", WEB_URLS.terms],
+      ["profile-support", WEB_URLS.support],
+    ] as const) {
+      fireEvent.press(getByTestId(testID));
+      await waitFor(() => expect(Linking.openURL).toHaveBeenLastCalledWith(url));
+    }
+  });
+
+  it("explains when a public resource cannot be opened", async () => {
+    (Linking.openURL as jest.Mock).mockRejectedValueOnce(new Error("unavailable"));
+    const { screen } = await renderScreen();
+
+    fireEvent.press(screen.getByTestId("profile-terms"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Couldn’t open this page",
+        "Please try again or visit 333lives.app in your browser.",
+      );
+    });
   });
 });

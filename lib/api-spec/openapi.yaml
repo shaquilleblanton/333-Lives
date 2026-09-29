@@ -84,6 +84,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /storage/uploads/cleanup:
+    post:
+      tags: [Storage]
+      operationId: cleanupLegacyLetterUpload
+      summary: Delete an unassociated legacy-letter upload
+      description: |
+        Deletes an upload owned by the current user only when no legacy letter
+        or other media entity references it. Only purpose-scoped legacy-letter
+        uploads are eligible. Clients should call this only after a definitive
+        4xx save rejection; ambiguous network and server errors must retain uploads.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CleanupLegacyLetterUploadRequest"
+      responses:
+        "200":
+          description: Upload removed, or already absent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CleanupLegacyLetterUploadResponse"
+        "400":
+          description: Invalid or unowned upload path.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Upload is associated with saved media.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to clean up upload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /storage/public-objects/{filePath}:
     get:
       tags: [Storage]
@@ -4843,6 +4884,10 @@ components:
           minLength: 1
           pattern: "^(audio|video)/"
           description: MIME type of the file (audio/* or video/*).
+        purpose:
+          type: string
+          enum: [legacy-letter]
+          description: Scopes this upload so other media entities cannot claim it.
     UploadUrlResponse:
       type: object
       required: [uploadURL, objectPath]
@@ -4856,6 +4901,19 @@ components:
           description: Normalized object path (e.g. /objects/uploads/uuid).
         metadata:
           $ref: "#/components/schemas/UploadUrlRequest"
+    CleanupLegacyLetterUploadRequest:
+      type: object
+      required: [objectPath]
+      properties:
+        objectPath:
+          type: string
+          minLength: 1
+    CleanupLegacyLetterUploadResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
 
     VoiceMemo:
       type: object

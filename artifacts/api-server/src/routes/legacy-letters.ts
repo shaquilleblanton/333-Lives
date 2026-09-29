@@ -25,7 +25,11 @@ router.get("/legacy-letters/:id", async (req, res) => {
 
 router.post("/legacy-letters", async (req, res) => {
   if (typeof req.body?.mediaUrl === "string") try {
-    req.body.mediaUrl = await objectStorageService.associateObjectEntity(req.body.mediaUrl, getUserId(req));
+    req.body.mediaUrl = await objectStorageService.associateObjectEntity(
+      req.body.mediaUrl,
+      getUserId(req),
+      "legacy-letter",
+    );
   } catch { return res.status(400).json({ error: "Uploaded media is invalid or belongs to another user" }); }
   const parsed = insertLegacyLetterSchema.safeParse({ ...req.body, userId: getUserId(req) });
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
@@ -39,8 +43,15 @@ router.put("/legacy-letters/:id", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const existing = await db.select().from(legacyLettersTable).where(and(eq(legacyLettersTable.id, id), eq(legacyLettersTable.userId, getUserId(req)))).limit(1);
   if (existing.length === 0) return res.status(404).json({ error: "Letter not found" });
-  if (typeof parsed.data.mediaUrl === "string") try {
-    parsed.data.mediaUrl = await objectStorageService.associateObjectEntity(parsed.data.mediaUrl, getUserId(req));
+  if (
+    typeof parsed.data.mediaUrl === "string" &&
+    parsed.data.mediaUrl !== existing[0].mediaUrl
+  ) try {
+    parsed.data.mediaUrl = await objectStorageService.associateObjectEntity(
+      parsed.data.mediaUrl,
+      getUserId(req),
+      "legacy-letter",
+    );
   } catch { return res.status(400).json({ error: "Uploaded media is invalid or belongs to another user" }); }
   const validated = insertLegacyLetterSchema.safeParse({ ...existing[0], ...parsed.data });
   if (!validated.success) return res.status(400).json({ error: validated.error.message });

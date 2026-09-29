@@ -2,7 +2,7 @@ import http from "node:http";
 import { createHash } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
-const identity = vi.hoisted(() => ({ clerkId: "regression-owner" }));
+const identity = vi.hoisted(() => ({ clerkId: "regression-owner" as string | null }));
 const storage = vi.hoisted(() => ({
   associateObjectEntity: vi.fn((path: string) => Promise.resolve(path)),
   deleteObjectEntityFile: vi.fn(() => Promise.resolve()),
@@ -10,7 +10,7 @@ const storage = vi.hoisted(() => ({
   saveVaultFile: vi.fn(() => Promise.resolve("/private/vault/new")),
   deleteVaultFile: vi.fn(() => Promise.resolve()),
   removeVaultFile: vi.fn(() => Promise.resolve()),
-  getObjectEntityFile: vi.fn(),
+  getObjectEntityFile: vi.fn(() => Promise.resolve({ getMetadata: async () => [{ metadata: {} }] })),
   trySetObjectEntityAclPolicy: vi.fn(),
   getObjectEntityUploadURL: vi.fn(),
   getPublicObjectSearchPaths: vi.fn(),
@@ -142,18 +142,41 @@ describe("API authorization regressions", () => {
     expect(stored.revokedAt).not.toBeNull();
   });
 
-  it("throttles invalid invites across requests and resets after the window", async () => {
+  it("accepts an invite immediately before its seven-day expiry and rejects it at the boundary", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const createdAt = new Date("2025-01-01T12:00:00.000Z");
+    vi.setSystemTime(createdAt);
+
+    try {
+      const firstResponse = await as("regression-owner", "/vault/family/invite", { method: "POST" });
+      const secondResponse = await as("regression-owner", "/vault/family/invite", { method: "POST" });
+      expect(firstResponse.status).toBe(201);
+      expect(secondResponse.status).toBe(201);
+      const firstInvite = await firstResponse.json() as { token: string; expiresAt: string };
+      const secondInvite = await secondResponse.json() as { token: string; expiresAt: string };
+      const expiry = new Date("2025-01-08T12:00:00.000Z");
+      expect(firstInvite.expiresAt).toBe(expiry.toISOString());
+      expect(secondInvite.expiresAt).toBe(expiry.toISOString());
+
+      vi.setSystemTime(new Date(expiry.getTime() - 1));
+      expect((await as("regression-viewer", `/vault/family/invite/${firstInvite.token}/accept`, { method: "POST" })).status).toBe(200);
+
+      vi.setSystemTime(expiry);
+      const expired = await as("regression-viewer", `/vault/family/invite/${secondInvite.token}/accept`, { method: "POST" });
+      expect(expired.status).toBe(404);
+      expect(await expired.json()).toEqual({ error: "Invite not found or expired" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("returns 429 on the tenth invalid invite attempt within 15 minutes and resets after the window", async () => {
     const key = createHash("sha256").update(String(viewerId)).digest("hex");
-    await db.insert(familyInviteAttemptTable).values({
-      key,
-      windowStartedAt: new Date(),
-      attemptCount: 9,
-    }).onConflictDoUpdate({
-      target: familyInviteAttemptTable.key,
-      set: { windowStartedAt: new Date(), attemptCount: 9 },
-    });
     const path = "/vault/family/invite/not-a-real-token/accept";
-    expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(429);
+    for (let attempt = 1; attempt <= 9; attempt++) {
+      expect((await as("regression-viewer", path, { method: "POST" })).status, `attempt ${attempt}`).toBe(404);
+    }
+    expect((await as("regression-viewer", path, { method: "POST" })).status, "attempt 10").toBe(429);
     expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(429);
     await db.update(familyInviteAttemptTable)
       .set({ windowStartedAt: new Date(Date.now() - 16 * 60 * 1000) })
@@ -161,6 +184,67 @@ describe("API authorization regressions", () => {
     expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(404);
     const [counter] = await db.select().from(familyInviteAttemptTable).where(eq(familyInviteAttemptTable.key, key));
     expect(counter.attemptCount).toBe(1);
+  });
+
+  it("rejects upload cleanup when the request is unauthenticated", async () => {
+    const previousIdentity = identity.clerkId;
+    identity.clerkId = null;
+    try {
+      const response = await api("/storage/uploads/cleanup", {
+        method: "POST",
+        body: JSON.stringify({ objectPath: `/objects/uploads/${ownerId}/legacy-letters/cleanup-unauthenticated` }),
+      });
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized" });
+      expect(storage.deleteObjectEntityFile).not.toHaveBeenCalled();
+    } finally {
+      identity.clerkId = previousIdentity;
+    }
+  });
+
+  it("rejects cleanup when the upload path belongs to another user", async () => {
+    const objectPath = `/objects/uploads/${ownerId}/cleanup-other-owner`;
+    const response = await as("regression-viewer", "/storage/uploads/cleanup", {
+      method: "POST",
+      body: JSON.stringify({ objectPath }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "This upload does not belong to the current user" });
+    expect(storage.getObjectEntityFile).not.toHaveBeenCalled();
+    expect(storage.deleteObjectEntityFile).not.toHaveBeenCalled();
+  });
+
+  it("refuses cleanup when a legacy letter references the upload", async () => {
+    const objectPath = `/objects/uploads/${ownerId}/legacy-letters/cleanup-associated`;
+    const [letter] = await db.insert(legacyLettersTable).values({
+      userId: ownerId,
+      title: "cleanup association regression",
+      content: "test",
+      recipientName: "Test",
+      mediaUrl: objectPath,
+    }).returning();
+    created.letters.push(letter.id);
+
+    const response = await as("regression-owner", "/storage/uploads/cleanup", {
+      method: "POST",
+      body: JSON.stringify({ objectPath }),
+    });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "This upload is already associated with saved media" });
+    expect(storage.getObjectEntityFile).not.toHaveBeenCalled();
+    expect(storage.deleteObjectEntityFile).not.toHaveBeenCalled();
+  });
+
+  it("deletes an owned upload when no legacy letter references it", async () => {
+    const objectPath = `/objects/uploads/${ownerId}/legacy-letters/cleanup-unassociated`;
+    const response = await as("regression-owner", "/storage/uploads/cleanup", {
+      method: "POST",
+      body: JSON.stringify({ objectPath }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true });
+    expect(storage.getObjectEntityFile).toHaveBeenCalledWith(objectPath);
+    expect(storage.deleteObjectEntityFile).toHaveBeenCalledWith(objectPath);
   });
 
   it("deletes Legacy Letter and Story Answer media only after successful update or deletion", async () => {

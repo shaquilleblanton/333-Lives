@@ -170,7 +170,10 @@ export class ObjectStorageService {
     return new Response(webStream, { headers });
   }
 
-  async getObjectEntityUploadURL(userId: number): Promise<string> {
+  async getObjectEntityUploadURL(
+    userId: number,
+    purpose?: "legacy-letter",
+  ): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     if (!privateObjectDir) {
       throw new Error(
@@ -180,7 +183,8 @@ export class ObjectStorageService {
     }
 
     const objectId = randomUUID();
-    const fullPath = `${privateObjectDir.replace(/\/$/, "")}/uploads/${userId}/${objectId}`;
+    const purposePath = purpose === "legacy-letter" ? "/legacy-letters" : "";
+    const fullPath = `${privateObjectDir.replace(/\/$/, "")}/uploads/${userId}${purposePath}/${objectId}`;
 
     const { bucketName, objectName } = parseObjectPath(fullPath);
 
@@ -275,10 +279,19 @@ export class ObjectStorageService {
   }
 
   /** Associate an upload without allowing one user to claim another's object. */
-  async associateObjectEntity(rawPath: string, userId: number): Promise<string> {
+  async associateObjectEntity(
+    rawPath: string,
+    userId: number,
+    purpose?: "legacy-letter",
+  ): Promise<string> {
     const normalized = this.normalizeObjectEntityPath(rawPath);
     if (!normalized.startsWith("/objects/")) throw new ObjectNotFoundError();
     const ownerPrefix = `/objects/uploads/${userId}/`;
+    const letterUploadPrefix = `${ownerPrefix}legacy-letters/`;
+    const isLegacyLetterUpload = normalized.startsWith(letterUploadPrefix);
+    if ((purpose === "legacy-letter") !== isLegacyLetterUpload) {
+      throw new Error("Upload purpose does not match the requested media entity");
+    }
     const file = await this.getObjectEntityFile(normalized);
     const policy = await getObjectAclPolicy(file);
     if ((!normalized.startsWith(ownerPrefix) && !(await canClaimObject(file, String(userId)))) ||

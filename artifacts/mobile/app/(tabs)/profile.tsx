@@ -36,7 +36,7 @@ const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
 function MenuItem({
-  icon, label, sub, onPress, danger, rightLabel, testID,
+  icon, label, sub, onPress, danger, rightLabel, testID, accessibilityRole,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -45,6 +45,7 @@ function MenuItem({
   danger?: boolean;
   rightLabel?: string;
   testID?: string;
+  accessibilityRole?: "button" | "link";
 }) {
   const colors = useColors();
   const iconColor = danger ? "#f87171" : colors.mutedForeground;
@@ -53,6 +54,7 @@ function MenuItem({
     <Pressable
       onPress={onPress}
       testID={testID}
+      accessibilityRole={accessibilityRole}
       style={({ pressed }) => [
         styles.menuItem,
         { backgroundColor: pressed ? colors.muted + "40" : "transparent", borderBottomColor: colors.border },
@@ -414,18 +416,24 @@ export default function ProfileScreen() {
           icon="shield"
           label="Privacy Policy"
           sub="How we protect your information"
+          accessibilityRole="link"
+          testID="profile-privacy"
           onPress={() => void handleOpenWebResource(WEB_URLS.privacy)}
         />
         <MenuItem
           icon="file-text"
           label="Terms of Service"
           sub="The terms for using 333 Lives"
+          accessibilityRole="link"
+          testID="profile-terms"
           onPress={() => void handleOpenWebResource(WEB_URLS.terms)}
         />
         <MenuItem
           icon="mail"
           label="Contact Support"
           sub="Get help from the 333 Lives team"
+          accessibilityRole="link"
+          testID="profile-support"
           onPress={() => void handleOpenWebResource(WEB_URLS.support)}
         />
       </Section>

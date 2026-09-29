@@ -16,3 +16,4 @@
 - [Artifact build environment](artifact-build-env.md) — direct Vite builds require both PORT and BASE_PATH; managed artifact workflows inject them
 - [Development schema push prompts](dev-schema-push-prompts.md) — Drizzle may require an unavailable TTY for rename resolution; avoid force-pushing an unreviewed diff
 - [GitHub authentication paths](github-auth-paths.md) — Git remote credentials and Replit's GitHub connector are separate; reconnecting one does not repair the other
+- [Upload cleanup safety](upload-cleanup-safety.md) — owner ACL does not prove an upload is unassociated; cleanup must account for every media reference

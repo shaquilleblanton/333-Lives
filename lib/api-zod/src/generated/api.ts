@@ -24,7 +24,8 @@ export const requestUploadUrlBodyContentTypeRegExp = new RegExp('^(audio|video)'
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlBodySizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlBodyContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).'),
+  "purpose": zod.enum(['legacy-letter']).optional().describe('Scopes this upload so other media entities cannot claim it.')
 })
 
 
@@ -41,8 +42,28 @@ export const RequestUploadUrlResponse = zod.object({
   "metadata": zod.object({
   "name": zod.string().min(1).describe('Original file name.'),
   "size": zod.number().min(1).max(requestUploadUrlResponseMetadataSizeMax).describe('File size in bytes (max 100MB).'),
-  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).')
+  "contentType": zod.string().min(1).regex(requestUploadUrlResponseMetadataContentTypeRegExp).describe('MIME type of the file (audio\/\* or video\/\*).'),
+  "purpose": zod.enum(['legacy-letter']).optional().describe('Scopes this upload so other media entities cannot claim it.')
 }).optional()
+})
+
+
+/**
+ * Deletes an upload owned by the current user only when no legacy letter
+ * or other media entity references it. Only purpose-scoped legacy-letter
+ * uploads are eligible. Clients should call this only after a definitive
+ * 4xx save rejection; ambiguous network and server errors must retain uploads.
+ * @summary Delete an unassociated legacy-letter upload
+ */
+
+
+
+export const CleanupLegacyLetterUploadBody = zod.object({
+  "objectPath": zod.string().min(1)
+})
+
+export const CleanupLegacyLetterUploadResponse = zod.object({
+  "success": zod.boolean()
 })
 
 

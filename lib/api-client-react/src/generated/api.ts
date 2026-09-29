@@ -33,6 +33,8 @@ import type {
   AnthropicMessageInput,
   CalendarEvent,
   CelebrationClaimResult,
+  CleanupLegacyLetterUploadRequest,
+  CleanupLegacyLetterUploadResponse,
   CollectionItem,
   CommunityEvent,
   CreateAffirmationBody,
@@ -236,6 +238,80 @@ export const useRequestUploadUrl = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getRequestUploadUrlMutationOptions(options));
+    }
+
+export const getCleanupLegacyLetterUploadUrl = () => {
+
+
+
+
+  return `/api/storage/uploads/cleanup`
+}
+
+/**
+ * Deletes an upload owned by the current user only when no legacy letter
+ * or other media entity references it. Only purpose-scoped legacy-letter
+ * uploads are eligible. Clients should call this only after a definitive
+ * 4xx save rejection; ambiguous network and server errors must retain uploads.
+ * @summary Delete an unassociated legacy-letter upload
+ */
+export const cleanupLegacyLetterUpload = async (cleanupLegacyLetterUploadRequest: CleanupLegacyLetterUploadRequest, options?: RequestInit): Promise<CleanupLegacyLetterUploadResponse> => {
+
+  return customFetch<CleanupLegacyLetterUploadResponse>(getCleanupLegacyLetterUploadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(cleanupLegacyLetterUploadRequest)
+  }
+);}
+
+
+
+
+export const getCleanupLegacyLetterUploadMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>, TError,{data: BodyType<CleanupLegacyLetterUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>, TError,{data: BodyType<CleanupLegacyLetterUploadRequest>}, TContext> => {
+
+const mutationKey = ['cleanupLegacyLetterUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>, {data: BodyType<CleanupLegacyLetterUploadRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  cleanupLegacyLetterUpload(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CleanupLegacyLetterUploadMutationResult = NonNullable<Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>>
+    export type CleanupLegacyLetterUploadMutationBody = BodyType<CleanupLegacyLetterUploadRequest>
+    export type CleanupLegacyLetterUploadMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Delete an unassociated legacy-letter upload
+ */
+export const useCleanupLegacyLetterUpload = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>, TError,{data: BodyType<CleanupLegacyLetterUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cleanupLegacyLetterUpload>>,
+        TError,
+        {data: BodyType<CleanupLegacyLetterUploadRequest>},
+        TContext
+      > => {
+      return useMutation(getCleanupLegacyLetterUploadMutationOptions(options));
     }
 
 export const getGetPublicObjectUrl = (filePath: string,) => {

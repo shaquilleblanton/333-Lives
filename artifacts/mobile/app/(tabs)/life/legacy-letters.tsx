@@ -8,6 +8,7 @@ import {
   useUnsealLegacyLetter,
   getGetLegacyLettersQueryKey,
   requestUploadUrl,
+  cleanupLegacyLetterUpload,
 } from "@workspace/api-client-react";
 import type { LegacyLetter } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -195,6 +196,7 @@ function LetterDetailModal({ letter, onClose, onSeal, onUnseal, onEdit, onDelete
 
 type MediaType = "text" | "voice" | "video";
 type PendingMedia = { uri: string; name: string; mimeType: string; size?: number };
+type UploadedPendingMedia = { uri: string; mediaType: MediaType; objectPath: string; saveAmbiguous: boolean };
 
 function storageUrl(objectPath: string) {
   return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${objectPath}`;
@@ -203,6 +205,18 @@ function storageUrl(objectPath: string) {
 function notifyError(title: string, message: string) {
   if (Platform.OS === "web") window.alert(`${title}\n${message}`);
   else Alert.alert(title, message);
+}
+
+function isDefinitiveSaveRejection(error: unknown) {
+  const status = error && typeof error === "object" && "status" in error
+    ? (error as { status?: unknown }).status
+    : undefined;
+  return typeof status === "number" && status >= 400 && status < 500;
+}
+
+function isAssociationConflict(error: unknown) {
+  return !!error && typeof error === "object" && "status" in error &&
+    (error as { status?: unknown }).status === 409;
 }
 
 function mediaMimeType(type: MediaType, uri: string, provided?: string | null) {
@@ -315,6 +329,7 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
   const [isRecordingActionBusy, setIsRecordingActionBusy] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [microphonePermission, setMicrophonePermission] = useState<{ granted: boolean; canAskAgain?: boolean } | null>(null);
+  const uploadedPendingMedia = useRef<UploadedPendingMedia[]>([]);
   const recordingDuration = useRef(0);
   recordingDuration.current = recorderState.durationMillis ?? 0;
 
@@ -338,6 +353,52 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
     }
   }, [visible, letter]);
 
+  function forgetUploadedPendingMedia(uri: string, type: MediaType) {
+    uploadedPendingMedia.current = uploadedPendingMedia.current.filter(
+      item => item.uri !== uri || item.mediaType !== type,
+    );
+  }
+
+  function forgetUploadedObjectPath(objectPath: string) {
+    uploadedPendingMedia.current = uploadedPendingMedia.current.filter(
+      item => item.objectPath !== objectPath,
+    );
+  }
+
+  async function cleanupUploadedPendingMedia(uri: string, type: MediaType, retainIfAssociated = false) {
+    const uploaded = uploadedPendingMedia.current.find(
+      item => item.uri === uri && item.mediaType === type,
+    );
+    if (!uploaded) return;
+    if (uploaded.saveAmbiguous) {
+      throw new Error("The save outcome is unknown, so this upload cannot be safely removed yet.");
+    }
+    try {
+      const result = await cleanupLegacyLetterUpload({ objectPath: uploaded.objectPath });
+      if (!result.success) throw new Error("The server did not confirm attachment cleanup.");
+    } catch (error) {
+      if (isAssociationConflict(error)) {
+        // The object remains valid for a save retry, but is not cleanup-eligible.
+        if (!retainIfAssociated) forgetUploadedPendingMedia(uri, type);
+        return;
+      }
+      throw error;
+    }
+    forgetUploadedPendingMedia(uri, type);
+  }
+
+  async function cleanupAllUploadedPendingMedia() {
+    let ambiguousCount = 0;
+    for (const uploaded of [...uploadedPendingMedia.current]) {
+      if (uploaded.saveAmbiguous) {
+        ambiguousCount++;
+        continue;
+      }
+      await cleanupUploadedPendingMedia(uploaded.uri, uploaded.mediaType);
+    }
+    return ambiguousCount;
+  }
+
   async function cleanupPendingMedia() {
     let recordingUri = recorder.uri;
     if (recorder.isRecording) {
@@ -353,6 +414,18 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
 
   async function closeAndCleanup() {
     if (isUploading || isSaving || isPickingAttachment || isRecordingActionBusy) return;
+    try {
+      const retainedCount = await cleanupAllUploadedPendingMedia();
+      if (retainedCount > 0) {
+        notifyError(
+          "Upload retained to protect your letter",
+          "A previous save may have reached the server, so its uploaded media was kept rather than risk deleting an attachment that may already be saved.",
+        );
+      }
+    } catch {
+      notifyError("Couldn't remove uploaded attachment", "The unsaved upload could not be safely removed. Your letter and attachment are still available; retry the save or try closing again.");
+      return;
+    }
     await cleanupPendingMedia();
     onClose();
   }
@@ -379,6 +452,21 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
       if (result.canceled || !result.assets[0]) return;
       const asset = result.assets[0];
       if (pendingMedia?.uri && pendingMedia.uri !== asset.uri) {
+        const previousUpload = uploadedPendingMedia.current.find(
+          item => item.uri === pendingMedia.uri && item.mediaType === mediaType,
+        );
+        if (previousUpload?.saveAmbiguous) {
+          await FileSystem.deleteAsync(asset.uri, { idempotent: true }).catch(() => {});
+          notifyError("Couldn't replace attachment", "A previous save may have reached the server. Retry saving with the current attachment or close the editor; the upload will not be deleted while its association is uncertain.");
+          return;
+        }
+        try {
+          await cleanupUploadedPendingMedia(pendingMedia.uri, mediaType);
+        } catch {
+          await FileSystem.deleteAsync(asset.uri, { idempotent: true }).catch(() => {});
+          notifyError("Couldn't replace attachment", "The previous uploaded attachment could not be safely removed. Keep it selected and retry the save or try replacing it again.");
+          return;
+        }
         await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
       }
       setPendingMedia({
@@ -426,6 +514,13 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
       if (!info.exists) throw new Error("The recording file is missing.");
       const ext = uri.split("?")[0].split(".").pop()?.toLowerCase() || "m4a";
       if (pendingMedia?.uri && pendingMedia.uri !== uri) {
+        const previousUpload = uploadedPendingMedia.current.find(
+          item => item.uri === pendingMedia.uri && item.mediaType === mediaType,
+        );
+        if (previousUpload?.saveAmbiguous) {
+          throw new Error("A previous save may have reached the server; retry or close before replacing this recording.");
+        }
+        await cleanupUploadedPendingMedia(pendingMedia.uri, mediaType);
         await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
       }
       setPendingMedia({
@@ -446,12 +541,21 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
   }
 
   async function removeAttachment() {
-    if (pendingMedia?.uri) await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+    if (pendingMedia?.uri) {
+      try {
+        await cleanupUploadedPendingMedia(pendingMedia.uri, mediaType);
+      } catch {
+        notifyError("Couldn't remove attachment", "The uploaded attachment could not be safely removed. Your selected media is still available; retry the save or try removing it again.");
+        return false;
+      }
+      await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+    }
     setPendingMedia(null);
+    return true;
   }
 
   async function changeMediaType(next: MediaType) {
-    if (next !== mediaType) await removeAttachment();
+    if (next !== mediaType && !(await removeAttachment())) return;
     setMediaType(next);
   }
 
@@ -465,35 +569,51 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
     }
     setIsUploading(true);
     setUploadProgress(0);
+    let uploadedObjectPath: string | null = null;
     try {
       let mediaUrl = existingMediaUrl ?? undefined;
       let mediaDurationSec: number | undefined;
       if (pendingMedia) {
-        const info = await FileSystem.getInfoAsync(pendingMedia.uri);
-        if (!info.exists) throw new Error("The selected attachment is no longer available.");
-        let size = pendingMedia.size ?? 0;
-        if (!size) {
-          if ("size" in info && typeof info.size === "number") size = info.size;
-        }
-        const upload = await requestUploadUrl({
-          name: pendingMedia.name,
-          size,
-          contentType: pendingMedia.mimeType,
-        });
-        const task = FileSystem.createUploadTask(
-          upload.uploadURL,
-          pendingMedia.uri,
-          { httpMethod: "PUT", headers: { "Content-Type": pendingMedia.mimeType } },
-          progress => {
-            const total = progress.totalBytesExpectedToSend;
-            if (total > 0) setUploadProgress(Math.min(100, Math.round((progress.totalBytesSent / total) * 100)));
-          },
+        const reusableUpload = uploadedPendingMedia.current.find(
+          item => item.uri === pendingMedia.uri && item.mediaType === mediaType,
         );
-        const result = await task.uploadAsync();
-        if (!result || result.status < 200 || result.status >= 300) {
-          throw new Error(`Upload failed${result ? ` (${result.status})` : ""}.`);
+        if (reusableUpload) {
+          mediaUrl = reusableUpload.objectPath;
+        } else {
+          const info = await FileSystem.getInfoAsync(pendingMedia.uri);
+          if (!info.exists) throw new Error("The selected attachment is no longer available.");
+          let size = pendingMedia.size ?? 0;
+          if (!size) {
+            if ("size" in info && typeof info.size === "number") size = info.size;
+          }
+          const upload = await requestUploadUrl({
+            name: pendingMedia.name,
+            size,
+            contentType: pendingMedia.mimeType,
+            purpose: "legacy-letter",
+          });
+          const task = FileSystem.createUploadTask(
+            upload.uploadURL,
+            pendingMedia.uri,
+            { httpMethod: "PUT", headers: { "Content-Type": pendingMedia.mimeType } },
+            progress => {
+              const total = progress.totalBytesExpectedToSend;
+              if (total > 0) setUploadProgress(Math.min(100, Math.round((progress.totalBytesSent / total) * 100)));
+            },
+          );
+          const result = await task.uploadAsync();
+          if (!result || result.status < 200 || result.status >= 300) {
+            throw new Error(`Upload failed${result ? ` (${result.status})` : ""}.`);
+          }
+          mediaUrl = upload.objectPath;
+          uploadedPendingMedia.current.push({
+            uri: pendingMedia.uri,
+            mediaType,
+            objectPath: upload.objectPath,
+            saveAmbiguous: false,
+          });
         }
-        mediaUrl = upload.objectPath;
+        uploadedObjectPath = mediaUrl ?? null;
         if (mediaType === "voice" && recorderState.durationMillis > 0) {
           mediaDurationSec = Math.max(1, Math.round(recordingDuration.current / 1000));
         }
@@ -512,10 +632,33 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
       });
       if (saved) {
         if (pendingMedia?.uri) await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+        if (uploadedObjectPath) forgetUploadedObjectPath(uploadedObjectPath);
+        if (uploadedPendingMedia.current.some(item => item.saveAmbiguous)) {
+          notifyError("Previous upload retained", "A prior save had an unknown outcome. Its upload was kept because it may already be attached to saved media.");
+        }
         reset();
       }
     } catch (error) {
-      notifyError("Couldn't save letter", error instanceof Error ? error.message : "Please try again.");
+      let message = error instanceof Error ? error.message : "Please try again.";
+      const uploaded = uploadedObjectPath
+        ? uploadedPendingMedia.current.find(item => item.objectPath === uploadedObjectPath)
+        : undefined;
+      if (uploaded) uploaded.saveAmbiguous = !isDefinitiveSaveRejection(error);
+      if (
+        uploadedObjectPath &&
+        uploadedObjectPath !== existingMediaUrl &&
+        isDefinitiveSaveRejection(error)
+      ) {
+        try {
+          const uploaded = uploadedPendingMedia.current.find(
+            item => item.objectPath === uploadedObjectPath,
+          );
+          if (uploaded) await cleanupUploadedPendingMedia(uploaded.uri, uploaded.mediaType, true);
+        } catch {
+          message += " The uploaded attachment could not be removed; it has been retained to avoid deleting media that may already be associated with a saved letter.";
+        }
+      }
+      notifyError("Couldn't save letter", message);
     } finally {
       setIsUploading(false);
     }
@@ -525,7 +668,7 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
     <Modal visible={visible} animationType="slide" onRequestClose={closeAndCleanup}>
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={closeAndCleanup} disabled={isUploading || isSaving || isPickingAttachment || isRecordingActionBusy} hitSlop={8}>
+          <Pressable accessibilityLabel="Close letter editor" onPress={closeAndCleanup} disabled={isUploading || isSaving || isPickingAttachment || isRecordingActionBusy} hitSlop={8}>
             <Feather name="x" size={22} color={colors.foreground} />
           </Pressable>
           <Text style={[styles.modalTitle, { color: colors.foreground }]}>{isEditing ? "Edit Letter" : "Write a Letter"}</Text>
@@ -642,20 +785,15 @@ export default function LegacyLettersScreen() {
   function invalidate() { qc.invalidateQueries({ queryKey: getGetLegacyLettersQueryKey() }); }
 
   async function handleSave(data: any): Promise<boolean> {
-    try {
-      if (editingLetter) {
-        await updateLetter.mutateAsync({ id: editingLetter.id, data });
-      } else {
-        await createLetter.mutateAsync({ data });
-      }
-      invalidate();
-      setWriteOpen(false);
-      setEditingLetter(null);
-      return true;
-    } catch {
-      Alert.alert("Couldn't save letter", "Please try again.");
-      return false;
+    if (editingLetter) {
+      await updateLetter.mutateAsync({ id: editingLetter.id, data });
+    } else {
+      await createLetter.mutateAsync({ data });
     }
+    invalidate();
+    setWriteOpen(false);
+    setEditingLetter(null);
+    return true;
   }
 
   async function handleSeal(id: number) {

@@ -1534,6 +1534,16 @@ export interface ReorderBlocksBody {
   blockIds: number[];
 }
 
+/**
+ * Scopes this upload so other media entities cannot claim it.
+ */
+export type UploadUrlRequestPurpose = typeof UploadUrlRequestPurpose[keyof typeof UploadUrlRequestPurpose];
+
+
+export const UploadUrlRequestPurpose = {
+  'legacy-letter': 'legacy-letter',
+} as const;
+
 export interface UploadUrlRequest {
   /**
      * Original file name.
@@ -1552,6 +1562,8 @@ export interface UploadUrlRequest {
      * @pattern ^(audio|video)/
      */
   contentType: string;
+  /** Scopes this upload so other media entities cannot claim it. */
+  purpose?: UploadUrlRequestPurpose;
 }
 
 export interface UploadUrlResponse {
@@ -1560,6 +1572,15 @@ export interface UploadUrlResponse {
   /** Normalized object path (e.g. /objects/uploads/uuid). */
   objectPath: string;
   metadata?: UploadUrlRequest;
+}
+
+export interface CleanupLegacyLetterUploadRequest {
+  /** @minLength 1 */
+  objectPath: string;
+}
+
+export interface CleanupLegacyLetterUploadResponse {
+  success: boolean;
 }
 
 export interface VoiceMemo {

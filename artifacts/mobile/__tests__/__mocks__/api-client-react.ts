@@ -241,6 +241,11 @@ export function __reset() {
   _relationshipMoments = [];
   buildMutations();
   buildRefetchSpies();
+  requestUploadUrl.mockReset().mockImplementation(async ({ name }: any) => ({
+    uploadURL: "https://example.com/upload",
+    objectPath: `/uploads/${name}`,
+  }));
+  cleanupLegacyLetterUpload.mockReset().mockResolvedValue({ success: true });
 }
 
 export function __setIntentions(intentions: Intention[]) { _intentions = intentions; }
@@ -355,6 +360,7 @@ export const requestUploadUrl = jest.fn(async ({ name }: any) => ({
   uploadURL: "https://example.com/upload",
   objectPath: `/uploads/${name}`,
 }));
+export const cleanupLegacyLetterUpload = jest.fn(async () => ({ success: true }));
 
 // ---------------------------------------------------------------------------
 // Query hooks — plain functions, always read current state at call time
