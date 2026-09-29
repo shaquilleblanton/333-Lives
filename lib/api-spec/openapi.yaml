@@ -493,7 +493,7 @@ paths:
     post:
       operationId: createVaultFamilyInvite
       tags: [vault]
-      summary: Create a family invite token
+      summary: Create a family invite token that expires after seven days
       responses:
         "201":
           description: Invite token
@@ -501,6 +501,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VaultFamilyInvite"
+
+  /vault/family/invites:
+    get:
+      operationId: getVaultFamilyInvites
+      tags: [vault]
+      summary: List pending family invites created by the current user
+      responses:
+        "200":
+          description: Pending invites, including expired invites not yet revoked
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultPendingFamilyInvite"
+
+  /vault/family/invites/{inviteId}:
+    delete:
+      operationId: revokeVaultFamilyInvite
+      tags: [vault]
+      summary: Revoke a pending family invite created by the current user
+      parameters:
+        - in: path
+          name: inviteId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invite revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Pending invite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /vault/family/invite/{token}/accept:
     post:
@@ -528,6 +568,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: Already accepted or already linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many invalid invite attempts
           content:
             application/json:
               schema:
@@ -3406,12 +3452,30 @@ components:
     VaultFamilyInvite:
       type: object
       properties:
+        id:
+          type: integer
         token:
           type: string
         createdAt:
           type: string
           format: date-time
-      required: [token, createdAt]
+        expiresAt:
+          type: string
+          format: date-time
+      required: [id, token, createdAt, expiresAt]
+
+    VaultPendingFamilyInvite:
+      type: object
+      properties:
+        id:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      required: [id, createdAt, expiresAt]
 
     VaultContact:
       type: object

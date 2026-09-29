@@ -5,7 +5,8 @@
  *
  *   • Brand-new user: INSERT succeeds → local ID returned and cached.
  *   • Returning user: fast path from in-process cache (no DB hit).
- *   • Legacy-account link: email ON CONFLICT → clerk_id updated in place.
+ *   • Verified legacy-account link: only an unbound row is linked in place.
+ *   • Already-bound or unverified-email conflicts never claim legacy data.
  *   • Concurrent first-login race: INSERT fails on users_clerk_id_unique →
  *     winner row re-read by clerk_id.
  *   • Race with no winner: re-read finds nothing → 500 returned to client.
@@ -26,6 +27,11 @@ const RUN_ID = Date.now().toString(36);
 let currentClerkId = `jit-test-${RUN_ID}-default`;
 let currentEmail = `jit-${RUN_ID}-default@test.invalid`;
 let currentName = "JIT Test User";
+let currentEmailVerified = true;
+
+beforeEach(() => {
+  currentEmailVerified = true;
+});
 
 vi.mock("@clerk/express", () => ({
   clerkMiddleware:
@@ -38,7 +44,10 @@ vi.mock("@clerk/express", () => ({
   clerkClient: {
     users: {
       getUser: vi.fn().mockImplementation(async (id: string) => ({
-        primaryEmailAddress: { emailAddress: currentEmail },
+        primaryEmailAddress: {
+          emailAddress: currentEmail,
+          verification: { status: currentEmailVerified ? "verified" : "unverified" },
+        },
         emailAddresses: [{ emailAddress: currentEmail }],
         firstName: currentName,
         lastName: "",
@@ -179,7 +188,7 @@ describe("JIT provisioning: legacy account (email match)", () => {
   const SHARED_EMAIL = `jit-legacy-${RUN_ID}@test.invalid`;
 
   beforeAll(async () => {
-    // Pre-seed a legacy row with no clerk_id (or a stale one).
+    // A row already bound to another account must not be claimed by email.
     await db.delete(usersTable).where(eq(usersTable.email, SHARED_EMAIL));
     await db.insert(usersTable).values({
       clerkId: LEGACY_CLERK_ID,
@@ -193,17 +202,13 @@ describe("JIT provisioning: legacy account (email match)", () => {
     await db.delete(usersTable).where(eq(usersTable.email, SHARED_EMAIL));
   });
 
-  it("re-links the legacy row to the new Clerk ID without creating a duplicate", async () => {
-    // Sign in as a new Clerk ID that shares the same email address.
+  it("refuses to reassign a row bound to another Clerk ID", async () => {
     currentClerkId = NEW_CLERK_ID;
     currentEmail = SHARED_EMAIL;
     currentName = "Legacy User";
 
     const res = await api("/api/users/me");
-    expect(res.status).toBe(200);
-
-    const body = await res.json() as { id: number; email: string };
-    expect(body.email).toBe(SHARED_EMAIL);
+    expect(res.status).toBe(409);
 
     // The DB must have exactly one row for this email.
     const rows = await db
@@ -212,7 +217,66 @@ describe("JIT provisioning: legacy account (email match)", () => {
       .where(eq(usersTable.email, SHARED_EMAIL));
 
     expect(rows).toHaveLength(1);
+    expect(rows[0].clerkId).toBe(LEGACY_CLERK_ID);
+  });
+});
+
+describe("JIT provisioning: unbound legacy account", () => {
+  const NEW_CLERK_ID = `jit-unbound-${RUN_ID}`;
+  const EMAIL = `jit-unbound-${RUN_ID}@test.invalid`;
+  let originalId: number;
+
+  beforeAll(async () => {
+    await db.delete(usersTable).where(eq(usersTable.email, EMAIL));
+    const [row] = await db.insert(usersTable).values({
+      clerkId: null,
+      email: EMAIL,
+      name: "Original name",
+      streakDays: 7,
+    }).returning({ id: usersTable.id });
+    originalId = row.id;
+  });
+
+  afterAll(async () => {
+    await db.delete(usersTable).where(eq(usersTable.email, EMAIL));
+  });
+
+  it("links a verified email without losing the legacy row or its data", async () => {
+    currentClerkId = NEW_CLERK_ID;
+    currentEmail = EMAIL;
+    currentName = "Updated name";
+    const res = await api("/api/users/me");
+    expect(res.status).toBe(200);
+    const rows = await db.select().from(usersTable).where(eq(usersTable.email, EMAIL));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(originalId);
     expect(rows[0].clerkId).toBe(NEW_CLERK_ID);
+    expect(rows[0].streakDays).toBe(7);
+  });
+});
+
+describe("JIT provisioning: unverified legacy email", () => {
+  const CLERK_ID = `jit-unverified-${RUN_ID}`;
+  const EMAIL = `jit-unverified-${RUN_ID}@test.invalid`;
+
+  beforeAll(async () => {
+    await db.delete(usersTable).where(eq(usersTable.email, EMAIL));
+    await db.insert(usersTable).values({ clerkId: null, email: EMAIL, name: "Legacy owner" });
+  });
+
+  afterAll(async () => {
+    await db.delete(usersTable).where(eq(usersTable.email, EMAIL));
+  });
+
+  it("does not claim an unbound row until the email is verified", async () => {
+    currentClerkId = CLERK_ID;
+    currentEmail = EMAIL;
+    currentEmailVerified = false;
+    const res = await api("/api/users/me");
+    expect(res.status).toBe(409);
+    const rows = await db.select().from(usersTable).where(eq(usersTable.email, EMAIL));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].clerkId).toBeNull();
   });
 });
 

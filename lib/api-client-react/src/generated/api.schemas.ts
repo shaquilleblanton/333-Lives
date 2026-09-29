@@ -256,8 +256,16 @@ export interface VaultFamilyItem {
 }
 
 export interface VaultFamilyInvite {
+  id: number;
   token: string;
   createdAt: string;
+  expiresAt: string;
+}
+
+export interface VaultPendingFamilyInvite {
+  id: number;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export type VaultContactType = typeof VaultContactType[keyof typeof VaultContactType];

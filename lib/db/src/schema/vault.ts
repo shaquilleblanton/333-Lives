@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -49,10 +49,23 @@ export const familyLinksTable = pgTable("family_links", {
   inviteeId: integer("invitee_id").references(() => usersTable.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
   acceptedAt: timestamp("accepted_at"),
+  expiresAt: timestamp("expires_at"),
+  revokedAt: timestamp("revoked_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export type FamilyLink = typeof familyLinksTable.$inferSelect;
+
+// Persistent failed-token throttling shared by all API server instances.
+export const familyInviteAttemptTable = pgTable(
+  "family_invite_attempts",
+  {
+    key: text("key").primaryKey(),
+    windowStartedAt: timestamp("window_started_at").notNull(),
+    attemptCount: integer("attempt_count").notNull().default(0),
+  },
+  (table) => [index("family_invite_attempts_window_started_idx").on(table.windowStartedAt)],
+);
 
 // ── Trusted Contacts (for Estate Vault access after death) ───────────────────
 export const VAULT_CONTACT_TYPES = ["person", "attorney", "executor"] as const;

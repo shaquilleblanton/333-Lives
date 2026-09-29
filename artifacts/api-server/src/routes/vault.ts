@@ -9,12 +9,19 @@ import {
   insertVaultContactSchema,
   updateVaultContactSchema,
   familyLinksTable,
+  familyInviteAttemptTable,
   usersTable,
 } from "@workspace/db/schema";
-import { eq, and, or, isNotNull } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { eq, and, or, isNotNull, isNull, gt, sql } from "drizzle-orm";
+import { createHash, randomUUID } from "crypto";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { encryptBuffer, decryptBuffer } from "../lib/vaultCrypto";
+import {
+  FAMILY_INVITE_TTL_MS,
+  INVALID_INVITE_WINDOW_MS,
+  isFamilyInviteExpired,
+  isInvalidInviteAttemptThrottled,
+} from "../lib/familyInviteLifecycle";
 import { z } from "zod/v4";
 
 const router = Router();
@@ -378,11 +385,60 @@ router.get("/vault/family/members", async (req, res) => {
 router.post("/vault/family/invite", async (req, res) => {
   const userId = getUserId(req);
   const token = randomUUID();
+  const createdAt = new Date();
+  const expiresAt = new Date(createdAt.getTime() + FAMILY_INVITE_TTL_MS);
   const inserted = await db
     .insert(familyLinksTable)
-    .values({ inviterId: userId, token })
+    .values({ inviterId: userId, token, createdAt, expiresAt })
     .returning();
-  return res.status(201).json({ token: inserted[0].token, createdAt: inserted[0].createdAt });
+  return res.status(201).json({
+    id: inserted[0].id,
+    token: inserted[0].token,
+    createdAt: inserted[0].createdAt,
+    expiresAt: inserted[0].expiresAt,
+  });
+});
+
+router.get("/vault/family/invites", async (req, res) => {
+  const invites = await db
+    .select({
+      id: familyLinksTable.id,
+      createdAt: familyLinksTable.createdAt,
+      expiresAt: familyLinksTable.expiresAt,
+    })
+    .from(familyLinksTable)
+    .where(
+      and(
+        eq(familyLinksTable.inviterId, getUserId(req)),
+        isNull(familyLinksTable.acceptedAt),
+        isNull(familyLinksTable.revokedAt),
+      ),
+    );
+  return res.json(invites.map((invite) => ({
+    ...invite,
+    expiresAt: invite.expiresAt ?? new Date(invite.createdAt.getTime() + FAMILY_INVITE_TTL_MS),
+  })));
+});
+
+router.delete("/vault/family/invites/:inviteId", async (req, res) => {
+  const inviteId = parseIntParam(req.params.inviteId, "inviteId");
+  const revoked = await db
+    .update(familyLinksTable)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(familyLinksTable.id, inviteId),
+        eq(familyLinksTable.inviterId, getUserId(req)),
+        isNull(familyLinksTable.acceptedAt),
+        isNull(familyLinksTable.revokedAt),
+      ),
+    )
+    .returning({ id: familyLinksTable.id });
+  if (revoked.length === 0) {
+    res.status(404).json({ error: "Pending invite not found" });
+    return;
+  }
+  return res.json({ success: true });
 });
 
 /**
@@ -392,6 +448,21 @@ router.post("/vault/family/invite", async (req, res) => {
 router.post("/vault/family/invite/:token/accept", async (req, res) => {
   const userId = getUserId(req);
   const { token } = req.params;
+  const now = new Date();
+  // Authentication is required here, so a per-account key avoids trusting
+  // forwarding headers and shares the limit across app instances.
+  const throttleKey = createHash("sha256").update(String(userId)).digest("hex");
+  const attempts = await db
+    .select({
+      attemptCount: familyInviteAttemptTable.attemptCount,
+      windowStartedAt: familyInviteAttemptTable.windowStartedAt,
+    })
+    .from(familyInviteAttemptTable)
+    .where(eq(familyInviteAttemptTable.key, throttleKey))
+    .limit(1);
+  if (isInvalidInviteAttemptThrottled(attempts[0]?.attemptCount ?? 0, attempts[0]?.windowStartedAt, now)) {
+    return res.status(429).json({ error: "Too many invalid invite attempts. Try again later." });
+  }
 
   const links = await db
     .select()
@@ -399,11 +470,38 @@ router.post("/vault/family/invite/:token/accept", async (req, res) => {
     .where(eq(familyLinksTable.token, token))
     .limit(1);
 
-  if (links.length === 0) return res.status(404).json({ error: "Invite not found or expired" });
+  const recordInvalidInviteAttempt = async () => {
+    const cutoff = new Date(now.getTime() - INVALID_INVITE_WINDOW_MS);
+    const [result] = await db
+      .insert(familyInviteAttemptTable)
+      .values({ key: throttleKey, windowStartedAt: now, attemptCount: 1 })
+      .onConflictDoUpdate({
+        target: familyInviteAttemptTable.key,
+        set: {
+          attemptCount: sql`CASE WHEN ${familyInviteAttemptTable.windowStartedAt} <= ${cutoff} THEN 1 ELSE ${familyInviteAttemptTable.attemptCount} + 1 END`,
+          windowStartedAt: sql`CASE WHEN ${familyInviteAttemptTable.windowStartedAt} <= ${cutoff} THEN ${now} ELSE ${familyInviteAttemptTable.windowStartedAt} END`,
+        },
+      })
+      .returning({ attemptCount: familyInviteAttemptTable.attemptCount });
+    return result.attemptCount;
+  };
+
+  if (links.length === 0) {
+    const count = await recordInvalidInviteAttempt();
+    res.status(isInvalidInviteAttemptThrottled(count) ? 429 : 404)
+      .json({ error: isInvalidInviteAttemptThrottled(count) ? "Too many invalid invite attempts. Try again later." : "Invite not found or expired" });
+    return;
+  }
   const link = links[0];
 
   if (link.acceptedAt) return res.status(409).json({ error: "Invite already accepted" });
   if (link.inviterId === userId) return res.status(400).json({ error: "Cannot accept your own invite" });
+  if (link.revokedAt || isFamilyInviteExpired(link.createdAt, link.expiresAt, now)) {
+    const count = await recordInvalidInviteAttempt();
+    res.status(isInvalidInviteAttemptThrottled(count) ? 429 : 404)
+      .json({ error: isInvalidInviteAttemptThrottled(count) ? "Too many invalid invite attempts. Try again later." : "Invite not found or expired" });
+    return;
+  }
 
   // Check for existing link between these two users
   const existing = await db
@@ -423,10 +521,27 @@ router.post("/vault/family/invite/:token/accept", async (req, res) => {
 
   const updated = await db
     .update(familyLinksTable)
-    .set({ inviteeId: userId, acceptedAt: new Date() })
-    .where(eq(familyLinksTable.token, token))
+    .set({ inviteeId: userId, acceptedAt: now })
+    .where(
+      and(
+        eq(familyLinksTable.token, token),
+        isNull(familyLinksTable.acceptedAt),
+        isNull(familyLinksTable.revokedAt),
+        or(
+          gt(familyLinksTable.expiresAt, now),
+          and(
+            isNull(familyLinksTable.expiresAt),
+            gt(familyLinksTable.createdAt, new Date(now.getTime() - FAMILY_INVITE_TTL_MS)),
+          ),
+        ),
+      ),
+    )
     .returning();
 
+  if (updated.length === 0) {
+    res.status(409).json({ error: "Invite already accepted or revoked" });
+    return;
+  }
   return res.json({ success: true, linkedAt: updated[0].acceptedAt });
 });
 

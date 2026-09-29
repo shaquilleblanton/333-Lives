@@ -1,4 +1,5 @@
 import http from "node:http";
+import { createHash } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const identity = vi.hoisted(() => ({ clerkId: "regression-owner" }));
@@ -34,7 +35,7 @@ vi.mock("../lib/objectStorage", () => ({
 
 import { db } from "@workspace/db";
 import {
-  communityCalendarTable, familyLinksTable, legacyLettersTable, peopleTable,
+  communityCalendarTable, familyInviteAttemptTable, familyLinksTable, legacyLettersTable, peopleTable,
   storyAnswersTable, usersTable, vaultItemsTable,
 } from "@workspace/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
@@ -78,6 +79,10 @@ afterEach(async () => {
   if (created.events.length) await db.delete(communityCalendarTable).where(inArray(communityCalendarTable.id, created.events.splice(0)));
   await db.delete(storyAnswersTable).where(eq(storyAnswersTable.userId, ownerId));
   await db.delete(familyLinksTable).where(orUsers(ownerId, viewerId));
+  await db.delete(familyInviteAttemptTable).where(eq(
+    familyInviteAttemptTable.key,
+    createHash("sha256").update(String(viewerId)).digest("hex"),
+  ));
   await db.delete(peopleTable).where(inArray(peopleTable.userId, [ownerId, viewerId]));
   vi.clearAllMocks();
 });
@@ -120,6 +125,42 @@ describe("API authorization regressions", () => {
     expect((await as("regression-viewer", `/vault/${item.id}/file`)).status).toBe(200);
     expect((await as("regression-viewer", `/vault/family/members/${link.id}`, { method: "DELETE" })).status).toBe(200);
     expect((await as("regression-viewer", `/vault/${item.id}/file`)).status).toBe(403);
+  });
+
+  it("expires pending invites and lets only the inviter revoke them", async () => {
+    const createdInvite = await as("regression-owner", "/vault/family/invite", { method: "POST" });
+    expect(createdInvite.status).toBe(201);
+    const invite = await createdInvite.json() as { id: number; token: string; expiresAt: string };
+    expect(new Date(invite.expiresAt).getTime()).toBeGreaterThan(Date.now());
+    expect((await as("regression-viewer", `/vault/family/invites/${invite.id}`, { method: "DELETE" })).status).toBe(404);
+    await db.update(familyLinksTable).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(familyLinksTable.id, invite.id));
+    expect((await as("regression-viewer", `/vault/family/invite/${invite.token}/accept`, { method: "POST" })).status).toBe(404);
+    expect((await as("regression-owner", `/vault/family/invites/${invite.id}`, { method: "DELETE" })).status).toBe(200);
+    expect((await as("regression-viewer", `/vault/family/invite/${invite.token}/accept`, { method: "POST" })).status).toBe(404);
+    const [stored] = await db.select().from(familyLinksTable).where(eq(familyLinksTable.id, invite.id));
+    expect(stored.inviteeId).toBeNull();
+    expect(stored.revokedAt).not.toBeNull();
+  });
+
+  it("throttles invalid invites across requests and resets after the window", async () => {
+    const key = createHash("sha256").update(String(viewerId)).digest("hex");
+    await db.insert(familyInviteAttemptTable).values({
+      key,
+      windowStartedAt: new Date(),
+      attemptCount: 9,
+    }).onConflictDoUpdate({
+      target: familyInviteAttemptTable.key,
+      set: { windowStartedAt: new Date(), attemptCount: 9 },
+    });
+    const path = "/vault/family/invite/not-a-real-token/accept";
+    expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(429);
+    expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(429);
+    await db.update(familyInviteAttemptTable)
+      .set({ windowStartedAt: new Date(Date.now() - 16 * 60 * 1000) })
+      .where(eq(familyInviteAttemptTable.key, key));
+    expect((await as("regression-viewer", path, { method: "POST" })).status).toBe(404);
+    const [counter] = await db.select().from(familyInviteAttemptTable).where(eq(familyInviteAttemptTable.key, key));
+    expect(counter.attemptCount).toBe(1);
   });
 
   it("deletes Legacy Letter and Story Answer media only after successful update or deletion", async () => {

@@ -50,3 +50,6 @@ Thumbs.db
 
 # Apple App Store Connect private keys
 *.p8
+
+# Google Play service account credentials
+*service-account*.json

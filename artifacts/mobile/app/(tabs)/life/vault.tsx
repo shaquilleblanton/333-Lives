@@ -10,13 +10,16 @@ import {
   useDeleteVaultContact,
   useGetVaultFamilyItems,
   useGetVaultFamilyMembers,
+  useGetVaultFamilyInvites,
   useCreateVaultFamilyInvite,
   useAcceptVaultFamilyInvite,
   useDeleteVaultFamilyMember,
+  useRevokeVaultFamilyInvite,
   getGetVaultItemsQueryKey,
   getGetVaultContactsQueryKey,
   getGetVaultFamilyMembersQueryKey,
   getGetVaultFamilyItemsQueryKey,
+  getGetVaultFamilyInvitesQueryKey,
   getUploadVaultFileUrl,
   getGetVaultFileUrl,
   getBaseUrl,
@@ -26,7 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
-import { uploadAsync, downloadAsync, cacheDirectory, FileSystemUploadType } from "expo-file-system/legacy";
+import { uploadAsync, downloadAsync, deleteAsync, cacheDirectory, FileSystemUploadType } from "expo-file-system/legacy";
 import { useAuth } from "@clerk/expo";
 import React, { useState, useEffect } from "react";
 import {
@@ -352,7 +355,7 @@ function ItemCard({ item, colors, onEdit, onDelete, onOpen }: {
       </View>
       <View style={{ gap: 8, alignItems: "center" }}>
         {hasFile && onOpen && (
-          <Pressable onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
+          <Pressable testID={`vault-open-file-${item.id}`} accessibilityLabel={`Open file ${item.name}`} onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
             <Feather name="download" size={12} color={colors.primary} />
           </Pressable>
         )}
@@ -378,7 +381,7 @@ function FamilyItemCard({ item, colors, onOpen }: { item: VaultFamilyItem; color
         <Text style={[styles.itemCat, { color: colors.mutedForeground }]}>{(item as any).ownerName} · {CATEGORY_LABELS[item.category as VaultCategory] ?? item.category}</Text>
       </View>
       {hasFile && (
-        <Pressable onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
+        <Pressable testID={`vault-open-file-${item.id}`} accessibilityLabel={`Open file ${item.name}`} onPress={onOpen} hitSlop={8} style={[styles.openBtn, { borderColor: colors.primary + "40", backgroundColor: colors.primary + "10" }]}>
           <Feather name="download" size={12} color={colors.primary} />
         </Pressable>
       )}
@@ -397,6 +400,7 @@ export default function VaultScreen() {
   const { data: contacts, isLoading: contactsLoading, refetch: refetchContacts } = useGetVaultContacts();
   const { data: familyItems = [], refetch: refetchFamilyItems } = useGetVaultFamilyItems();
   const { data: familyMembers = [], refetch: refetchFamilyMembers } = useGetVaultFamilyMembers();
+  const { data: familyInvites = [] } = useGetVaultFamilyInvites();
   const createItem = useCreateVaultItem();
   const updateItem = useUpdateVaultItem();
   const deleteItem = useDeleteVaultItem();
@@ -406,6 +410,7 @@ export default function VaultScreen() {
   const createInvite = useCreateVaultFamilyInvite();
   const acceptInvite = useAcceptVaultFamilyInvite();
   const deleteFamily = useDeleteVaultFamilyMember();
+  const revokeInvite = useRevokeVaultFamilyInvite();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("general");
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -416,6 +421,7 @@ export default function VaultScreen() {
   const [contactPriority, setContactPriority] = useState<1 | 2>(1);
   const [uploadingItemId, setUploadingItemId] = useState<number | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteExpiresAt, setInviteExpiresAt] = useState<string | null>(null);
   const [acceptInput, setAcceptInput] = useState("");
   const [acceptingInvite, setAcceptingInvite] = useState(false);
 
@@ -424,6 +430,9 @@ export default function VaultScreen() {
   function invalidateFamily() {
     qc.invalidateQueries({ queryKey: getGetVaultFamilyMembersQueryKey() });
     qc.invalidateQueries({ queryKey: getGetVaultFamilyItemsQueryKey() });
+  }
+  function invalidateFamilyInvites() {
+    qc.invalidateQueries({ queryKey: getGetVaultFamilyInvitesQueryKey() });
   }
 
   function openCreateItem(cat: VaultCategory) { setEditingItem(null); setDefaultCat(cat); setItemModalOpen(true); }
@@ -452,21 +461,39 @@ export default function VaultScreen() {
 
   async function handleOpenFile(item: { id: number; name: string; fileUrl?: string | null; mimeType?: string | null }) {
     if (!item.fileUrl) return;
+    let localUri: string | null = null;
     try {
       const token = await getToken();
+      if (!token) throw new Error("Please sign in again to open this file.");
+      if (!cacheDirectory) throw new Error("Device storage is unavailable.");
       const downloadUrl = `${getBaseUrl()}${getGetVaultFileUrl(item.id)}`;
       const ext = getExtFromMime(item.mimeType);
       const safeName = (item.name || "vault_file").replace(/[^a-zA-Z0-9._-]/g, "_");
-      const localUri = `${cacheDirectory ?? ""}${safeName}${ext}`;
+      localUri = `${cacheDirectory}vault-${item.id}-${Date.now()}-${safeName}${ext}`;
       const downloaded = await downloadAsync(downloadUrl, localUri, {
-        headers: { Authorization: `Bearer ${token ?? ""}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(downloaded.uri, { mimeType: item.mimeType ?? "application/octet-stream", dialogTitle: item.name });
+      if (downloaded.status < 200 || downloaded.status >= 300) {
+        throw new Error(`Secure download failed (${downloaded.status}).`);
       }
-    } catch {
-      Alert.alert("Couldn't open file", "Please try again.");
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error("The native file opener is unavailable on this device.");
+      }
+      await Sharing.shareAsync(downloaded.uri, {
+        mimeType: item.mimeType ?? "application/octet-stream",
+        dialogTitle: item.name,
+      });
+    } catch (error) {
+      Alert.alert(
+        "Couldn't open file",
+        error instanceof Error ? error.message : "The secure download or native file opener failed.",
+      );
+    } finally {
+      if (localUri) {
+        // Sharing opens/copies the local file before resolving. Keep cache from
+        // accumulating private Vault downloads once the native sheet is done.
+        await deleteAsync(localUri, { idempotent: true }).catch(() => {});
+      }
     }
   }
 
@@ -528,6 +555,8 @@ export default function VaultScreen() {
     try {
       const result = await createInvite.mutateAsync(undefined as any);
       setInviteToken(result.token);
+      setInviteExpiresAt(result.expiresAt);
+      invalidateFamilyInvites();
     } catch { Alert.alert("Couldn't create invite", "Please try again."); }
   }
 
@@ -550,6 +579,24 @@ export default function VaultScreen() {
     } finally {
       setAcceptingInvite(false);
     }
+  }
+
+  function confirmRevokeInvite(inviteId: number) {
+    Alert.alert("Revoke invite?", "The invite code will no longer be usable.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Revoke",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await revokeInvite.mutateAsync({ inviteId });
+            invalidateFamilyInvites();
+          } catch {
+            Alert.alert("Couldn't revoke invite", "Please try again.");
+          }
+        },
+      },
+    ]);
   }
 
   const generalItems = items?.filter(i => GENERAL_CATEGORIES.includes(i.category as VaultCategory)) ?? [];
@@ -777,7 +824,9 @@ export default function VaultScreen() {
 
               {inviteToken && (
                 <View style={[styles.inviteTokenBox, { backgroundColor: colors.muted + "30", borderColor: colors.border }]}>
-                  <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Share this code:</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                    Share this code · expires {inviteExpiresAt ? new Date(inviteExpiresAt).toLocaleDateString() : "in 7 days"}:
+                  </Text>
                   <Text style={[{ fontFamily: fonts.body, fontSize: 12, color: colors.foreground, marginTop: 4, marginBottom: 8, letterSpacing: 0.5 }]} selectable>
                     {inviteToken}
                   </Text>
@@ -787,6 +836,37 @@ export default function VaultScreen() {
                     <Feather name="share-2" size={13} color={colors.primary} />
                     <Text style={[styles.pillText, { color: colors.primary }]}>Share invite</Text>
                   </Pressable>
+                </View>
+              )}
+
+              {familyInvites.length > 0 && (
+                <View style={{ marginTop: 12, gap: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 }}>
+                  <Text style={[styles.fieldLabel, { color: colors.foreground }]}>Pending invites</Text>
+                  {familyInvites.map(invite => {
+                    const expired = new Date(invite.expiresAt).getTime() <= Date.now();
+                    return (
+                      <View key={invite.id} style={[styles.memberRow, { borderColor: colors.border }]}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.pillText, { color: colors.foreground }]}>
+                            {expired ? "Expired invite" : "Awaiting acceptance"}
+                          </Text>
+                          <Text style={[styles.contactSub, { color: colors.mutedForeground }]}>
+                            {expired ? "Expired" : "Expires"} {new Date(invite.expiresAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        <Pressable
+                          onPress={() => confirmRevokeInvite(invite.id)}
+                          disabled={revokeInvite.isPending}
+                          testID={`revoke-family-invite-${invite.id}`}
+                          accessibilityRole="button"
+                          accessibilityLabel="Revoke family invite"
+                          hitSlop={8}
+                        >
+                          <Feather name="x-circle" size={17} color={colors.destructive ?? colors.mutedForeground} />
+                        </Pressable>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
 

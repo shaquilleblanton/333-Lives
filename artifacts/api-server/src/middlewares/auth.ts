@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import { db } from "@workspace/db";
 import { accountDeletionsTable, usersTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 
 import { logger } from "../lib/logger";
 
@@ -43,13 +43,14 @@ export function getClerkUserId(req: Request): string {
  * 1. Fast path — row already linked to this Clerk id (cached + DB check).
  * 2. Single atomic upsert on email:
  *    - No row with that email → INSERT a fresh row.
- *    - Row exists (legacy account, stale clerk_id, or concurrent race) →
- *      UPDATE clerk_id in place so all existing data is preserved.
+ *    - Verified email matching an unbound legacy row → link it in place.
+ *    - Email already bound to another Clerk user → refuse to reassign it.
  *
- * Using ON CONFLICT (email) DO UPDATE makes this crash-proof: the email
- * uniqueness constraint can never fire because we handle it explicitly, and
- * there is no window between a SELECT and an INSERT where a race can sneak in.
+ * The conflict update is conditional in the database, so concurrent requests
+ * cannot claim a row that another identity has already linked.
  */
+class AccountLinkConflictError extends Error {}
+
 async function resolveLocalUser(clerkUserId: string): Promise<number> {
   // Fast path: already linked.
   const linked = await db
@@ -61,20 +62,15 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
 
   // Fetch the Clerk user's display name and primary email.
   const clerkUser = await clerkClient.users.getUser(clerkUserId);
-  const email = (
-    clerkUser.primaryEmailAddress?.emailAddress ??
-    clerkUser.emailAddresses[0]?.emailAddress ??
-    `${clerkUserId}@users.noreply`
-  ).toLowerCase();
+  const emailAddress = clerkUser.primaryEmailAddress ?? clerkUser.emailAddresses[0];
+  const email = (emailAddress?.emailAddress ?? `${clerkUserId}@users.noreply`).toLowerCase();
+  const verifiedEmail = emailAddress?.verification?.status === "verified";
   const name =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     email.split("@")[0];
 
-  // Atomic upsert: insert or re-link by email.
-  // ON CONFLICT (email) DO UPDATE means:
-  //   • New user  → row is inserted, id returned.
-  //   • Existing row (any clerk_id) → clerk_id is updated, same id returned.
-  // This handles legacy accounts and stale Clerk ids (dev/prod mismatch).
+  // Only a verified email may claim an unbound legacy row. Never overwrite an
+  // existing Clerk ID, even if the incoming account has the same email.
   //
   // NOTE: the email arbiter does NOT cover a concurrent first-login race.
   // A brand-new user's first app launch fires several API calls in parallel;
@@ -89,10 +85,19 @@ async function resolveLocalUser(clerkUserId: string): Promise<number> {
       .onConflictDoUpdate({
         target: usersTable.email,
         set: { clerkId: clerkUserId, name },
+        setWhere: verifiedEmail ? isNull(usersTable.clerkId) : sql`false`,
       })
       .returning({ id: usersTable.id });
 
     if (upserted.length > 0) return upserted[0].id;
+    // A parallel first-login request may have inserted this same identity.
+    const winner = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.clerkId, clerkUserId))
+      .limit(1);
+    if (winner.length > 0) return winner[0].id;
+    throw new AccountLinkConflictError("Email is already associated with an account");
   } catch (error) {
     if (isUniqueViolation(error)) {
       logger.warn(
@@ -228,6 +233,13 @@ export async function requireAuth(
     req.userId = localId;
     next();
   } catch (error) {
+    if (error instanceof AccountLinkConflictError) {
+      req.log.warn({ clerkUserId: req.clerkUserId }, "Refused automatic account re-link");
+      res.status(409).json({
+        error: "This email cannot be linked automatically. Verify your email or contact support.",
+      });
+      return;
+    }
     req.log.error({ err: error }, "Auth middleware failure");
     res.status(500).json({ error: "Authentication failed" });
   }

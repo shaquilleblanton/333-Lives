@@ -7,16 +7,31 @@ import {
   useSealLegacyLetter,
   useUnsealLegacyLetter,
   getGetLegacyLettersQueryKey,
+  requestUploadUrl,
 } from "@workspace/api-client-react";
 import type { LegacyLetter } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
+import * as Sharing from "expo-sharing";
+import { useAuth } from "@clerk/expo";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -130,6 +145,8 @@ function LetterDetailModal({ letter, onClose, onSeal, onUnseal, onEdit, onDelete
             {letter.triggerDate ? <Text style={[styles.metaRow, { color: colors.mutedForeground }]}>Date: <Text style={{ color: colors.foreground }}>{new Date(letter.triggerDate + "T12:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</Text></Text> : null}
           </View>
 
+          <LetterMedia letter={letter} />
+
           {/* Content */}
           {letter.content ? (
             <View style={[styles.contentCard, { backgroundColor: colors.card, borderColor: letter.isSealed ? colors.accent + "30" : colors.border }]}>
@@ -176,17 +193,130 @@ function LetterDetailModal({ letter, onClose, onSeal, onUnseal, onEdit, onDelete
   );
 }
 
-type MediaType = "text" | "voice";
+type MediaType = "text" | "voice" | "video";
+type PendingMedia = { uri: string; name: string; mimeType: string; size?: number };
+
+function storageUrl(objectPath: string) {
+  return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api/storage${objectPath}`;
+}
+
+function notifyError(title: string, message: string) {
+  if (Platform.OS === "web") window.alert(`${title}\n${message}`);
+  else Alert.alert(title, message);
+}
+
+function mediaMimeType(type: MediaType, uri: string, provided?: string | null) {
+  if (provided) return provided;
+  const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
+  if (type === "video") {
+    if (ext === "mov") return "video/quicktime";
+    if (ext === "webm") return "video/webm";
+    if (ext === "mkv") return "video/x-matroska";
+    if (ext === "avi") return "video/x-msvideo";
+    if (ext === "3gp") return "video/3gpp";
+    return "video/mp4";
+  }
+  if (ext === "wav") return "audio/wav";
+  if (ext === "mp3") return "audio/mpeg";
+  if (ext === "aac") return "audio/aac";
+  if (ext === "ogg" || ext === "oga" || ext === "opus") return "audio/ogg";
+  if (ext === "flac") return "audio/flac";
+  if (ext === "amr") return "audio/amr";
+  if (ext === "wma") return "audio/x-ms-wma";
+  return "audio/mp4";
+}
+
+function LetterMedia({ letter }: { letter: LegacyLetter }) {
+  const colors = useColors();
+  const player = useAudioPlayer();
+  const status = useAudioPlayerStatus(player);
+  const { getToken } = useAuth();
+  const [isOpening, setIsOpening] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    if (status.didJustFinish) setPlaying(false);
+  }, [status.didJustFinish]);
+
+  async function toggleAudio() {
+    try {
+      if (playing) {
+        player.pause();
+        setPlaying(false);
+        return;
+      }
+      const token = await getToken();
+      if (!token) throw new Error("Sign in to listen to this recording.");
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      player.replace({ uri: storageUrl(letter.mediaUrl!), headers: { Authorization: `Bearer ${token}` } });
+      player.play();
+      setPlaying(true);
+    } catch {
+      notifyError("Couldn't play recording", "Please check your connection and try again.");
+    }
+  }
+
+  async function openVideo() {
+    if (!letter.mediaUrl || isOpening) return;
+    setIsOpening(true);
+    let localUri: string | null = null;
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Sign in to open this attachment.");
+      if (!FileSystem.cacheDirectory) throw new Error("Device cache is unavailable.");
+      const ext = letter.mediaUrl.toLowerCase().includes(".mov") ? ".mov" : ".mp4";
+      localUri = `${FileSystem.cacheDirectory}legacy-letter-${letter.id}-${Date.now()}${ext}`;
+      const result = await FileSystem.downloadAsync(storageUrl(letter.mediaUrl), localUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (result.status < 200 || result.status >= 300) throw new Error(`Download failed (${result.status}).`);
+      if (!(await Sharing.isAvailableAsync())) throw new Error("File sharing is not available on this device.");
+      await Sharing.shareAsync(result.uri, { mimeType: result.mimeType ?? "video/mp4", dialogTitle: letter.title });
+    } catch {
+      notifyError("Couldn't open video", "Please check your connection and try again.");
+    } finally {
+      if (localUri) FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+      setIsOpening(false);
+    }
+  }
+
+  if (!letter.mediaUrl || letter.mediaType === "text") return null;
+  return (
+    <View style={[styles.mediaCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {letter.mediaType === "voice" ? (
+        <Pressable accessibilityLabel={playing ? "Pause voice letter" : "Play voice letter"} onPress={toggleAudio} style={styles.mediaAction}>
+          <Feather name={playing ? "pause" : "play"} size={17} color={colors.primary} />
+          <Text style={[styles.actionBtnText, { color: colors.primary }]}>{playing ? "Pause Voice Letter" : "Play Voice Letter"}</Text>
+        </Pressable>
+      ) : (
+        <Pressable accessibilityLabel="Open video letter" onPress={openVideo} disabled={isOpening} style={styles.mediaAction}>
+          {isOpening ? <ActivityIndicator size="small" color={colors.primary} /> : <Feather name="video" size={17} color={colors.primary} />}
+          <Text style={[styles.actionBtnText, { color: colors.primary }]}>{isOpening ? "Opening…" : "Open Video Letter"}</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
 
 function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
   visible: boolean;
   letter: LegacyLetter | null;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any) => Promise<boolean>;
   isSaving: boolean;
 }) {
   const colors = useColors();
   const isEditing = !!letter;
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
+  const [pendingMedia, setPendingMedia] = useState<PendingMedia | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isPickingAttachment, setIsPickingAttachment] = useState(false);
+  const [isRecordingActionBusy, setIsRecordingActionBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [microphonePermission, setMicrophonePermission] = useState<{ granted: boolean; canAskAgain?: boolean } | null>(null);
+  const recordingDuration = useRef(0);
+  recordingDuration.current = recorderState.durationMillis ?? 0;
 
   const [title, setTitle] = useState(letter?.title ?? "");
   const [recipientName, setRecipientName] = useState(letter?.recipientName ?? "");
@@ -203,32 +333,199 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
       setTriggerType((letter?.triggerType as TriggerType) ?? "date");
       setMediaType((letter?.mediaType as MediaType) ?? "text");
       setContent(letter?.content ?? "");
+      setPendingMedia(null);
+      setUploadProgress(0);
     }
   }, [visible, letter]);
 
-  function reset() { setTitle(""); setRecipientName(""); setRecipientRelation(""); setTriggerType("date"); setMediaType("text"); setContent(""); }
+  async function cleanupPendingMedia() {
+    let recordingUri = recorder.uri;
+    if (recorder.isRecording) {
+      await recorder.stop().catch(() => {});
+      recordingUri = recorder.uri;
+    }
+    await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => {});
+    if (pendingMedia?.uri) await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+    if (recordingUri && recordingUri !== pendingMedia?.uri) {
+      await FileSystem.deleteAsync(recordingUri, { idempotent: true }).catch(() => {});
+    }
+  }
 
-  function submit() {
-    if (!title.trim() || !recipientName.trim()) return;
+  async function closeAndCleanup() {
+    if (isUploading || isSaving || isPickingAttachment || isRecordingActionBusy) return;
+    await cleanupPendingMedia();
+    onClose();
+  }
+
+  function reset() {
+    setTitle("");
+    setRecipientName("");
+    setRecipientRelation("");
+    setTriggerType("date");
+    setMediaType("text");
+    setContent("");
+    setPendingMedia(null);
+    setUploadProgress(0);
+  }
+
+  async function pickAttachment() {
+    if (mediaType === "text" || isPickingAttachment) return;
+    setIsPickingAttachment(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: mediaType === "voice" ? "audio/*" : "video/*",
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      if (pendingMedia?.uri && pendingMedia.uri !== asset.uri) {
+        await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+      }
+      setPendingMedia({
+        uri: asset.uri,
+        name: asset.name,
+        mimeType: mediaMimeType(mediaType, asset.uri, asset.mimeType),
+        size: asset.size,
+      });
+    } catch {
+      notifyError("Couldn't open files", "Please try choosing the attachment again.");
+    } finally {
+      setIsPickingAttachment(false);
+    }
+  }
+
+  async function startRecording() {
+    setIsRecordingActionBusy(true);
+    try {
+      if (Platform.OS === "web") throw new Error("Audio recording is only available on a mobile device.");
+      const permission = await AudioModule.requestRecordingPermissionsAsync();
+      setMicrophonePermission(permission);
+      if (!permission.granted) {
+        notifyError("Microphone needed", "Allow microphone access to record your voice letter.");
+        return;
+      }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+    } catch (error) {
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => {});
+      notifyError("Recording failed", error instanceof Error ? error.message : "Couldn't start recording.");
+    } finally {
+      setIsRecordingActionBusy(false);
+    }
+  }
+
+  async function stopRecording() {
+    setIsRecordingActionBusy(true);
+    try {
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      const uri = recorder.uri;
+      if (!uri) throw new Error("The recording file wasn't created.");
+      const info = await FileSystem.getInfoAsync(uri);
+      if (!info.exists) throw new Error("The recording file is missing.");
+      const ext = uri.split("?")[0].split(".").pop()?.toLowerCase() || "m4a";
+      if (pendingMedia?.uri && pendingMedia.uri !== uri) {
+        await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+      }
+      setPendingMedia({
+        uri,
+        name: `legacy-voice-${Date.now()}.${ext}`,
+        mimeType: mediaMimeType("voice", uri),
+        size: "size" in info && typeof info.size === "number" ? info.size : undefined,
+      });
+    } catch (error) {
+      if (recorder.uri && recorder.uri !== pendingMedia?.uri) {
+        await FileSystem.deleteAsync(recorder.uri, { idempotent: true }).catch(() => {});
+      }
+      notifyError("Couldn't finish recording", error instanceof Error ? error.message : "Please try again.");
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => {});
+    } finally {
+      setIsRecordingActionBusy(false);
+    }
+  }
+
+  async function removeAttachment() {
+    if (pendingMedia?.uri) await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+    setPendingMedia(null);
+  }
+
+  async function changeMediaType(next: MediaType) {
+    if (next !== mediaType) await removeAttachment();
+    setMediaType(next);
+  }
+
+  async function submit() {
+    if (!title.trim() || !recipientName.trim() || isPickingAttachment || isRecordingActionBusy || recorder.isRecording) return;
+    const existingMediaUrl = letter?.mediaType === mediaType ? letter.mediaUrl : null;
     if (mediaType === "text" && !content.trim()) return;
-    onSave({
-      title: title.trim(),
-      recipientName: recipientName.trim(),
-      recipientRelation: recipientRelation.trim() || undefined,
-      triggerType,
-      mediaType,
-      content: content.trim() || undefined,
-      status: "draft",
-      isSealed: false,
-    });
-    reset();
+    if (mediaType !== "text" && !pendingMedia && !existingMediaUrl) {
+      notifyError("Attachment required", mediaType === "voice" ? "Record or attach an audio file before saving." : "Attach a video before saving.");
+      return;
+    }
+    setIsUploading(true);
+    setUploadProgress(0);
+    try {
+      let mediaUrl = existingMediaUrl ?? undefined;
+      let mediaDurationSec: number | undefined;
+      if (pendingMedia) {
+        const info = await FileSystem.getInfoAsync(pendingMedia.uri);
+        if (!info.exists) throw new Error("The selected attachment is no longer available.");
+        let size = pendingMedia.size ?? 0;
+        if (!size) {
+          if ("size" in info && typeof info.size === "number") size = info.size;
+        }
+        const upload = await requestUploadUrl({
+          name: pendingMedia.name,
+          size,
+          contentType: pendingMedia.mimeType,
+        });
+        const task = FileSystem.createUploadTask(
+          upload.uploadURL,
+          pendingMedia.uri,
+          { httpMethod: "PUT", headers: { "Content-Type": pendingMedia.mimeType } },
+          progress => {
+            const total = progress.totalBytesExpectedToSend;
+            if (total > 0) setUploadProgress(Math.min(100, Math.round((progress.totalBytesSent / total) * 100)));
+          },
+        );
+        const result = await task.uploadAsync();
+        if (!result || result.status < 200 || result.status >= 300) {
+          throw new Error(`Upload failed${result ? ` (${result.status})` : ""}.`);
+        }
+        mediaUrl = upload.objectPath;
+        if (mediaType === "voice" && recorderState.durationMillis > 0) {
+          mediaDurationSec = Math.max(1, Math.round(recordingDuration.current / 1000));
+        }
+      }
+      const saved = await onSave({
+        title: title.trim(),
+        recipientName: recipientName.trim(),
+        recipientRelation: recipientRelation.trim() || undefined,
+        triggerType,
+        mediaType,
+        content: content.trim() || "",
+        mediaUrl: mediaType === "text" ? null : mediaUrl,
+        mediaDurationSec: mediaType === "text" ? null : mediaDurationSec,
+        status: "draft",
+        isSealed: false,
+      });
+      if (saved) {
+        if (pendingMedia?.uri) await FileSystem.deleteAsync(pendingMedia.uri, { idempotent: true }).catch(() => {});
+        reset();
+      }
+    } catch (error) {
+      notifyError("Couldn't save letter", error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   return (
-    <Modal visible={visible} animationType="slide">
+    <Modal visible={visible} animationType="slide" onRequestClose={closeAndCleanup}>
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => { reset(); onClose(); }} hitSlop={8}>
+          <Pressable onPress={closeAndCleanup} disabled={isUploading || isSaving || isPickingAttachment || isRecordingActionBusy} hitSlop={8}>
             <Feather name="x" size={22} color={colors.foreground} />
           </Pressable>
           <Text style={[styles.modalTitle, { color: colors.foreground }]}>{isEditing ? "Edit Letter" : "Write a Letter"}</Text>
@@ -255,11 +552,11 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
 
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Format</Text>
           <View style={[styles.pills, { marginBottom: 4 }]}>
-            {(["text", "voice"] as MediaType[]).map(m => (
-              <Pressable key={m} onPress={() => setMediaType(m)}
+            {(["text", "voice", "video"] as MediaType[]).map(m => (
+              <Pressable key={m} onPress={() => changeMediaType(m)} disabled={isUploading || isSaving || isPickingAttachment || isRecordingActionBusy}
                 style={[styles.pill, { borderColor: mediaType === m ? colors.primary : colors.border, backgroundColor: mediaType === m ? colors.primary + "1A" : "transparent" }]}>
-                <Feather name={m === "text" ? "file-text" : "mic"} size={12} color={mediaType === m ? colors.primary : colors.mutedForeground} style={{ marginRight: 4 }} />
-                <Text style={[styles.pillText, { color: mediaType === m ? colors.primary : colors.mutedForeground }]}>{m === "text" ? "Written" : "Voice Recording"}</Text>
+                <Feather name={m === "text" ? "file-text" : m === "voice" ? "mic" : "video"} size={12} color={mediaType === m ? colors.primary : colors.mutedForeground} style={{ marginRight: 4 }} />
+                <Text style={[styles.pillText, { color: mediaType === m ? colors.primary : colors.mutedForeground }]}>{m === "text" ? "Written" : m === "voice" ? "Voice Recording" : "Video"}</Text>
               </Pressable>
             ))}
           </View>
@@ -269,18 +566,57 @@ function WriteModal({ visible, letter, onClose, onSave, isSaving }: {
               style={[styles.input, styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} />
           ) : (
             <View style={[styles.voiceNote, { backgroundColor: colors.card, borderColor: colors.primary + "40" }]}>
-              <Feather name="mic" size={28} color={colors.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.voiceNoteTitle, { color: colors.foreground }]}>Voice Letter</Text>
+              <Feather name={mediaType === "voice" ? "mic" : "video"} size={28} color={colors.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.voiceNoteTitle, { color: colors.foreground }]}>{mediaType === "voice" ? "Voice Letter" : "Video Letter"}</Text>
               <Text style={[styles.voiceNoteSub, { color: colors.mutedForeground }]}>
-                Add a note about what this voice letter contains, then record on your device and attach the file.
+                {mediaType === "voice" ? "Record now or attach an audio file." : "Attach a video file from your device."}
               </Text>
-              <TextInput value={content} onChangeText={setContent} placeholder="Describe or transcribe this voice letter…" placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={4} textAlignVertical="top"
+              {mediaType === "voice" ? (
+              <Pressable
+                  accessibilityLabel={recorderState.isRecording ? "Stop voice letter recording" : "Start voice letter recording"}
+                  onPress={recorderState.isRecording ? stopRecording : startRecording}
+                disabled={isUploading || isSaving || isRecordingActionBusy || isPickingAttachment}
+                style={[styles.mediaAction, { borderColor: colors.border, marginTop: 12, opacity: isUploading || isSaving || isRecordingActionBusy || isPickingAttachment ? 0.6 : 1 }]}
+                >
+                  <Feather name={recorderState.isRecording ? "square" : "mic"} size={16} color={recorderState.isRecording ? "#f87171" : colors.primary} />
+                  <Text style={[styles.actionBtnText, { color: recorderState.isRecording ? "#f87171" : colors.primary }]}>
+                    {recorderState.isRecording ? `Stop Recording · ${Math.floor(recordingDuration.current / 1000)}s` : "Record Voice Letter"}
+                  </Text>
+                </Pressable>
+              ) : null}
+              {Platform.OS !== "web" && microphonePermission?.granted === false && microphonePermission.canAskAgain === false ? (
+                <Pressable onPress={() => Linking.openSettings().catch(() => notifyError("Settings unavailable", "Open your device settings to enable microphone access."))} style={[styles.mediaAction, { marginTop: 8 }]}>
+                  <Feather name="settings" size={15} color={colors.primary} />
+                  <Text style={[styles.actionBtnText, { color: colors.primary }]}>Open Settings</Text>
+                </Pressable>
+              ) : null}
+              <Pressable accessibilityLabel={mediaType === "voice" ? "Attach audio file" : "Attach video file"} onPress={pickAttachment} disabled={isPickingAttachment || isUploading || isSaving || isRecordingActionBusy} style={[styles.mediaAction, { borderColor: colors.border, marginTop: 8, opacity: isPickingAttachment ? 0.6 : 1 }]}>
+                {isPickingAttachment ? <ActivityIndicator size="small" color={colors.primary} /> : <Feather name="paperclip" size={15} color={colors.primary} />}
+                <Text style={[styles.actionBtnText, { color: colors.primary }]}>{isPickingAttachment ? "Opening files…" : mediaType === "voice" ? "Choose Audio File" : "Choose Video File"}</Text>
+              </Pressable>
+              {pendingMedia ? (
+                <View style={[styles.mediaAction, { marginTop: 8 }]}>
+                  <Text style={[styles.voiceNoteSub, { color: colors.foreground, flex: 1 }]} numberOfLines={1}>{pendingMedia.name}</Text>
+                    <Pressable accessibilityLabel="Remove media attachment" onPress={removeAttachment} disabled={isUploading || isSaving || isPickingAttachment || isRecordingActionBusy} hitSlop={8}>
+                    <Feather name="x" size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+              ) : letter?.mediaType === mediaType && letter.mediaUrl ? (
+                <Text style={[styles.voiceNoteSub, { color: colors.primary, marginTop: 10 }]}>An attachment is already saved. Choose a file to replace it.</Text>
+              ) : null}
+              <TextInput value={content} onChangeText={setContent} placeholder={mediaType === "voice" ? "Describe or transcribe this voice letter…" : "Add a note about this video…"} placeholderTextColor={colors.mutedForeground + "99"} multiline numberOfLines={4} textAlignVertical="top"
                 style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground, marginTop: 12 }]} />
+              {isUploading ? (
+                <View style={[styles.row, { marginTop: 12, gap: 8 }]}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={[styles.voiceNoteSub, { color: colors.primary }]}>Uploading… {uploadProgress}%</Text>
+                </View>
+              ) : null}
             </View>
           )}
-          <Pressable onPress={submit} disabled={!title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving}
-            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving ? 0.5 : 1 }]}>
-            {isSaving ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{isEditing ? "Save Changes" : "Save as Draft"}</Text>}
+          <Pressable onPress={submit} disabled={!title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving || isUploading || isPickingAttachment || isRecordingActionBusy || recorderState.isRecording || recorder.isRecording}
+            style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: !title.trim() || !recipientName.trim() || (mediaType === "text" && !content.trim()) || isSaving || isUploading || isPickingAttachment || isRecordingActionBusy || recorderState.isRecording || recorder.isRecording ? 0.5 : 1 }]}>
+            {isSaving || isUploading ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>{isEditing ? "Save Changes" : "Save as Draft"}</Text>}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -305,7 +641,7 @@ export default function LegacyLettersScreen() {
 
   function invalidate() { qc.invalidateQueries({ queryKey: getGetLegacyLettersQueryKey() }); }
 
-  async function handleSave(data: any) {
+  async function handleSave(data: any): Promise<boolean> {
     try {
       if (editingLetter) {
         await updateLetter.mutateAsync({ id: editingLetter.id, data });
@@ -315,7 +651,11 @@ export default function LegacyLettersScreen() {
       invalidate();
       setWriteOpen(false);
       setEditingLetter(null);
-    } catch { Alert.alert("Couldn't save letter", "Please try again."); }
+      return true;
+    } catch {
+      Alert.alert("Couldn't save letter", "Please try again.");
+      return false;
+    }
   }
 
   async function handleSeal(id: number) {
@@ -377,7 +717,7 @@ export default function LegacyLettersScreen() {
               <Text style={[styles.pageTitle, { color: colors.foreground }]}>Legacy Letters</Text>
               <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>Words that outlive the moment.</Text>
             </View>
-            <Pressable onPress={() => { setEditingLetter(null); setWriteOpen(true); }} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
+            <Pressable accessibilityLabel="Create legacy letter" onPress={() => { setEditingLetter(null); setWriteOpen(true); }} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
               <Feather name="plus" size={20} color={colors.primaryForeground} />
             </Pressable>
           </View>
@@ -445,6 +785,8 @@ const styles = StyleSheet.create({
   voiceNote: { borderRadius: 14, borderWidth: 1, borderStyle: "dashed", padding: 20, alignItems: "center" },
   voiceNoteTitle: { fontFamily: fonts.serif, fontSize: 17, marginBottom: 6 },
   voiceNoteSub: { fontFamily: fonts.sub, fontSize: 13, textAlign: "center", lineHeight: 18 },
+  mediaCard: { borderRadius: 14, borderWidth: 1, padding: 14 },
+  mediaAction: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 8 },
   input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, fontFamily: fonts.body, fontSize: 14 },
   textArea: { minHeight: 220, textAlignVertical: "top" },
   fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },

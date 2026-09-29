@@ -405,11 +405,36 @@ export const GetVaultFamilyMembersResponse = zod.array(GetVaultFamilyMembersResp
 
 
 /**
- * @summary Create a family invite token
+ * @summary Create a family invite token that expires after seven days
  */
 export const CreateVaultFamilyInviteResponse = zod.object({
+  "id": zod.number(),
   "token": zod.string(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List pending family invites created by the current user
+ */
+export const GetVaultFamilyInvitesResponseItem = zod.object({
+  "id": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date()
+})
+export const GetVaultFamilyInvitesResponse = zod.array(GetVaultFamilyInvitesResponseItem)
+
+
+/**
+ * @summary Revoke a pending family invite created by the current user
+ */
+export const RevokeVaultFamilyInviteParams = zod.object({
+  "inviteId": zod.coerce.number()
+})
+
+export const RevokeVaultFamilyInviteResponse = zod.object({
+  "success": zod.boolean()
 })
 
 

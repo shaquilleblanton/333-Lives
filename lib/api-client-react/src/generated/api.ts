@@ -134,6 +134,7 @@ import type {
   VaultFamilyItem,
   VaultFamilyMember,
   VaultItem,
+  VaultPendingFamilyInvite,
   VoiceMemo,
   WorkoutSession
 } from './api.schemas';
@@ -1665,7 +1666,7 @@ export const getCreateVaultFamilyInviteUrl = () => {
 }
 
 /**
- * @summary Create a family invite token
+ * @summary Create a family invite token that expires after seven days
  */
 export const createVaultFamilyInvite = async ( options?: RequestInit): Promise<VaultFamilyInvite> => {
 
@@ -1713,7 +1714,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateVaultFamilyInviteMutationError = ErrorType<unknown>
 
     /**
- * @summary Create a family invite token
+ * @summary Create a family invite token that expires after seven days
  */
 export const useCreateVaultFamilyInvite = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVaultFamilyInvite>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1724,6 +1725,153 @@ export const useCreateVaultFamilyInvite = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateVaultFamilyInviteMutationOptions(options));
+    }
+
+export const getGetVaultFamilyInvitesUrl = () => {
+
+
+
+
+  return `/api/vault/family/invites`
+}
+
+/**
+ * @summary List pending family invites created by the current user
+ */
+export const getVaultFamilyInvites = async ( options?: RequestInit): Promise<VaultPendingFamilyInvite[]> => {
+
+  return customFetch<VaultPendingFamilyInvite[]>(getGetVaultFamilyInvitesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVaultFamilyInvitesQueryKey = () => {
+    return [
+    `/api/vault/family/invites`
+    ] as const;
+    }
+
+
+export const getGetVaultFamilyInvitesQueryOptions = <TData = Awaited<ReturnType<typeof getVaultFamilyInvites>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyInvites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVaultFamilyInvitesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVaultFamilyInvites>>> = ({ signal }) => getVaultFamilyInvites({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyInvites>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVaultFamilyInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof getVaultFamilyInvites>>>
+export type GetVaultFamilyInvitesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List pending family invites created by the current user
+ */
+
+export function useGetVaultFamilyInvites<TData = Awaited<ReturnType<typeof getVaultFamilyInvites>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVaultFamilyInvites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVaultFamilyInvitesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRevokeVaultFamilyInviteUrl = (inviteId: number,) => {
+
+
+
+
+  return `/api/vault/family/invites/${inviteId}`
+}
+
+/**
+ * @summary Revoke a pending family invite created by the current user
+ */
+export const revokeVaultFamilyInvite = async (inviteId: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getRevokeVaultFamilyInviteUrl(inviteId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRevokeVaultFamilyInviteMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeVaultFamilyInvite>>, TError,{inviteId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeVaultFamilyInvite>>, TError,{inviteId: number}, TContext> => {
+
+const mutationKey = ['revokeVaultFamilyInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeVaultFamilyInvite>>, {inviteId: number}> = (props) => {
+          const {inviteId} = props ?? {};
+
+          return  revokeVaultFamilyInvite(inviteId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeVaultFamilyInviteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeVaultFamilyInvite>>>
+
+    export type RevokeVaultFamilyInviteMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Revoke a pending family invite created by the current user
+ */
+export const useRevokeVaultFamilyInvite = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeVaultFamilyInvite>>, TError,{inviteId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeVaultFamilyInvite>>,
+        TError,
+        {inviteId: number},
+        TContext
+      > => {
+      return useMutation(getRevokeVaultFamilyInviteMutationOptions(options));
     }
 
 export const getAcceptVaultFamilyInviteUrl = (token: string,) => {

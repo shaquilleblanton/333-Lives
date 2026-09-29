@@ -10,13 +10,16 @@ import {
   useDeleteVaultContact,
   useGetVaultFamilyItems,
   useGetVaultFamilyMembers,
+  useGetVaultFamilyInvites,
   useCreateVaultFamilyInvite,
   useAcceptVaultFamilyInvite,
   useDeleteVaultFamilyMember,
+  useRevokeVaultFamilyInvite,
   getGetVaultItemsQueryKey,
   getGetVaultContactsQueryKey,
   getGetVaultFamilyMembersQueryKey,
   getGetVaultFamilyItemsQueryKey,
+  getGetVaultFamilyInvitesQueryKey,
 } from "@workspace/api-client-react";
 import type { VaultItem, VaultContact, VaultFamilyItem, VaultFamilyMember } from "@workspace/api-client-react";
 import {
@@ -120,10 +123,12 @@ export default function Vault() {
   const { data: contacts, isLoading: contactsLoading } = useGetVaultContacts();
   const { data: familyItems = [], refetch: refetchFamilyItems } = useGetVaultFamilyItems();
   const { data: familyMembers = [], refetch: refetchFamilyMembers } = useGetVaultFamilyMembers();
+  const { data: familyInvites = [] } = useGetVaultFamilyInvites();
   const deleteVaultItem = useDeleteVaultItem();
   const createInvite = useCreateVaultFamilyInvite();
   const acceptInvite = useAcceptVaultFamilyInvite();
   const deleteFamilyMember = useDeleteVaultFamilyMember();
+  const revokeFamilyInvite = useRevokeVaultFamilyInvite();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -135,6 +140,7 @@ export default function Vault() {
   const [editingContact, setEditingContact] = useState<VaultContact | null>(null);
   const [contactPriority, setContactPriority] = useState<1 | 2>(1);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteExpiresAt, setInviteExpiresAt] = useState<string | null>(null);
   const [acceptInput, setAcceptInput] = useState("");
   const [acceptingInvite, setAcceptingInvite] = useState(false);
 
@@ -163,6 +169,8 @@ export default function Vault() {
     try {
       const result = await createInvite.mutateAsync(undefined as any);
       setInviteToken(result.token);
+      setInviteExpiresAt(result.expiresAt);
+      queryClient.invalidateQueries({ queryKey: getGetVaultFamilyInvitesQueryKey() });
     } catch { toast({ variant: "destructive", title: "Couldn't create invite" }); }
   };
 
@@ -195,6 +203,13 @@ export default function Vault() {
         queryClient.invalidateQueries({ queryKey: getGetVaultFamilyItemsQueryKey() });
       },
       onError: () => toast({ variant: "destructive", title: "Couldn't unlink" }),
+    });
+  };
+
+  const handleRevokeInvite = (inviteId: number) => {
+    revokeFamilyInvite.mutate({ inviteId }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetVaultFamilyInvitesQueryKey() }),
+      onError: () => toast({ variant: "destructive", title: "Couldn't revoke invite", description: "Please try again." }),
     });
   };
 
@@ -420,10 +435,40 @@ export default function Vault() {
                         <Copy className="w-4 h-4" />
                       </button>
                     </div>
-                    <p className="text-xs text-muted-foreground/70 font-subheading">One-time use. The recipient pastes this in their Family Access section.</p>
+                    <p className="text-xs text-muted-foreground/70 font-subheading">
+                      One-time use. Expires {inviteExpiresAt ? format(new Date(inviteExpiresAt), "MMM d, yyyy") : "in 7 days"}.
+                    </p>
                   </div>
                 )}
               </div>
+
+              {familyInvites.length > 0 && (
+                <div className="space-y-2 border-t border-border/40 pt-4">
+                  <p className="text-sm font-subheading text-foreground">Pending invites</p>
+                  {familyInvites.map(invite => {
+                    const expired = new Date(invite.expiresAt).getTime() <= Date.now();
+                    return (
+                      <div key={invite.id} className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/50 p-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-subheading text-foreground">{expired ? "Expired invite" : "Invite awaiting acceptance"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {expired ? "Expired" : "Expires"} {format(new Date(invite.expiresAt), "MMM d, yyyy")}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRevokeInvite(invite.id)}
+                          disabled={revokeFamilyInvite.isPending}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          Revoke
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Accept invite */}
               <div className="space-y-2 pt-2 border-t border-border/40">
