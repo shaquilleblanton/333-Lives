@@ -305,6 +305,9 @@ importers:
       '@react-native/jest-preset':
         specifier: ^0.86.2
         version: 0.86.2(@babel/core@7.29.7)(react@19.1.0)
+      '@sentry/cli':
+        specifier: 2.55.0
+        version: 2.55.0
       '@stardazed/streams-text-encoding':
         specifier: ^1.0.2
         version: 1.0.2
