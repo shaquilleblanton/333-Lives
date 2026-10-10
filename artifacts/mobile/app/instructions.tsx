@@ -182,7 +182,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     items: [
       {
         icon: "zap",
-        title: "Pulse",
+        title: "What's Good",
         description: "Share a text update, photo, or voice note with your Circle; react to posts from people in that Circle and delete your own posts. A post can expire after 24 hours or be kept persistent when you choose.",
         accent: "accent",
       },

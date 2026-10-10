@@ -28,6 +28,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@clerk/expo", () => ({
   useClerk: () => ({ signOut: jest.fn() }),
+  useAuth: () => ({ userId: "user_test", isLoaded: true, isSignedIn: true }),
 }));
 
 jest.mock("expo-haptics", () => ({

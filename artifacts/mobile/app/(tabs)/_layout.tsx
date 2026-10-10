@@ -85,42 +85,6 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="pulse"
-        options={{
-          title: "Pulse",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bolt" tintColor={color} size={24} />
-            ) : (
-              <Feather name="zap" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="growth"
-        options={{
-          title: "Growth",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="leaf" tintColor={color} size={24} />
-            ) : (
-              <Feather name="trending-up" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="memories"
-        options={{
-          title: "Memories",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="photo.on.rectangle" tintColor={color} size={24} />
-            ) : (
-              <Feather name="image" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
         name="memos"
         options={{
           title: "Memos",
@@ -145,6 +109,9 @@ function ClassicTabLayout() {
         }}
       />
       {/* Hidden tabs — still accessible via router.push */}
+      <Tabs.Screen name="pulse"           options={{ href: null }} />
+      <Tabs.Screen name="growth"          options={{ href: null }} />
+      <Tabs.Screen name="memories"        options={{ href: null }} />
       <Tabs.Screen name="streak"          options={{ href: null }} />
       <Tabs.Screen name="feedback"        options={{ href: null }} />
       <Tabs.Screen name="ai-chat"         options={{ href: null }} />

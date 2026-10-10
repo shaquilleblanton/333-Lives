@@ -16,6 +16,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 jest.mock("@clerk/expo", () => ({
   useClerk: () => ({ signOut: jest.fn() }),
+  useAuth: () => ({ userId: "user_test", isLoaded: true, isSignedIn: true }),
 }));
 
 jest.mock("expo-haptics", () => ({

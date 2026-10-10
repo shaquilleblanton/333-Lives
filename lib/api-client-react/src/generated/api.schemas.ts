@@ -428,6 +428,18 @@ export interface UpdateEventBody {
   color?: string;
 }
 
+export type HabitCategory = typeof HabitCategory[keyof typeof HabitCategory];
+
+
+export const HabitCategory = {
+  health: 'health',
+  mindfulness: 'mindfulness',
+  fitness: 'fitness',
+  learning: 'learning',
+  personal: 'personal',
+  work: 'work',
+} as const;
+
 export type HabitTodayStatus = typeof HabitTodayStatus[keyof typeof HabitTodayStatus] | null;
 
 
@@ -455,6 +467,7 @@ export type HabitRecentCheckinsItem = {
 export interface Habit {
   id: number;
   name: string;
+  category: HabitCategory;
   description?: string | null;
   icon?: string | null;
   targetDays: number;
@@ -468,15 +481,41 @@ export interface Habit {
   createdAt: string;
 }
 
+export type CreateHabitBodyCategory = typeof CreateHabitBodyCategory[keyof typeof CreateHabitBodyCategory];
+
+
+export const CreateHabitBodyCategory = {
+  health: 'health',
+  mindfulness: 'mindfulness',
+  fitness: 'fitness',
+  learning: 'learning',
+  personal: 'personal',
+  work: 'work',
+} as const;
+
 export interface CreateHabitBody {
   name: string;
+  category?: CreateHabitBodyCategory;
   description?: string;
   icon?: string;
   targetDays?: number;
 }
 
+export type UpdateHabitBodyCategory = typeof UpdateHabitBodyCategory[keyof typeof UpdateHabitBodyCategory];
+
+
+export const UpdateHabitBodyCategory = {
+  health: 'health',
+  mindfulness: 'mindfulness',
+  fitness: 'fitness',
+  learning: 'learning',
+  personal: 'personal',
+  work: 'work',
+} as const;
+
 export interface UpdateHabitBody {
   name?: string;
+  category?: UpdateHabitBodyCategory;
   description?: string;
   icon?: string;
   targetDays?: number;

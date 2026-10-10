@@ -121,7 +121,7 @@ export default function PulseScreen() {
       {
         data: {
           type: "bug",
-          title: `[REPORT] Pulse post #${post.id} — ${reason}`,
+          title: `[REPORT] What's Good post #${post.id} — ${reason}`,
           details:
             `Reason: ${reason}\nPost ID: ${post.id}\nAuthor: ${post.authorName} (user #${post.userId})\n` +
             `Type: ${post.type}\nPosted: ${post.createdAt}\nContent: ${post.content ?? "(media only)"}`,
@@ -151,7 +151,7 @@ export default function PulseScreen() {
   const confirmBlock = (post: PulsePost) => {
     Alert.alert(
       `Block ${post.authorName}?`,
-      "You won't see their posts in Pulse anymore. To stop sharing your posts with them, also remove them from your Circle in People.",
+      "You won't see their posts in What's Good anymore. To stop sharing your posts with them, also remove them from your Circle in People.",
       [
         { text: "Cancel", style: "cancel" },
         { text: "Block", style: "destructive", onPress: () => void blockUser(post.userId) },

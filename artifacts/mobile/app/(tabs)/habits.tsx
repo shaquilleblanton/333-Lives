@@ -5,6 +5,8 @@ import {
   useCreateHabit,
   useDeleteHabit,
   useGetHabits,
+  useUpdateHabit,
+  type Habit,
 } from "@workspace/api-client-react";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +30,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 import { ErrorRetryView } from "@/components/ErrorRetryView";
+import {
+  DEFAULT_HABIT_CATEGORY,
+  HABIT_CATEGORIES,
+  resolveHabitCategory,
+  type HabitCategoryValue,
+} from "@/constants/habitCategories";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -71,10 +79,54 @@ export default function HabitsScreen() {
   const checkIn = useCheckInHabit();
   const createHabit = useCreateHabit();
   const deleteHabit = useDeleteHabit();
+  const updateHabit = useUpdateHabit();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
+  const [category, setCategory] = useState<HabitCategoryValue>(DEFAULT_HABIT_CATEGORY);
+  const formPending = createHabit.isPending || updateHabit.isPending;
+  const [actionTarget, setActionTarget] = useState<Pick<Habit, "id" | "name" | "description" | "category"> | null>(null);
+
+  function closeForm() {
+    if (formPending) return;
+    setCreateOpen(false);
+    setEditingId(null);
+    setName("");
+    setDesc("");
+    setCategory(DEFAULT_HABIT_CATEGORY);
+  }
+
+  function openCreate() {
+    setEditingId(null);
+    setName("");
+    setDesc("");
+    setCategory(DEFAULT_HABIT_CATEGORY);
+    setCreateOpen(true);
+  }
+
+  function openEdit(h: { id: number; name?: string | null; description?: string | null; category?: string | null }) {
+    setEditingId(h.id);
+    setName(h.name ?? "");
+    setDesc(h.description ?? "");
+    setCategory(resolveHabitCategory(h.category).value);
+    setCreateOpen(true);
+  }
+
+  function openActions(h: { id: number; name?: string | null; description?: string | null; category?: string | null }) {
+    if (Platform.OS === "web") {
+      setActionTarget(h as NonNullable<typeof actionTarget>);
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const label = h.name ?? "Unnamed Habit";
+    Alert.alert(label, undefined, [
+      { text: "Edit", onPress: () => openEdit(h) },
+      { text: "Delete", style: "destructive", onPress: () => confirmDelete(h.id, label) },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
 
   // Mood picker state
   const [moodTarget, setMoodTarget] = useState<number | null>(null);
@@ -110,22 +162,38 @@ export default function HabitsScreen() {
   }
 
   function handleCreate() {
-    if (!name.trim()) return;
+    if (!name.trim() || formPending) return;
+    const onSuccess = () => {
+      invalidate();
+      setName("");
+      setDesc("");
+      setCategory(DEFAULT_HABIT_CATEGORY);
+      setEditingId(null);
+      setCreateOpen(false);
+    };
+    if (editingId != null) {
+      updateHabit.mutate(
+        { id: editingId, data: { name: name.trim(), description: desc.trim(), category } },
+        { onSuccess, onError: () => Alert.alert("Oops", "Couldn't save your changes. Please try again.") }
+      );
+      return;
+    }
     createHabit.mutate(
-      { data: { name: name.trim(), description: desc.trim() || undefined } },
-      {
-        onSuccess: () => {
-          invalidate();
-          setName("");
-          setDesc("");
-          setCreateOpen(false);
-        },
-        onError: () => Alert.alert("Oops", "Couldn't create habit."),
-      }
+      { data: { name: name.trim(), description: desc.trim() || undefined, category } },
+      { onSuccess, onError: () => Alert.alert("Oops", "Couldn't create habit.") }
     );
   }
 
   function confirmDelete(id: number, habitName: string) {
+    if (Platform.OS === "web") {
+      if (window.confirm(`Delete "${habitName}" and all its check-in history?`)) {
+        deleteHabit.mutate({ id }, {
+          onSuccess: invalidate,
+          onError: () => window.alert("Couldn't delete habit. Please try again."),
+        });
+      }
+      return;
+    }
     Alert.alert("Delete habit?", `"${habitName}" and all its check-in history will be removed.`, [
       { text: "Cancel", style: "cancel" },
       {
@@ -185,7 +253,7 @@ export default function HabitsScreen() {
               {total === 0
                 ? "Build your first streak"
                 : allDone
-                ? "All done for today 🔥"
+                ? "All done for today"
                 : `${completed} of ${total} complete`}
             </Text>
           </View>
@@ -275,7 +343,8 @@ export default function HabitsScreen() {
                 <Pressable
                   key={h.id}
                   onPress={() => handleCheckIn(h.id, h.checkedInToday)}
-                  onLongPress={() => confirmDelete(h.id, h.name ?? "Unnamed Habit")}
+                  onLongPress={() => openActions(h)}
+                  accessibilityHint="Tap to check in. Hold for edit and delete."
                   delayLongPress={500}
                   style={({ pressed }) => [
                     s.card,
@@ -341,6 +410,12 @@ export default function HabitsScreen() {
                       >
                         {h.name ?? "Unnamed Habit"}
                       </Text>
+                      <View style={s.metaRow}>
+                        <Feather name={resolveHabitCategory(h.category).icon} size={11} color={colors.mutedForeground} />
+                        <Text testID={`habit-category-${h.id}`} style={[s.habitDesc, { color: colors.mutedForeground, marginTop: 0 }]}>
+                          {resolveHabitCategory(h.category).label}
+                        </Text>
+                      </View>
                       {h.description ? (
                         <Text
                           style={[s.habitDesc, { color: colors.mutedForeground }]}
@@ -414,7 +489,7 @@ export default function HabitsScreen() {
 
         {/* ── Add button ── */}
         <Pressable
-          onPress={() => setCreateOpen(true)}
+          onPress={openCreate}
           style={({ pressed }) => [
             s.addBtn,
             {
@@ -442,10 +517,35 @@ export default function HabitsScreen() {
           <Text
             style={[s.hint, { color: colors.mutedForeground }]}
           >
-            Tap to check in · Hold to delete
+            Tap to check in · Hold to edit or delete
           </Text>
         )}
       </ScrollView>
+
+      {/* React Native's Alert action menu is native-only. */}
+      <Modal visible={actionTarget != null} transparent animationType="fade" onRequestClose={() => setActionTarget(null)}>
+        <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: colors.background + "CC" }}>
+          <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: 20, gap: 12 }}>
+            <Text style={[s.modalTitle, { color: colors.foreground }]}>{actionTarget?.name}</Text>
+            <Pressable accessibilityRole="button" onPress={() => {
+              if (actionTarget) openEdit(actionTarget);
+              setActionTarget(null);
+            }} style={{ padding: 12 }}>
+              <Text style={{ color: colors.foreground, fontFamily: fonts.sub }}>Edit</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => {
+              const target = actionTarget;
+              setActionTarget(null);
+              if (target) confirmDelete(target.id, target.name ?? "Habit");
+            }} style={{ padding: 12 }}>
+              <Text style={{ color: colors.destructive, fontFamily: fonts.sub }}>Delete</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setActionTarget(null)} style={{ padding: 12 }}>
+              <Text style={{ color: colors.mutedForeground, fontFamily: fonts.sub }}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Mood picker modal ── */}
       <Modal
@@ -512,7 +612,7 @@ export default function HabitsScreen() {
         visible={createOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => { if (!createHabit.isPending) { setCreateOpen(false); setName(""); setDesc(""); } }}
+        onRequestClose={closeForm}
       >
         <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={s.modalBg}>
@@ -526,7 +626,7 @@ export default function HabitsScreen() {
             ]}
           >
             <Text style={[s.modalTitle, { color: colors.foreground }]}>
-              New Habit
+              {editingId != null ? "Edit Habit" : "New Habit"}
             </Text>
             <TextInput
               value={name}
@@ -561,16 +661,29 @@ export default function HabitsScreen() {
               returnKeyType="done"
               onSubmitEditing={handleCreate}
             />
+            <Text style={[s.fieldLabel, { color: colors.mutedForeground }]}>Category</Text>
+            <View style={s.catRow}>
+              {HABIT_CATEGORIES.map((c) => {
+                const active = c.value === category;
+                return (
+                  <Pressable
+                    key={c.value}
+                    testID={`habit-category-option-${c.value}`}
+                    accessibilityState={{ selected: active }}
+                    onPress={() => setCategory(c.value)}
+                    style={[s.catChip, { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primary + "1A" : "transparent" }]}
+                  >
+                    <Feather name={c.icon} size={12} color={active ? colors.primary : colors.mutedForeground} />
+                    <Text style={{ color: active ? colors.primary : colors.mutedForeground, fontFamily: fonts.sub, fontSize: 12 }}>{c.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
             <View style={s.modalBtns}>
               <Pressable
-                onPress={() => {
-                  if (createHabit.isPending) return;
-                  setCreateOpen(false);
-                  setName("");
-                  setDesc("");
-                }}
-                disabled={createHabit.isPending}
-                style={[s.modalBtn, { borderColor: colors.border, opacity: createHabit.isPending ? 0.4 : 1 }]}
+                onPress={closeForm}
+                disabled={formPending}
+                style={[s.modalBtn, { borderColor: colors.border, opacity: formPending ? 0.4 : 1 }]}
               >
                 <Text
                   style={{
@@ -583,17 +696,17 @@ export default function HabitsScreen() {
               </Pressable>
               <Pressable
                 onPress={handleCreate}
-                disabled={!name.trim() || createHabit.isPending}
+                disabled={!name.trim() || formPending}
                 style={[
                   s.modalBtn,
                   {
                     backgroundColor: colors.primary,
                     opacity:
-                      !name.trim() || createHabit.isPending ? 0.45 : 1,
+                      !name.trim() || formPending ? 0.45 : 1,
                   },
                 ]}
               >
-                {createHabit.isPending ? (
+                {formPending ? (
                   <ActivityIndicator
                     size="small"
                     color={colors.primaryForeground}
@@ -605,7 +718,7 @@ export default function HabitsScreen() {
                       fontFamily: fonts.sub,
                     }}
                   >
-                    Create
+                    {editingId != null ? "Save" : "Create"}
                   </Text>
                 )}
               </Pressable>
@@ -813,6 +926,10 @@ const s = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 15,
   },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
+  fieldLabel: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginTop: 16, marginBottom: 8 },
+  catRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  catChip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
   modalBtns: {
     flexDirection: "row",
     gap: 10,

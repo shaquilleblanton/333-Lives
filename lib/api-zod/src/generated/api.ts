@@ -679,9 +679,12 @@ export const DeleteEventResponse = zod.object({
 /**
  * @summary List all habits
  */
+export const getHabitsResponseCategoryDefault = `health`;
+
 export const GetHabitsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).default(getHabitsResponseCategoryDefault),
   "description": zod.string().nullish(),
   "icon": zod.string().nullish(),
   "targetDays": zod.number(),
@@ -703,16 +706,22 @@ export const GetHabitsResponse = zod.array(GetHabitsResponseItem)
 /**
  * @summary Create a habit
  */
+export const createHabitBodyCategoryDefault = `health`;
+
 export const CreateHabitBody = zod.object({
   "name": zod.string(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).default(createHabitBodyCategoryDefault),
   "description": zod.string().optional(),
   "icon": zod.string().optional(),
   "targetDays": zod.number().optional()
 })
 
+export const createHabitResponseCategoryDefault = `health`;
+
 export const CreateHabitResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).default(createHabitResponseCategoryDefault),
   "description": zod.string().nullish(),
   "icon": zod.string().nullish(),
   "targetDays": zod.number(),
@@ -739,14 +748,18 @@ export const UpdateHabitParams = zod.object({
 
 export const UpdateHabitBody = zod.object({
   "name": zod.string().optional(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).optional(),
   "description": zod.string().optional(),
   "icon": zod.string().optional(),
   "targetDays": zod.number().optional()
 })
 
+export const updateHabitResponseCategoryDefault = `health`;
+
 export const UpdateHabitResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).default(updateHabitResponseCategoryDefault),
   "description": zod.string().nullish(),
   "icon": zod.string().nullish(),
   "targetDays": zod.number(),
@@ -1675,6 +1688,8 @@ export const RespondToCommunityEventResponse = zod.object({
 /**
  * @summary Get dashboard summary stats
  */
+export const getDashboardResponseTodayHabitsItemCategoryDefault = `health`;
+
 export const GetDashboardResponse = zod.object({
   "userName": zod.string(),
   "streakDays": zod.number(),
@@ -1705,6 +1720,7 @@ export const GetDashboardResponse = zod.object({
   "todayHabits": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "category": zod.enum(['health', 'mindfulness', 'fitness', 'learning', 'personal', 'work']).default(getDashboardResponseTodayHabitsItemCategoryDefault),
   "description": zod.string().nullish(),
   "icon": zod.string().nullish(),
   "targetDays": zod.number(),

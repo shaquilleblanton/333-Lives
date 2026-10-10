@@ -13,4 +13,16 @@ description: How to get a Playwright testing agent past Clerk auth in this proje
 - React Native Web forms: programmatic `fill()` doesn't fire `onChangeText`, leaving controlled state empty and submit buttons disabled — testers must type with real keystrokes.
 - The Expo dev domain serves only the mobile bundle; if a tester reports the web app's UI there, its tabs/session got crossed during cross-domain auth — don't chase phantom routing bugs.
 
+## One-time testing harness links
+
+Clerk's programmatic agent-task login links are single-use. A failed redirect while
+the Expo preview returns a transient 502 may still consume the task; reusing it
+then returns `agent_task_already_used`, not an app authentication defect.
+
+**Why:** A blocked mobile UI verification reached this exact state after Metro became available.
+
+**How to apply:** Confirm the Expo preview renders before requesting the harness login.
+If a task is consumed, request a fresh harness task rather than reusing its redirect;
+do not change application auth to work around the testing harness.
+
 **How to apply:** Any e2e sweep of this project's web or Expo-web surfaces; also relevant to future Clerk-proxied apps.

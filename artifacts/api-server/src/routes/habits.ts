@@ -6,6 +6,7 @@ import { habitsTable, habitCheckinsTable, insertHabitSchema, updateHabitSchema, 
 import { eq, and } from "drizzle-orm";
 import type { Request } from "express";
 import { getTodayDate } from "../lib/date";
+import { habitStreaks } from "../lib/habit-streaks";
 
 const router = Router();
 
@@ -27,7 +28,8 @@ async function buildHabitResponse(habit: typeof habitsTable.$inferSelect, req: R
     return { date, done: !!match, status: match?.status ?? null };
   });
 
-  return { ...habit, checkedInToday, todayStatus, completionRate, totalCheckins, recentCheckins };
+  const streaks = habitStreaks(checkins.map((c) => c.date), today);
+  return { ...habit, ...streaks, checkedInToday, todayStatus, completionRate, totalCheckins, recentCheckins };
 }
 
 router.get("/habits", async (req, res) => {
@@ -76,9 +78,8 @@ router.post("/habits/:id/checkin", async (req, res) => {
   const inserted = await db.insert(habitCheckinsTable).values(parsed.data).returning();
 
   const checkins = await db.select().from(habitCheckinsTable).where(eq(habitCheckinsTable.habitId, habitId));
-  const newStreak = checkins.length;
-  const longestStreak = Math.max(habit[0].longestStreak, newStreak);
-  await db.update(habitsTable).set({ currentStreak: newStreak, longestStreak, totalCheckins: newStreak }).where(eq(habitsTable.id, habitId));
+  const streaks = habitStreaks(checkins.map((c) => c.date), today);
+  await db.update(habitsTable).set({ ...streaks, totalCheckins: checkins.length }).where(eq(habitsTable.id, habitId));
 
   return res.json(inserted[0]);
 });

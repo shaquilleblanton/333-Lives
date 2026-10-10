@@ -1,9 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import {
   useGetHabits,
-  useCheckInHabit,
-  useCreateHabit,
-  getGetHabitsQueryKey,
   useGetGoals,
   useCreateGoal,
   useUpdateGoal,
@@ -12,7 +9,6 @@ import {
   useCreateJournalEntry,
   getGetJournalEntriesQueryKey,
 } from "@workspace/api-client-react";
-import type { Habit, Goal, JournalEntry } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -38,7 +34,7 @@ import { moodColors } from "@/constants/colors";
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
 
-type Tab = "habits" | "goals" | "journal";
+type Tab = "goals" | "journal";
 
 const GOAL_CATEGORIES = ["personal", "financial", "health", "relationships", "career", "spiritual"] as const;
 const MOODS = ["great", "good", "okay", "rough", "struggling"] as const;
@@ -46,98 +42,53 @@ type Mood = typeof MOODS[number];
 
 const MOOD_COLORS: Record<Mood, string> = moodColors;
 
-// ── Habits ──────────────────────────────────────────────────────────────
-function HabitsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
-  const qc = useQueryClient();
-  const { data: habits, isLoading, refetch, isRefetching } = useGetHabits();
-  const checkIn = useCheckInHabit();
-  const createHabit = useCreateHabit();
-  const [formOpen, setFormOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-
-  function invalidate() { qc.invalidateQueries({ queryKey: getGetHabitsQueryKey() }); }
-
-  async function handleCreate() {
-    if (!name.trim()) return;
-    try {
-      await createHabit.mutateAsync({ data: { name: name.trim(), description: desc.trim() || undefined } as any });
-      invalidate();
-      setFormOpen(false);
-      setName(""); setDesc("");
-    } catch { Alert.alert("Couldn't save habit", "Please try again."); }
-  }
-
-  function doCheckIn(id: number) {
-    checkIn.mutate({ id, data: { status: "great" } as any }, {
-      onSuccess: invalidate,
-      onError: () => Alert.alert("Couldn't check in", "Please try again."),
-    });
-  }
-
+// ── Habits summary (full habit management lives on the Habits tab) ──
+export function HabitsSummary({ colors }: { colors: ReturnType<typeof useColors> }) {
+  const { data: habits, isLoading, isError, refetch } = useGetHabits();
+  const list = (habits ?? []).filter((h) => !!h?.id);
+  const done = list.filter((h) => h.checkedInToday).length;
+  const total = list.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
-    <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}>
-      <View style={[sStyles.row, { marginBottom: 16 }]}>
-        <Text style={[sStyles.sectionTitle, { color: colors.foreground }]}>Daily Habits</Text>
-        <Pressable onPress={() => setFormOpen(true)} style={[sStyles.addBtn, { backgroundColor: colors.primary }]}>
-          <Feather name="plus" size={16} color={colors.primaryForeground} />
-        </Pressable>
+    <Pressable
+      testID="growth-habits-summary"
+      accessibilityRole="button"
+      accessibilityLabel={`Habits, ${done} of ${total} done today. Open Habits.`}
+      onPress={() => (isError ? refetch() : router.push("/(tabs)/habits" as any))}
+      style={({ pressed }) => [sStyles.summary, { backgroundColor: colors.card, borderColor: colors.primary + "33", opacity: pressed ? 0.85 : 1 }]}
+    >
+      <View style={[sStyles.summaryIcon, { backgroundColor: colors.primary + "1A" }]}>
+        <Feather name="check-circle" size={18} color={colors.primary} />
       </View>
-
-      {isLoading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> :
-        (habits ?? []).length === 0 ? (
-          <View style={sStyles.empty}>
-            <Feather name="activity" size={36} color={colors.mutedForeground + "50"} />
-            <Text style={[sStyles.emptyTitle, { color: colors.foreground }]}>No habits yet</Text>
-            <Text style={[sStyles.emptySub, { color: colors.mutedForeground }]}>Small actions, compounded daily.</Text>
-          </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[sStyles.fieldLabel, { color: colors.mutedForeground }]}>Today's habits</Text>
+        {isLoading ? (
+          <View style={[sStyles.progressBar, { backgroundColor: colors.border, marginTop: 8, width: "60%" }]} />
+        ) : isError ? (
+          <Text style={[sStyles.cardSub, { color: colors.mutedForeground }]}>Couldn't load. Tap to retry.</Text>
+        ) : total === 0 ? (
+          <Text style={[sStyles.cardTitle, { color: colors.foreground, marginTop: 2 }]}>Start your first habit</Text>
         ) : (
-          <View style={{ gap: 10 }}>
-            {(habits ?? []).map(h => {
-              const checkedToday = h.checkedInToday;
-              return (
-                <View key={h.id} style={[sStyles.card, { backgroundColor: colors.card, borderColor: checkedToday ? colors.primary + "40" : colors.border }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[sStyles.cardTitle, { color: colors.foreground }]}>{h.name}</Text>
-                    {h.description ? <Text style={[sStyles.cardSub, { color: colors.mutedForeground }]}>{h.description}</Text> : null}
-                    <Text style={[sStyles.cardMeta, { color: colors.mutedForeground }]}>
-                      {h.currentStreak} day streak
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => !checkedToday && doCheckIn(h.id)}
-                    style={[sStyles.checkBtn, { backgroundColor: checkedToday ? colors.primary + "1A" : colors.muted + "40", borderColor: checkedToday ? colors.primary + "60" : colors.border }]}
-                  >
-                    <Feather name={checkedToday ? "check" : "circle"} size={18} color={checkedToday ? colors.primary : colors.mutedForeground} />
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
-        )
-      }
-
-      <Modal visible={formOpen} transparent animationType="slide">
-        <View style={{ flex: 1 }}>
-          <Pressable style={sStyles.overlay} onPress={() => setFormOpen(false)} />
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <View style={[sStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[sStyles.sheetTitle, { color: colors.foreground }]}>New Habit</Text>
-            <TextInput value={name} onChangeText={setName} placeholder="Habit name" placeholderTextColor={colors.mutedForeground + "99"} autoFocus
-              style={[sStyles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-            <TextInput value={desc} onChangeText={setDesc} placeholder="Description (optional)" placeholderTextColor={colors.mutedForeground + "99"}
-              style={[sStyles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} />
-            <Pressable onPress={handleCreate} disabled={!name.trim() || createHabit.isPending}
-              style={[sStyles.saveBtn, { backgroundColor: colors.primary, opacity: !name.trim() || createHabit.isPending ? 0.5 : 1 }]}>
-              {createHabit.isPending ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={[sStyles.saveBtnText, { color: colors.primaryForeground }]}>Create Habit</Text>}
-            </Pressable>
-          </View>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
-    </ScrollView>
+          <>
+            <Text style={[sStyles.cardTitle, { color: colors.foreground, marginTop: 2 }]}>
+              <Text style={{ color: colors.primary }}>{done}</Text>/{total} done
+            </Text>
+            <View style={[sStyles.progressBar, { backgroundColor: colors.border, marginTop: 6 }]}>
+              <View style={[sStyles.progressFill, { backgroundColor: colors.primary, width: `${pct}%` as any }]} />
+            </View>
+          </>
+        )}
+      </View>
+      <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+    </Pressable>
   );
 }
+
+const AI_TOOLS: { key: string; label: string; sub: string; icon: keyof typeof Feather.glyphMap; route: string }[] = [
+  { key: "coach", label: "Life Coach", sub: "Daily insights", icon: "compass", route: "/(tabs)/ai-coach" },
+  { key: "affirm", label: "Affirmations", sub: "Made for you", icon: "sun", route: "/(tabs)/ai-affirmations" },
+  { key: "chat", label: "AI Chat", sub: "Talk it through", icon: "message-circle", route: "/(tabs)/ai-chat" },
+];
 
 // ── Goals ──────────────────────────────────────────────────────────────
 function GoalsSection({ colors }: { colors: ReturnType<typeof useColors> }) {
@@ -374,13 +325,12 @@ function JournalSection({ colors }: { colors: ReturnType<typeof useColors> }) {
 export default function GrowthScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [tab, setTab] = useState<Tab>("habits");
+  const [tab, setTab] = useState<Tab>("goals");
 
   const topPad = insets.top + WEB_TOP_INSET + 12;
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "habits", label: "Habits" },
     { key: "goals", label: "Goals" },
     { key: "journal", label: "Journal" },
   ];
@@ -395,6 +345,23 @@ export default function GrowthScreen() {
           </Pressable>
           <Text style={[sStyles.pageTitle, { color: colors.foreground }]}>Growth Hub</Text>
         </View>
+
+        <View style={sStyles.aiRow}>
+          {AI_TOOLS.map((t) => (
+            <Pressable
+              key={t.key}
+              testID={`growth-ai-${t.key}`}
+              onPress={() => router.push(t.route as any)}
+              style={({ pressed }) => [sStyles.aiCard, { backgroundColor: colors.card, borderColor: colors.primary + "30", opacity: pressed ? 0.8 : 1 }]}
+            >
+              <Feather name={t.icon} size={18} color={colors.primary} />
+              <Text style={[sStyles.aiTitle, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{t.label}</Text>
+              <Text style={[sStyles.aiSub, { color: colors.mutedForeground }]} numberOfLines={1}>{t.sub}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <HabitsSummary colors={colors} />
 
         {/* Tab bar */}
         <View style={[sStyles.tabBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -411,8 +378,7 @@ export default function GrowthScreen() {
       </View>
 
       <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: botPad }}>
-        {tab === "habits" ? <HabitsSection colors={colors} /> :
-         tab === "goals" ? <GoalsSection colors={colors} /> :
+        {tab === "goals" ? <GoalsSection colors={colors} /> :
          <JournalSection colors={colors} />}
       </View>
     </View>
@@ -423,6 +389,12 @@ const sStyles = StyleSheet.create({
   pageHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
   backBtn: { padding: 4 },
   pageTitle: { fontFamily: fonts.serifBold, fontSize: 28 },
+  aiRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  aiCard: { flex: 1, minWidth: 0, borderRadius: 14, borderWidth: 1, paddingVertical: 12, paddingHorizontal: 8, alignItems: "center", gap: 4 },
+  aiTitle: { fontFamily: fonts.subSemibold, fontSize: 13, textAlign: "center" },
+  aiSub: { fontFamily: fonts.sub, fontSize: 11, textAlign: "center" },
+  summary: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 12 },
+  summaryIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   tabBar: { flexDirection: "row", borderRadius: 14, borderWidth: 1, padding: 4, marginBottom: 4 },
   tabItem: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
   tabLabel: { fontFamily: fonts.subSemibold, fontSize: 13 },
@@ -435,7 +407,6 @@ const sStyles = StyleSheet.create({
   cardMeta: { fontFamily: fonts.sub, fontSize: 11, marginTop: 4, textTransform: "capitalize" },
   cardDate: { fontFamily: fonts.subSemibold, fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase" },
   entryText: { fontFamily: fonts.body, fontSize: 14, lineHeight: 21, marginTop: 8 },
-  checkBtn: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   progressBar: { height: 4, borderRadius: 2, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 2 },
   progressBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },

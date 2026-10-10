@@ -55,7 +55,7 @@ describe("Instructions screen", () => {
     expect(getByText("My Circle")).toBeTruthy();
     expect(getByText("Schedule")).toBeTruthy();
     expect(getByText("Workouts")).toBeTruthy();
-    expect(getByText("Pulse")).toBeTruthy();
+    expect(getByText("What's Good")).toBeTruthy();
     expect(getByText("Community")).toBeTruthy();
     expect(getByText("Family Tree")).toBeTruthy();
     expect(getByText("Legacy Letters")).toBeTruthy();

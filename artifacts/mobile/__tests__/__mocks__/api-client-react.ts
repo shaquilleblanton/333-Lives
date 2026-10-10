@@ -705,3 +705,42 @@ export const useDeleteEvent = jest.fn(() => ({ mutate: jest.fn(), isPending: fal
 
 // Initialize
 __reset();
+
+// ── Habit update + AI affirmation (Today / Habits cleanup) ──────────────────
+let _updateHabitSpy: jest.Mock = jest.fn();
+let _updateHabitError: Error | null = null;
+export function __setUpdateHabitError(err: Error | null) { _updateHabitError = err; }
+export function __getUpdateHabitSpy() { return _updateHabitSpy; }
+export function __resetHabitUpdate() { _updateHabitSpy = jest.fn(); _updateHabitError = null; }
+export const useUpdateHabit = jest.fn(() => ({
+  mutate: (args: any, opts?: any) => {
+    _updateHabitSpy(args);
+    if (_updateHabitError) opts?.onError?.(_updateHabitError);
+    else opts?.onSuccess?.();
+  },
+  isPending: false,
+}));
+export function __getCreateHabitSpy() { return _createHabit; }
+export function __getDeleteHabitSpy() { return _deleteHabit; }
+export function __getCheckInHabitSpy() { return _checkInHabit; }
+
+let _affirmationResult: { text: string } | Error = { text: "You are steady and you are enough." };
+let _affirmationSpy: jest.Mock = jest.fn();
+export function __setAffirmationResult(r: { text: string } | Error) { _affirmationResult = r; _affirmationSpy = jest.fn(); }
+export function __getAffirmationSpy() { return _affirmationSpy; }
+export const useGenerateAnthropicAffirmation = jest.fn(() => ({
+  mutateAsync: () => {
+    _affirmationSpy();
+    return _affirmationResult instanceof Error ? Promise.reject(_affirmationResult) : Promise.resolve(_affirmationResult);
+  },
+  isPending: false,
+}));
+
+// Goals / journal (Growth Hub)
+export const useGetGoals = () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn(), isRefetching: false });
+export const useCreateGoal = jest.fn(() => ({ mutateAsync: jest.fn(() => Promise.resolve({})), isPending: false }));
+export const useUpdateGoal = jest.fn(() => ({ mutateAsync: jest.fn(() => Promise.resolve({})), isPending: false }));
+export const getGetGoalsQueryKey = () => ["goals"];
+export const useGetJournalEntries = () => ({ data: [], isLoading: false, isError: false, refetch: jest.fn(), isRefetching: false });
+export const useCreateJournalEntry = jest.fn(() => ({ mutateAsync: jest.fn(() => Promise.resolve({})), isPending: false }));
+export const getGetJournalEntriesQueryKey = () => ["journal"];

@@ -67,7 +67,7 @@ export default function AiAffirmationsScreen() {
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={s.title}>Affirmations</Text>
-          <Text style={s.subtitle}>Personalized to your goals</Text>
+          <Text style={s.subtitle}>Made for you</Text>
         </View>
       </View>
 
@@ -79,7 +79,7 @@ export default function AiAffirmationsScreen() {
       >
         {/* Hero generate card */}
         <View style={s.heroCard}>
-          <Text style={s.heroLabel}>✨ AI-Powered</Text>
+          <Text style={s.heroLabel}>Made for you</Text>
           <Text style={s.heroTagline}>
             Get an affirmation crafted from your actual goals, intentions, and
             progress — not a random quote.

@@ -3694,6 +3694,10 @@ components:
           type: integer
         name:
           type: string
+        category:
+          type: string
+          enum: [health, mindfulness, fitness, learning, personal, work]
+          default: health
         description:
           type: string
           nullable: true
@@ -3733,13 +3737,17 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, name, targetDays, currentStreak, longestStreak, completionRate, checkedInToday, recentCheckins, createdAt]
+      required: [id, name, category, targetDays, currentStreak, longestStreak, completionRate, checkedInToday, recentCheckins, createdAt]
 
     CreateHabitBody:
       type: object
       properties:
         name:
           type: string
+        category:
+          type: string
+          enum: [health, mindfulness, fitness, learning, personal, work]
+          default: health
         description:
           type: string
         icon:
@@ -3753,6 +3761,9 @@ components:
       properties:
         name:
           type: string
+        category:
+          type: string
+          enum: [health, mindfulness, fitness, learning, personal, work]
         description:
           type: string
         icon:

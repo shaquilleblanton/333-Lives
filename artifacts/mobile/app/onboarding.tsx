@@ -59,7 +59,7 @@ const SLIDES: Slide[] = [
     iconColor: "#8FA67A",
     title: "Stay Connected",
     subtitle:
-      "Share moments on the family Pulse feed, grow your family tree, and keep the people who matter most close.",
+      "Share moments on the family What's Good feed, grow your family tree, and keep the people who matter most close.",
   },
 ];
 

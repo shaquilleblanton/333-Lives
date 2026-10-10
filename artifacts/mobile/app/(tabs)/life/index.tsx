@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
 import { categoryColors, priorityColors, statusColors } from "@/constants/colors";
@@ -23,6 +23,8 @@ const FEATURES: FeatureItem[] = [
   { key: "gratitude",  label: "Gratitude",        sub: "Count your blessings",     icon: "heart",        route: "life/gratitude",       accent: "rose" },
   { key: "people",     label: "My Circle",        sub: "People who shaped you",    icon: "users",        route: "life/people",          accent: "secondary" },
   { key: "growth",     label: "Growth Hub",       sub: "Habits, goals & journal",  icon: "trending-up",  route: "life/growth",          accent: "accent" },
+  { key: "pulse",      label: "What's Good",      sub: "Your circle's pulse",      icon: "zap",          route: "pulse",                accent: "amber" },
+  { key: "memories",   label: "Memories",         sub: "Your life in albums",      icon: "image",        route: "memories",             accent: "sky" },
   { key: "legacy",     label: "Legacy Letters",   sub: "Words that outlive today", icon: "mail",         route: "life/legacy-letters",  accent: "amber" },
   { key: "future",     label: "Future Messages",  sub: "Sealed in time",           icon: "lock",         route: "life/future",          accent: "violet" },
   { key: "vault",      label: "Secure Vault",     sub: "Your private sanctuary",   icon: "shield",       route: "life/vault",           accent: "emerald" },
@@ -30,7 +32,7 @@ const FEATURES: FeatureItem[] = [
   { key: "calendar",   label: "Schedule",         sub: "Your time, arranged",      icon: "calendar",     route: "life/calendar",        accent: "primary" },
   { key: "familyTree", label: "Family Tree",      sub: "Your lineage & ancestors", icon: "git-branch",   route: "life/family-tree",     accent: "amber" },
   { key: "myStory",   label: "Tell Your Story", sub: "A living autobiography",   icon: "book-open",    route: "life/tell-your-story", accent: "violet" },
-  { key: "timeline",  label: "Life Timeline",   sub: "Your defining moments",    icon: "calendar",     route: "life/timeline",        accent: "sky" },
+  { key: "timeline",  label: "Life Timeline",   sub: "Your defining moments",    icon: "clock",        route: "life/timeline",        accent: "sky" },
   { key: "workouts",  label: "Workouts",        sub: "Train with intention",      icon: "activity",     route: "life/workouts",        accent: "rose" },
 ];
 
@@ -46,6 +48,7 @@ const ACCENT_MAP = {
 };
 
 export default function LifeHub() {
+  const { width } = useWindowDimensions();
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
@@ -66,7 +69,7 @@ export default function LifeHub() {
       </View>
 
       <View style={styles.grid}>
-        {FEATURES.map((item) => {
+        {FEATURES.map((item, index) => {
           const accentColor = ACCENT_MAP[item.accent](colors);
           return (
             <Pressable
@@ -76,6 +79,7 @@ export default function LifeHub() {
                 styles.card,
                 {
                   backgroundColor: colors.card,
+                  width: FEATURES.length % 2 !== 0 && index === FEATURES.length - 1 ? "100%" : (width - 52) / 2,
                   borderColor: pressed ? accentColor + "66" : colors.border,
                   opacity: pressed ? 0.85 : 1,
                 },

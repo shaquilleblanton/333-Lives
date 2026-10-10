@@ -38,9 +38,9 @@ const TYPE_OPTIONS: Array<{ value: FeedbackType; label: string; icon: keyof type
 ];
 
 const APP_AREAS = [
-  "Today", "Streak", "Memos", "Tasks", "Future", "Vault", "Growth",
-  "Gratitude", "People", "Legacy Letters", "Workouts", "Community",
-  "Calendar", "Profile", "Other",
+  "Today", "Habits", "Streak", "Memos", "Tasks", "Future Messages", "Secure Vault", "Growth Hub",
+  "Gratitude", "My Circle", "Legacy Letters", "Workouts", "Community",
+  "Schedule", "What's Good", "Memories", "Family Tree", "Life Timeline", "Tell Your Story", "Profile", "Other",
 ];
 
 const STATUS_LABELS: Record<FeedbackStatus, string> = {

@@ -1,4 +1,3 @@
-import { useClerk } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,10 +16,11 @@ import {
   type CalendarEvent,
 } from "@workspace/api-client-react";
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Platform,
   Pressable,
   RefreshControl,
@@ -39,6 +39,9 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
 import { router } from "expo-router";
+import { TodayAffirmation } from "@/components/TodayAffirmation";
+import { TodayHabitsStrip } from "@/components/TodayHabitsStrip";
+import { useLocalNow } from "@/hooks/useLocalNow";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -49,35 +52,8 @@ const PLACEHOLDERS = [
   "Move my body for 30 minutes",
 ];
 
-function SignOutButton() {
-  const { signOut } = useClerk();
-  const colors = useColors();
-
-  const confirmSignOut = () => {
-    if (Platform.OS === "web") {
-      void signOut();
-      return;
-    }
-    Alert.alert("Sign out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign out", style: "destructive", onPress: () => void signOut() },
-    ]);
-  };
-
-  return (
-    <Pressable
-      onPress={confirmSignOut}
-      hitSlop={10}
-      style={({ pressed }) => [{ marginLeft: 10, opacity: pressed ? 0.6 : 1 }]}
-      accessibilityLabel="Sign out"
-    >
-      <Feather name="log-out" size={18} color={colors.mutedForeground} />
-    </Pressable>
-  );
-}
-
-function greeting(): string {
-  const h = new Date().getHours();
+export function greeting(date: Date = new Date()): string {
+  const h = date.getHours();
   if (h < 12) return "Good Morning";
   if (h < 18) return "Good Afternoon";
   return "Good Evening";
@@ -92,6 +68,7 @@ function todayLabel(): string {
 }
 
 export default function TodayScreen() {
+  const now = useLocalNow();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
@@ -122,6 +99,26 @@ export default function TodayScreen() {
   const isSet = total >= 3;
   const allDone = isSet && completed === total;
   const streak = history?.currentStreak ?? dashboard?.intentionsStreak ?? 0;
+
+  // Celebrate only on the transition into "all done" — never on initial load.
+  const prevAllDone = useRef<boolean | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrate = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (isLoading || intentions === undefined) return;
+    const prev = prevAllDone.current;
+    prevAllDone.current = allDone;
+    if (prev === false && allDone) {
+      setCelebrating(true);
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      celebrate.setValue(0);
+      Animated.timing(celebrate, { toValue: 1, duration: 1100, useNativeDriver: Platform.OS !== "web" }).start(() =>
+        setCelebrating(false),
+      );
+    }
+  }, [allDone, isLoading, intentions, celebrate]);
 
   const usedOrders = new Set(sorted.map((i) => i.order));
   const freeOrders = [0, 1, 2].filter((o) => !usedOrders.has(o));
@@ -233,7 +230,7 @@ export default function TodayScreen() {
     <View style={styles.header}>
       <View style={{ flex: 1 }}>
         <Text style={[styles.greeting, { color: colors.foreground }]}>
-          {greeting()}
+            {greeting(now)}
           {dashboard?.userName ? (
             <Text style={{ color: colors.primary }}>, {dashboard.userName}</Text>
           ) : null}
@@ -256,7 +253,6 @@ export default function TodayScreen() {
           </Text>
         </View>
       )}
-      <SignOutButton />
     </View>
     <FeedbackNudgeBanner />
     </>
@@ -301,7 +297,7 @@ export default function TodayScreen() {
       <Text style={{ color: colors.mutedForeground, fontSize: 10, fontFamily: fonts.body, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 2 }}>Coming Up</Text>
       {upcomingEvents.map((ev) => (
         <View key={`${ev.personId}-${ev.type}`} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={{ fontSize: 13 }}>{ev.type === "birthday" ? "🎂" : "🎉"}</Text>
+          <Feather name={ev.type === "birthday" ? "gift" : "heart"} size={13} color={colors.primary} />
           <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{ev.label}</Text>
           <Text style={{ color: colors.mutedForeground, fontSize: 12, fontFamily: fonts.body }}>
             {ev.daysUntil === 0 ? "Today!" : ev.daysUntil === 1 ? "Tomorrow" : `In ${ev.daysUntil}d`}
@@ -310,7 +306,7 @@ export default function TodayScreen() {
       ))}
       {overdueConnections.slice(0, 2).map((oc) => (
         <View key={oc.personId} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={{ fontSize: 13 }}>💭</Text>
+          <Feather name="message-circle" size={13} color={colors.mutedForeground} />
           <Text style={{ color: colors.foreground, fontSize: 13, flex: 1, fontFamily: fonts.body }}>{oc.personName}</Text>
           <Text style={{ color: colors.destructive, fontSize: 12, fontFamily: fonts.body }}>{oc.daysSinceLastMoment}d overdue</Text>
         </View>
@@ -467,6 +463,8 @@ export default function TodayScreen() {
             )}
           </Pressable>
         </View>
+        <TodayHabitsStrip />
+        <TodayAffirmation />
       </KeyboardAwareScrollViewCompat>
     );
   }
@@ -520,7 +518,23 @@ export default function TodayScreen() {
 
         <View style={styles.ringRow}>
           <View style={styles.ringWrap}>
-            <CompletionRing completed={completed} total={total} />
+            <View>
+              <CompletionRing completed={completed} total={total} />
+              {celebrating && (
+                <Animated.View
+                  testID="intentions-celebration"
+                  pointerEvents="none"
+                  style={[
+                    styles.celebrateRing,
+                    {
+                      borderColor: colors.primary,
+                      opacity: celebrate.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.9, 0] }),
+                      transform: [{ scale: celebrate.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.6] }) }],
+                    },
+                  ]}
+                />
+              )}
+            </View>
             <Text style={[styles.ringLabel, { color: colors.mutedForeground }]}>
               {allDone ? "ALL COMPLETE" : `${completed} OF ${total} DONE`}
             </Text>
@@ -609,6 +623,8 @@ export default function TodayScreen() {
           </View>
         )}
       </View>
+      <TodayHabitsStrip />
+      <TodayAffirmation />
     </ScrollView>
   );
 }
@@ -728,6 +744,15 @@ const styles = StyleSheet.create({
   },
   reviewBannerTitle: { fontSize: 13, fontFamily: fonts.subSemibold },
   reviewBannerSub: { fontSize: 12, fontFamily: fonts.body },
+  celebrateRing: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 999,
+    borderWidth: 3,
+  },
   doneNote: {
     flexDirection: "row",
     alignItems: "center",

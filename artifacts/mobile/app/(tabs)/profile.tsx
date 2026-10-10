@@ -308,8 +308,14 @@ export default function ProfileScreen() {
   }
 
   function confirmSignOut() {
-    if (Platform.OS === "web") { void signOut(); return; }
-    Alert.alert("Sign out", "Are you sure?", [
+    if (Platform.OS === "web") {
+      const ok = typeof window !== "undefined" && typeof window.confirm === "function"
+        ? window.confirm("Sign out of 333 Lives?")
+        : false;
+      if (ok) void signOut();
+      return;
+    }
+    Alert.alert("Sign out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
       { text: "Sign out", style: "destructive", onPress: () => void signOut() },
     ]);

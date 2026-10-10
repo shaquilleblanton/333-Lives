@@ -258,7 +258,7 @@ export default function MemosScreen() {
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.foreground }]}>Voice Memos</Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-              One tap. Completely private.
+              One tap. Just for you.
             </Text>
 
             <View

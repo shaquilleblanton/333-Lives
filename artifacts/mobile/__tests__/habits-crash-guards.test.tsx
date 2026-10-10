@@ -25,6 +25,7 @@ import { getPast7Days } from "../utils/getPast7Days";
 
 jest.mock("@clerk/expo", () => ({
   useClerk: () => ({ signOut: jest.fn() }),
+  useAuth: () => ({ userId: "user_test", isLoaded: true, isSignedIn: true }),
 }));
 
 jest.mock("expo-haptics", () => ({
@@ -250,6 +251,11 @@ describe("Habits tab – crash guards", () => {
       fireEvent(getByText("Journaling"), "longPress");
     });
 
+    // Long press opens an Edit/Delete menu first…
+    expect(alertSpy).toHaveBeenCalledWith("Journaling", undefined, expect.any(Array));
+    const menu = alertSpy.mock.calls[0][2] as any[];
+    await act(async () => { menu.find((b) => b.text === "Delete").onPress(); });
+    // …then an explicit delete confirmation with the habit name.
     expect(alertSpy).toHaveBeenCalledWith(
       "Delete habit?",
       expect.stringContaining("Journaling"),
