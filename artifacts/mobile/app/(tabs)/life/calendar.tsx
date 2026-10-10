@@ -25,6 +25,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ErrorRetryView } from "@/components/ErrorRetryView";
 import { fonts } from "@/constants/fonts";
+import { eventTypeColors, windowTypeColors } from "@/constants/colors";
 import { useColors } from "@/hooks/useColors";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
@@ -42,11 +43,7 @@ type EventType = "event" | "medication" | "routine";
 type WindowType = "open" | "locked" | "scheduled" | "private";
 
 const EVENT_TYPES: EventType[] = ["event", "medication", "routine"];
-const TYPE_COLORS: Record<EventType, string> = {
-  event: "#C9A439",
-  medication: "#38bdf8",
-  routine: "#9ca3af",
-};
+const TYPE_COLORS: Record<EventType, string> = eventTypeColors;
 
 const WINDOW_TYPES: WindowType[] = ["open", "locked", "scheduled", "private"];
 const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
@@ -63,12 +60,7 @@ const WINDOW_TYPE_ICONS: Record<WindowType, keyof typeof Feather.glyphMap> = {
 };
 
 function getWindowTypeColor(wt: WindowType): string {
-  switch (wt) {
-    case "open":      return "#34d399";
-    case "locked":    return "#fbbf24";
-    case "private":   return "#6b7280";
-    default:          return "#C9A439";
-  }
+  return windowTypeColors[wt] ?? windowTypeColors.scheduled;
 }
 
 function CalendarGrid({ year, month, events, onDaySelect, selectedDay }: {

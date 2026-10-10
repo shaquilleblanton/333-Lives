@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/fonts";
+import { categoryColors, priorityColors, statusColors } from "@/constants/colors";
 import { useColors } from "@/hooks/useColors";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
@@ -37,11 +38,11 @@ const ACCENT_MAP = {
   primary:   (c: ReturnType<typeof useColors>) => c.primary,
   secondary: (c: ReturnType<typeof useColors>) => c.secondary,
   accent:    (c: ReturnType<typeof useColors>) => c.accent,
-  rose:      () => "#fb7185",
-  sky:       () => "#38bdf8",
-  emerald:   () => "#34d399",
-  violet:    () => "#a78bfa",
-  amber:     () => "#fbbf24",
+  rose:      () => categoryColors.health,        // "#fb7185"
+  sky:       () => categoryColors.travel,        // "#38bdf8"
+  emerald:   () => statusColors.open,            // "#34d399"
+  violet:    () => categoryColors.relationship,  // "#a78bfa"
+  amber:     () => priorityColors.medium,        // "#fbbf24"
 };
 
 export default function LifeHub() {

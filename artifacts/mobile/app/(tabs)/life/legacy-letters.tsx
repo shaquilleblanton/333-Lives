@@ -132,7 +132,7 @@ function LetterDetailModal({ letter, onClose, onSeal, onUnseal, onEdit, onDelete
           </Pressable>
           <Text style={[styles.modalTitle, { color: colors.foreground }]} numberOfLines={1}>{letter.title}</Text>
           <Pressable onPress={onDelete} hitSlop={8}>
-            <Feather name="trash-2" size={18} color="#f87171" />
+            <Feather name="trash-2" size={18} color={colors.destructive} />
           </Pressable>
         </View>
 

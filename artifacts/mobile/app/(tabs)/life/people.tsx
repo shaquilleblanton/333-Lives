@@ -137,7 +137,7 @@ function PersonDetailModal({ person, onClose, onDeleted, onEdit }: { person: Per
             </Pressable>
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>{person.name}</Text>
             <Pressable onPress={confirmDelete} hitSlop={8} disabled={deletePerson.isPending}>
-              <Feather name="trash-2" size={18} color="#f87171" />
+              <Feather name="trash-2" size={18} color={colors.destructive} />
             </Pressable>
           </View>
 
@@ -226,7 +226,7 @@ function PersonDetailModal({ person, onClose, onDeleted, onEdit }: { person: Per
             {/* Moments list */}
             {isError ? (
               <View style={styles.emptyMoments}>
-                <Feather name="alert-circle" size={28} color="#f87171" />
+                <Feather name="alert-circle" size={28} color={colors.destructive} />
                 <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Couldn't load moments.</Text>
                 <Pressable onPress={() => refetchMoments()}>
                   <Text style={[styles.addLink, { color: colors.primary }]}>Try again</Text>

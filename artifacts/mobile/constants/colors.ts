@@ -101,3 +101,22 @@ export const statusColors = {
   open:   "#34d399",
   locked: "#fbbf24",
 } as const;
+
+/**
+ * Event-type colors for the personal calendar.
+ */
+export const eventTypeColors = {
+  event:      palette.primary, // logo gold
+  medication: "#38bdf8",       // sky blue
+  routine:    "#9ca3af",       // neutral gray
+} as const;
+
+/**
+ * Window-type colors for community calendar availability.
+ */
+export const windowTypeColors = {
+  open:      "#34d399", // emerald
+  locked:    "#fbbf24", // amber
+  private:   "#6b7280", // slate gray
+  scheduled: palette.primary, // logo gold (default)
+} as const;
