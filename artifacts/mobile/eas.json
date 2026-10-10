@@ -10,15 +10,17 @@
     },
     "preview": {
       "pnpm": "10.26.1",
+      "node": "20.19.4",
       "distribution": "internal",
-      "ios": { "simulator": false },
-      "android": { "buildType": "apk" }
+      "ios": { "simulator": false, "image": "latest" },
+      "android": { "buildType": "apk", "image": "latest" }
     },
     "production": {
       "pnpm": "10.26.1",
+      "node": "20.19.4",
       "autoIncrement": true,
-      "ios": { "buildConfiguration": "Release" },
-      "android": { "buildType": "app-bundle" },
+      "ios": { "buildConfiguration": "Release", "image": "latest" },
+      "android": { "buildType": "app-bundle", "image": "latest" },
       "env": {
         "EXPO_PUBLIC_DOMAIN": "333lives.app",
         "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuMzMzbGl2ZXMuYXBwJA",
@@ -38,7 +40,7 @@
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
-        "track": "production"
+        "track": "internal"
       }
     }
   }
