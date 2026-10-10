@@ -9,11 +9,13 @@
       "distribution": "internal"
     },
     "preview": {
+      "pnpm": "10.26.1",
       "distribution": "internal",
       "ios": { "simulator": false },
       "android": { "buildType": "apk" }
     },
     "production": {
+      "pnpm": "10.26.1",
       "autoIncrement": true,
       "ios": { "buildConfiguration": "Release" },
       "android": { "buildType": "app-bundle" },
