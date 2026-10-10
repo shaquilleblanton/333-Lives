@@ -21,6 +21,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
+jest.mock("@react-native-async-storage/async-storage", () =>
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
+);
+
 jest.mock("@clerk/expo", () => ({
   useClerk: () => ({ signOut: jest.fn() }),
 }));
@@ -287,5 +291,58 @@ describe("Pulse: delete post onError guard", () => {
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith("Error", expect.any(String))
     );
+  });
+});
+
+// ── Report & block (App Store guideline 1.2) ───────────────────────────────
+
+describe("Pulse: report and block", () => {
+  const otherPost = { ...basePost, id: 30, userId: 7, content: "Someone else's post" };
+
+  function pressButton(label: string) {
+    alertSpy.mockImplementationOnce((_t: string, _m: string, buttons: any[]) => {
+      buttons?.find((b: any) => b.text === label)?.onPress?.();
+    });
+  }
+
+  it("does not show the report/block menu on your own posts", async () => {
+    mockApi.__setPulsePosts([{ ...otherPost, isOwn: true }]);
+    const { queryByLabelText } = await render(withProviders(<PulseScreen />));
+    expect(queryByLabelText("Report or block")).toBeNull();
+  });
+
+  it("files a report through feedback and hides the post", async () => {
+    mockApi.__setPulsePosts([otherPost]);
+    const reportSpy = mockApi.__getCreateFeedback();
+    reportSpy.mockImplementation((_args: any, opts: any) => opts?.onSuccess?.());
+
+    pressButton("Report post");
+    pressButton("Spam or scam");
+
+    const { getByLabelText, queryByText } = await render(withProviders(<PulseScreen />));
+    fireEvent.press(getByLabelText("Report or block"));
+
+    expect(reportSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ appArea: "pulse-report", type: "bug" }),
+      }),
+      expect.anything(),
+    );
+    expect(reportSpy.mock.calls[0][0].data.details).toContain("Post ID: 30");
+    expect(alertSpy).toHaveBeenCalledWith("Report sent", expect.any(String));
+    await waitFor(() => expect(queryByText("Someone else's post")).toBeNull());
+  });
+
+  it("blocking a person hides their posts", async () => {
+    mockApi.__setPulsePosts([{ ...otherPost, id: 31, userId: 8, content: "Block me" }]);
+
+    pressButton("Block Alice Bob");
+    pressButton("Block");
+
+    const { getByLabelText, queryByText } = await render(withProviders(<PulseScreen />));
+    expect(queryByText("Block me")).toBeTruthy();
+    fireEvent.press(getByLabelText("Report or block"));
+
+    await waitFor(() => expect(queryByText("Block me")).toBeNull());
   });
 });

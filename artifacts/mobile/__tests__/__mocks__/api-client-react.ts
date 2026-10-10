@@ -61,6 +61,7 @@ let _deletePost: jest.Mock;
 let _reactToPost: jest.Mock;
 let _unreactPost: jest.Mock;
 let _createPost: jest.Mock;
+let _createFeedback: jest.Mock;
 
 // Memories mutation spies
 let _deleteCollection: jest.Mock;
@@ -162,6 +163,7 @@ function buildMutations() {
 
   // Pulse
   _deletePost = jest.fn();
+  _createFeedback = jest.fn();
   _reactToPost = jest.fn();
   _unreactPost = jest.fn();
   _createPost = jest.fn();
@@ -295,6 +297,7 @@ export function __setRelationshipMoments(moments: any[]) { _relationshipMoments 
 
 // Expose mutation spies for assertions
 export function __getDeletePost() { return _deletePost; }
+export function __getCreateFeedback() { return _createFeedback; }
 export function __getReactToPost() { return _reactToPost; }
 export function __getUnreactPost() { return _unreactPost; }
 export function __getCreatePost() { return _createPost; }
@@ -591,6 +594,7 @@ export const useDeleteIntention = jest.fn(() => ({
 // Pulse mutations
 export const useCreatePulsePost = jest.fn(() => ({ mutate: _createPost, isPending: false }));
 export const useDeletePulsePost = jest.fn(() => ({ mutate: _deletePost, isPending: false }));
+export const useCreateFeedback = jest.fn(() => ({ mutate: _createFeedback, isPending: false }));
 export const useReactToPulsePost = jest.fn(() => ({ mutate: _reactToPost, isPending: false }));
 export const useRemovePulseReaction = jest.fn(() => ({ mutate: _unreactPost, isPending: false }));
 

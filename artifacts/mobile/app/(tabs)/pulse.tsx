@@ -37,10 +37,20 @@ import {
   useRemovePulseReaction,
   getGetPulseFeedQueryKey,
   requestUploadUrl,
+  useCreateFeedback,
   type PulsePost,
 } from "@workspace/api-client-react";
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
+import { usePulseModeration } from "@/utils/moderation";
+
+const REPORT_REASONS = [
+  "Harassment or bullying",
+  "Hate or violence",
+  "Sexual or explicit content",
+  "Spam or scam",
+  "Something else",
+] as const;
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -95,10 +105,67 @@ export default function PulseScreen() {
   const botPad = insets.bottom + WEB_BOTTOM_INSET + 24;
 
   const queryClient = useQueryClient();
-  const { data: posts = [], isLoading, isError, refetch } = useGetPulseFeed();
+  const { data: rawPosts = [], isLoading, isError, refetch } = useGetPulseFeed();
   const deletePost = useDeletePulsePost();
   const reactMutation = useReactToPulsePost();
   const unreactMutation = useRemovePulseReaction();
+  const createFeedback = useCreateFeedback();
+  const { blockedUserIds, hiddenPostIds, blockUser, hidePost } = usePulseModeration();
+
+  const posts = (rawPosts as PulsePost[]).filter(
+    (p) => p.isOwn || (!blockedUserIds.includes(p.userId) && !hiddenPostIds.includes(p.id)),
+  );
+
+  const submitReport = (post: PulsePost, reason: string) => {
+    createFeedback.mutate(
+      {
+        data: {
+          type: "bug",
+          title: `[REPORT] Pulse post #${post.id} — ${reason}`,
+          details:
+            `Reason: ${reason}\nPost ID: ${post.id}\nAuthor: ${post.authorName} (user #${post.userId})\n` +
+            `Type: ${post.type}\nPosted: ${post.createdAt}\nContent: ${post.content ?? "(media only)"}`,
+          appArea: "pulse-report",
+        },
+      },
+      {
+        onSuccess: () => {
+          void hidePost(post.id);
+          Alert.alert(
+            "Report sent",
+            "Thanks for letting us know. We review reports within 24 hours and remove content that breaks our Terms. This post is now hidden for you.",
+          );
+        },
+        onError: () => Alert.alert("Couldn't send report", "Please try again."),
+      },
+    );
+  };
+
+  const chooseReportReason = (post: PulsePost) => {
+    Alert.alert("Report post", "Why are you reporting this?", [
+      ...REPORT_REASONS.map((reason) => ({ text: reason, onPress: () => submitReport(post, reason) })),
+      { text: "Cancel", style: "cancel" as const },
+    ]);
+  };
+
+  const confirmBlock = (post: PulsePost) => {
+    Alert.alert(
+      `Block ${post.authorName}?`,
+      "You won't see their posts in Pulse anymore. To stop sharing your posts with them, also remove them from your Circle in People.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Block", style: "destructive", onPress: () => void blockUser(post.userId) },
+      ],
+    );
+  };
+
+  const openPostMenu = (post: PulsePost) => {
+    Alert.alert(post.authorName, undefined, [
+      { text: "Report post", onPress: () => chooseReportReason(post) },
+      { text: `Block ${post.authorName}`, style: "destructive", onPress: () => confirmBlock(post) },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
 
   const [composerOpen, setComposerOpen] = useState(false);
 
@@ -126,6 +193,7 @@ export default function PulseScreen() {
       colors={colors}
       onReact={(type) => handleReact(item.id, type, item.myReaction)}
       onDelete={() => confirmDelete(item.id)}
+      onMore={() => openPostMenu(item)}
     />
   );
 
@@ -155,7 +223,7 @@ export default function PulseScreen() {
             <Text style={[styles.emptyBtnText, { color: colors.primary }]}>Retry</Text>
           </Pressable>
         </View>
-      ) : (posts as PulsePost[]).length === 0 ? (
+      ) : posts.length === 0 ? (
         <View style={styles.empty}>
           <Feather name="zap" size={40} color={colors.mutedForeground + "60"} />
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Nothing yet</Text>
@@ -166,7 +234,7 @@ export default function PulseScreen() {
         </View>
       ) : (
         <FlatList
-          data={posts as PulsePost[]}
+          data={posts}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderPost}
           contentContainerStyle={{ padding: 16, paddingBottom: botPad }}
@@ -223,11 +291,12 @@ function VoicePlayer({ objectPath, colors }: { objectPath: string; colors: Retur
   );
 }
 
-function PostCard({ post, colors, onReact, onDelete }: {
+function PostCard({ post, colors, onReact, onDelete, onMore }: {
   post: PulsePost;
   colors: ReturnType<typeof useColors>;
   onReact: (type: ReactionType) => void;
   onDelete: () => void;
+  onMore: () => void;
 }) {
   const [showReactors, setShowReactors] = useState(false);
   const totalReactions = Object.values(post.reactions ?? {}).reduce((s: number, v) => s + (v as number), 0);
@@ -254,6 +323,17 @@ function PostCard({ post, colors, onReact, onDelete }: {
           {post.isOwn && (
             <Pressable onPress={onDelete} style={styles.actionBtn} accessibilityLabel="Delete post">
               <Feather name="trash-2" size={14} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+          {!post.isOwn && (
+            <Pressable
+              onPress={onMore}
+              style={styles.actionBtn}
+              hitSlop={8}
+              accessibilityLabel="Report or block"
+              testID={`pulse-post-more-${post.id}`}
+            >
+              <Feather name="more-horizontal" size={16} color={colors.mutedForeground} />
             </Pressable>
           )}
         </View>

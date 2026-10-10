@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { fonts } from "@/constants/fonts";
+import { WEB_URLS } from "@/constants/links";
 import { useColors } from "@/hooks/useColors";
 
 import { useWarmUpBrowser } from "./sign-in";
@@ -227,6 +228,23 @@ export default function SignUpScreen() {
         >
           <Text style={[styles.link, { color: colors.primary }]}>I am under the minimum age</Text>
         </Pressable>
+        <Text testID="terms-agreement" style={[styles.ageText, { color: colors.mutedForeground, marginTop: 8 }]}>
+          By creating an account, you agree to our{" "}
+          <Text
+            style={{ color: colors.primary, textDecorationLine: "underline" }}
+            onPress={() => void WebBrowser.openBrowserAsync(WEB_URLS.terms)}
+          >
+            Terms of Service
+          </Text>{" "}
+          and{" "}
+          <Text
+            style={{ color: colors.primary, textDecorationLine: "underline" }}
+            onPress={() => void WebBrowser.openBrowserAsync(WEB_URLS.privacy)}
+          >
+            Privacy Policy
+          </Text>
+          . 333 Lives has zero tolerance for abusive or objectionable content or users.
+        </Text>
         {underMinimumAge && (
           <View>
             <Text testID="underage-message" style={[styles.error, { color: colors.destructive }]}>
