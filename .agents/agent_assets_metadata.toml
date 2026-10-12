@@ -47,102 +47,119 @@ id = "yhSeerbDLljJPU6jiFCGh"
 uri = "file://ios_dist_csr.zip"
 type = "unspecified"
 title = "iOS Certificate Signing Request (.certSigningRequest inside)"
+logical_id = "c33eb527-cc8d-4604-ad51-a20855395585"
 
 [[outputs]]
 id = "ZIToo-pO4wsBGpmuRVKS1"
 uri = "file://android_keystore.zip"
 type = "unspecified"
 title = "Android Keystore (android.p12 inside)"
+logical_id = "e5385990-0e9f-4c83-ac7d-c9ee46ce0220"
 
 [[outputs]]
 id = "TT2mWlhkzngCzjrkkKYvU"
 uri = "file://ios_csr.zip"
 type = "unspecified"
 title = "iOS CSR — unzip and upload to Apple Developer Portal"
+logical_id = "1f7c5052-269c-4fca-adab-76362ab71ffd"
 
 [[outputs]]
 id = "OrQRewAKkwzC_ttTPek2H"
 uri = "file://attached_assets/store_assets/feature_graphic.png"
 type = "image"
 title = "Feature Graphic (1024x500) — Play Store banner"
+logical_id = "1e9ba8e4-aed8-4480-b16b-4c2b01a91516"
 
 [[outputs]]
 id = "Ues3pNoMqzaP6rE021gRW"
 uri = "file://attached_assets/store_assets/phone_screenshot_1.png"
 type = "image"
 title = "Phone Screenshot 1 — Today's Intentions"
+logical_id = "71bc3c7b-4835-41a8-b8ec-6c8f0fa44091"
 
 [[outputs]]
 id = "A6hdhVeqeovOTSvTrBciv"
 uri = "file://attached_assets/store_assets/phone_screenshot_2.png"
 type = "image"
 title = "Phone Screenshot 2 — Gratitude Journal"
+logical_id = "1a84a95a-0342-4850-b9df-078fe91dbe03"
 
 [[outputs]]
 id = "d9UHTcyndCariXD3fikoh"
 uri = "file://attached_assets/store_assets/phone_screenshot_3.png"
 type = "image"
 title = "Phone Screenshot 3 — My People"
+logical_id = "8bd38d8b-539a-44eb-bd67-1bc45e42f615"
 
 [[outputs]]
 id = "P97v7OF5Fpdh7p7kgc-ae"
 uri = "file://attached_assets/store_assets/tablet_screenshot_1.png"
 type = "image"
 title = "Tablet Screenshot 1 — Full Dashboard"
+logical_id = "54f03542-3a31-4c1b-bcd4-5dc6c2f2a385"
 
 [[outputs]]
 id = "Am9lQfphfEpXub51fPLO5"
 uri = "file://attached_assets/store_assets/tablet_screenshot_2.png"
 type = "image"
 title = "Tablet Screenshot 2 — Reflection & Stats"
+logical_id = "e97ec67b-f689-4b4b-a8ef-0aaf4c0dbf09"
 
 [[outputs]]
 id = "-pYQ5wDCYPOZ5qpeTrCa9"
 uri = "file://attached_assets/A3723975-BCF9-4735-B4BA-5FF8121CF538_1784738140883_compressed.png"
 type = "image"
 title = "333 Lives Logo — compressed (840KB)"
+logical_id = "5fe01029-b444-4e2e-aa11-cfa51aad9c3a"
 
 [[outputs]]
 id = "gH8NehpcBt6QzOsWHUQQ9"
 uri = "file://attached_assets/333lives_testers.csv"
 type = "table"
 title = "333 Lives Testers"
+logical_id = "d61a3307-4e61-4ee4-876f-a144af4169fd"
 
 [[outputs]]
 id = "4hmX450Pv7Q3UUMo-6NRq"
 uri = "file://attached_assets/store_assets/ios_screenshot_1.png"
 type = "image"
 title = "iOS Screenshot 1 — Today's Intentions"
+logical_id = "dda9cf3e-212b-432e-8e41-a57e22b16892"
 
 [[outputs]]
 id = "cqqPWwNOolC0gQ8vO_ftU"
 uri = "file://attached_assets/store_assets/ios_screenshot_2.png"
 type = "image"
 title = "iOS Screenshot 2 — Gratitude Journal"
+logical_id = "1fe4ade4-7d6b-4453-b01a-917f41d948a8"
 
 [[outputs]]
 id = "6rPzPplJF_ju0Od6EmHFu"
 uri = "file://attached_assets/store_assets/ios_screenshot_3.png"
 type = "image"
 title = "iOS Screenshot 3 — My People"
+logical_id = "ce7d8a02-d098-405e-aaec-c6bc0d770f62"
 
 [[outputs]]
 id = "y_ynq5DfZr-x8a51Vx08a"
 uri = "file://attached_assets/store_assets/ipad_screenshot_1.png"
 type = "image"
 title = "iPad Screenshot 1 — Dashboard"
+logical_id = "5a0ad3cf-cbf5-432c-bf00-1686658c381b"
 
 [[outputs]]
 id = "m7eHQv3lf20EI_3PYiKDo"
 uri = "file://attached_assets/store_assets/ipad_screenshot_2.png"
 type = "image"
 title = "iPad Screenshot 2 — Reflection & Stats"
+logical_id = "14947afa-4ae0-46e3-a035-64dfc8626ece"
 
 [[outputs]]
 id = "jxfIYY3IR-Fu5fuYz1DMh"
 uri = "file://333lives-mobile.zip"
 type = "unspecified"
 title = "333 Lives Mobile Source"
+logical_id = "fb065081-ed56-4033-9a74-2045dee2b9b0"
 
 [[outputs]]
 id = "HbpCLiLu-qQNl7fe7A11Q"
@@ -150,6 +167,7 @@ uri = "file://tmp/social/333-lives-social.pdf"
 type = "pdf"
 title = "333 Lives — Social Media Pack"
 description = "5 marketing cards (hero, habits, intentions, timeline, family) — square format, ready for Instagram, Facebook, and LinkedIn."
+logical_id = "f2563ac3-4d24-4b52-adb1-a8b99eae07c6"
 
 [[outputs]]
 id = "tBYSh4ttU6IxjjzjArCIo"
@@ -157,6 +175,7 @@ uri = "file://tmp/appstore/333-lives-appstore-package.pdf"
 type = "pdf"
 title = "333 Lives — App Store Package"
 description = "Cover page · 5 screenshots · listing metadata · launch checklist"
+logical_id = "54c6a79c-60da-4d63-958b-522a347beaa8"
 
 [[outputs]]
 id = "1Ozh5oRTc4p2ahQ3lDt7F"
@@ -164,6 +183,7 @@ uri = "file://tmp/products/fleece-jacket.jpg"
 type = "image"
 title = "333 Lives Legacy Fleece Jacket"
 description = "$120 · Active in Shopify"
+logical_id = "3d32c9aa-d584-4283-bacf-1dce9bd63bc6"
 
 [[outputs]]
 id = "5VDPku_5Iyg8WAc0bdgNa"
@@ -171,6 +191,7 @@ uri = "file://tmp/products/gold-tee.png"
 type = "image"
 title = "333 Lives Gold Logo Tee"
 description = "$45 · Active in Shopify"
+logical_id = "5d32b20e-a6ed-4b9a-b8aa-2a6ae6f99ccb"
 
 [[outputs]]
 id = "VjBkKoXxA9xNsULm_IgY9"
@@ -178,6 +199,7 @@ uri = "file://tmp/products/wings-hoodie.jpg"
 type = "image"
 title = "333 Lives Wings Hoodie"
 description = "$75 · 15 in stock"
+logical_id = "4bfecb75-390f-4a35-b417-742877efd9cd"
 
 [[outputs]]
 id = "L-kLrKbqAgXRczo4uzgXB"
@@ -185,6 +207,7 @@ uri = "file://tmp/products/wings-cap.jpg"
 type = "image"
 title = "333 Lives Wings Cap"
 description = "$38 · Active in Shopify"
+logical_id = "628280d2-b1a7-4672-8d47-401bff240dbc"
 
 [[outputs]]
 id = "1glFSrGCSkww5xKOdodmN"
@@ -192,6 +215,7 @@ uri = "file://tmp/products/cutoff-tank.png"
 type = "image"
 title = "333 Lives Legacy Cutoff Tank"
 description = "$38 · Active in Shopify"
+logical_id = "aa2f9646-c187-4cf5-b932-691f75130fdf"
 
 [[outputs]]
 id = "w08S8PCBPpSzVk-UHQFTB"
@@ -199,6 +223,7 @@ uri = "file://tmp/products/sweatpants.jpg"
 type = "image"
 title = "333 Lives Legacy Sweatpants"
 description = "$68 · 15 in stock"
+logical_id = "4eb6cd2f-dd42-4f63-95cb-9c2025736f73"
 
 [[outputs]]
 id = "ymfPSafL5vC6J2MLrkZAf"
@@ -206,6 +231,7 @@ uri = "file://tmp/products/shorts.jpg"
 type = "image"
 title = "333 Lives Legacy Shorts"
 description = "$55 · 15 in stock"
+logical_id = "ee76f216-c0c0-4eb7-8b3c-e14159f388e4"
 
 [[outputs]]
 id = "SQ_Yes643k_AxVA3l2CLj"
@@ -213,6 +239,7 @@ uri = "file://tmp/products/socks.png"
 type = "image"
 title = "333 Lives Legacy Socks 3-Pack"
 description = "$22 · Active in Shopify"
+logical_id = "dc15ba8a-fde0-4234-aa31-a3816021fcdb"
 
 [[outputs]]
 id = "mND2-akF5VtXJKfZlRJ8D"
@@ -220,6 +247,7 @@ uri = "file://tmp/appstore/as4-welcome.jpg"
 type = "image"
 title = "Screenshot 4 — Welcome"
 description = "App Store screenshot 4 of 5"
+logical_id = "44172788-ffdb-4e23-88a7-4b4f1accce7e"
 
 [[outputs]]
 id = "dVIc4TX8r-d1NHhYelBKX"
@@ -227,6 +255,7 @@ uri = "file://tmp/appstore/as1-intentions.jpg"
 type = "image"
 title = "Screenshot 1 — Intentions"
 description = "App Store screenshot 1 of 5"
+logical_id = "c742c427-c2f3-4a92-b2c9-5d1506560849"
 
 [[outputs]]
 id = "F3S5k-s6GxsLwNCmW0Jia"
@@ -234,6 +263,7 @@ uri = "file://tmp/appstore/as2-habits.jpg"
 type = "image"
 title = "Screenshot 2 — Habits"
 description = "App Store screenshot 2 of 5"
+logical_id = "cf4eb135-a573-42bf-8718-37932d79950c"
 
 [[outputs]]
 id = "k-tGNvf7iK8uB7rWpTg86"
@@ -241,6 +271,7 @@ uri = "file://tmp/appstore/as3-timeline.jpg"
 type = "image"
 title = "Screenshot 3 — Timeline"
 description = "App Store screenshot 3 of 5"
+logical_id = "91fda0f6-1dd7-4681-9057-5c894a4870c6"
 
 [[outputs]]
 id = "qIBsqJeoAA6bllEWC6LGn"
@@ -248,6 +279,7 @@ uri = "file://tmp/appstore/as5-pulse.jpg"
 type = "image"
 title = "Screenshot 5 — Pulse"
 description = "App Store screenshot 5 of 5"
+logical_id = "aa89ffe1-24f6-4a50-a885-819bc313cac4"
 
 [[outputs]]
 id = "WvOkYkBeCcFpjD4zUTPzs"
@@ -255,6 +287,7 @@ uri = "file://tmp/appstore/ss1-welcome.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 1: Welcome"
 description = "Older set — may already be in App Store Connect"
+logical_id = "9b677adb-3abf-4414-a58e-bc967cc7687b"
 
 [[outputs]]
 id = "0CMAoRo-eA638Hc_hvSsT"
@@ -262,6 +295,7 @@ uri = "file://tmp/appstore/ss2-intentions.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 2: Intentions"
 description = "Older set"
+logical_id = "b69df812-08d7-402f-9722-e3a36c11a896"
 
 [[outputs]]
 id = "6lxpDw1835lksPjj3PtA8"
@@ -269,6 +303,7 @@ uri = "file://tmp/appstore/ss3-habits.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 3: Habits"
 description = "Older set"
+logical_id = "ca88c590-074f-459e-b827-16ded46b8b83"
 
 [[outputs]]
 id = "SGqInUYYNABwrLAABG-D9"
@@ -276,6 +311,7 @@ uri = "file://tmp/appstore/ss4-timeline.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 4: Timeline"
 description = "Older set"
+logical_id = "4db122f2-278a-435b-8d0b-75054277a13c"
 
 [[outputs]]
 id = "xVhdek639dPCNQ1F2_6mi"
@@ -283,6 +319,7 @@ uri = "file://tmp/appstore/ss5-pulse.jpg"
 type = "image"
 title = "Aug 5 — Screenshot 5: Pulse"
 description = "Older set"
+logical_id = "e314f71a-7a35-49fa-95dc-1e1588650a82"
 
 [[outputs]]
 id = "M6oseKIyGi2yGyNW-KUNC"
@@ -290,6 +327,7 @@ uri = "file://tmp/appstore/final-as1-intentions.jpg"
 type = "image"
 title = "Screenshot 1 — Intentions (1290×2796)"
 description = "Apple App Store spec"
+logical_id = "d8d4ec30-4999-488b-a523-f01f1bf007c4"
 
 [[outputs]]
 id = "4zcq4FqFIcA8h_e2iIANS"
@@ -297,6 +335,7 @@ uri = "file://tmp/appstore/final-as2-habits.jpg"
 type = "image"
 title = "Screenshot 2 — Habits (1290×2796)"
 description = "Apple App Store spec"
+logical_id = "937722af-d8dc-4c44-be12-fd51d4d36e63"
 
 [[outputs]]
 id = "BgSHdXNQ_rHj69zbnUvmW"
@@ -304,6 +343,7 @@ uri = "file://tmp/appstore/final-as3-timeline.jpg"
 type = "image"
 title = "Screenshot 3 — Timeline (1290×2796)"
 description = "Apple App Store spec"
+logical_id = "e3f5181b-b938-48ba-b28c-aa4aa966f251"
 
 [[outputs]]
 id = "0kh5hEcWoZLKuPjwYJyyT"
@@ -311,6 +351,7 @@ uri = "file://tmp/appstore/final-as4-welcome.jpg"
 type = "image"
 title = "Screenshot 4 — Welcome (1290×2796)"
 description = "Apple App Store spec"
+logical_id = "c7b4ab45-0207-4295-b099-c5342ca6a764"
 
 [[outputs]]
 id = "K_speWbGhvaMa9vFH6bEP"
@@ -318,6 +359,7 @@ uri = "file://tmp/appstore/final-as5-pulse.jpg"
 type = "image"
 title = "Screenshot 5 — Pulse (1290×2796)"
 description = "Apple App Store spec"
+logical_id = "ae548451-c564-424c-bccb-931213c7f04e"
 
 [[outputs]]
 id = "Ei3XSASeNbxkl0smp78W-"
@@ -325,6 +367,7 @@ uri = "file://tmp/appstore/final2-as1-intentions.jpg"
 type = "image"
 title = "Screenshot 1 — Intentions"
 description = "Real app colors + actual logo"
+logical_id = "a948234e-01b4-4520-b8ff-8cbd88b03acf"
 
 [[outputs]]
 id = "ko_JNBkOS1ByTjSJ8FXx4"
@@ -332,6 +375,7 @@ uri = "file://tmp/appstore/final2-as2-habits.jpg"
 type = "image"
 title = "Screenshot 2 — Habits"
 description = "Real app colors + actual logo"
+logical_id = "83644036-e18c-4e4e-97e7-d1f9558d6f04"
 
 [[outputs]]
 id = "TW3zJ2gR504yIv3hPJAGK"
@@ -339,6 +383,7 @@ uri = "file://tmp/appstore/final2-as3-timeline.jpg"
 type = "image"
 title = "Screenshot 3 — Timeline"
 description = "Real app colors + actual logo"
+logical_id = "80edc67a-f76a-4813-a89b-44c17e54bceb"
 
 [[outputs]]
 id = "EEWDEEla_QPmt_C9DkmLM"
@@ -346,6 +391,7 @@ uri = "file://tmp/appstore/final2-as4-welcome.jpg"
 type = "image"
 title = "Screenshot 4 — Welcome"
 description = "Real logo mark, full brand"
+logical_id = "bd9d72e0-1b27-425d-8d3a-0e755f2c46dd"
 
 [[outputs]]
 id = "XcczjiGtN0fnB4Z6FiUal"
@@ -353,3 +399,18 @@ uri = "file://tmp/appstore/final2-as5-pulse.jpg"
 type = "image"
 title = "Screenshot 5 — Family Pulse"
 description = "Real app colors + actual logo"
+logical_id = "66b28977-b4bd-4b94-900a-fd69f92aa52a"
+
+[[outputs]]
+id = "OmlzVWe8SluKLTgxFRzmJ"
+uri = "file://generated-artifacts/333-lives-interface-only-draft-screenshots.zip"
+type = "unspecified"
+title = "Interface-only screenshot drafts"
+description = "Six iPhone/Android drafts with the top clock, signal and battery/status indicators removed. Originals preserved. These older mockups still need replacement with captures of the updated app before store submission."
+logical_id = "75d2dce7-f4e2-433d-8638-3ae503784380"
+content_hash = "sha256:07b1890e9ad11c362c6d1385513fdccf6b41ab33fedd01d691b1d11ea4afee69"
+size = 714845
+mtime_ms = 1791808222645
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:f20274bb-315d-4596-94ff-37f419304b95/75d2dce7-f4e2-433d-8638-3ae503784380/ec123c2c-adf7-4b40-a70a-28ec28a1b80e"
+storage_version_token = "1791808232780338"
+content_type = "application/octet-stream"

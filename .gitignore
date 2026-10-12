@@ -64,3 +64,6 @@ Thumbs.db
 
 # Google Play service account credentials
 *service-account*.json
+
+# Generated screenshot exports and downloads
+/generated-artifacts/
