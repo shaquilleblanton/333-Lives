@@ -28,7 +28,7 @@ import * as Haptics from "expo-haptics";
 
 import { fonts } from "@/constants/fonts";
 import { useColors } from "@/hooks/useColors";
-import { getBaseUrl } from "@workspace/api-client-react";
+import { streamMessage } from "@/utils/aiStream";
 
 const WEB_TOP_INSET = Platform.OS === "web" ? 67 : 0;
 const WEB_BOTTOM_INSET = Platform.OS === "web" ? 100 : 0;
@@ -38,57 +38,6 @@ type Message = {
   role: "user" | "assistant";
   content: string;
 };
-
-// ─── Streaming fetch ──────────────────────────────────────────────────────────
-
-async function* streamMessage(
-  conversationId: number,
-  content: string,
-  getToken: () => Promise<string | null>
-): AsyncGenerator<string, void, unknown> {
-  const token = await getToken();
-  const base = getBaseUrl();
-  const res = await fetch(
-    `${base}/api/anthropic/conversations/${conversationId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ content }),
-    }
-  );
-
-  if (!res.ok || !res.body) {
-    throw new Error("Stream failed");
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-
-    for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        const raw = line.slice(6).trim();
-        if (!raw) continue;
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed.done) return;
-          if (parsed.content) yield parsed.content as string;
-        } catch {}
-      }
-    }
-  }
-}
 
 // ─── Conversation list ────────────────────────────────────────────────────────
 
@@ -290,7 +239,8 @@ function ChatThread({
       await qc.invalidateQueries({
         queryKey: getGetAnthropicConversationQueryKey(conversationId),
       });
-    } catch {
+    } catch (err) {
+      console.warn("AI chat send failed:", err);
       Alert.alert("Error", "Couldn't send message. Please try again.");
       setLocalMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
     } finally {
